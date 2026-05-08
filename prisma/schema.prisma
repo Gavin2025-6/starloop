@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // URL is configured in prisma.config.ts (Prisma v7 requirement)
+  // For migrations: prisma.config.ts datasource.url
+  // For PrismaClient: @prisma/adapter-pg in lib/prisma.ts
+}
+
+enum Plan {
+  FREE
+  STARTER
+  PRO
+}
+
+enum AiReplyTone {
+  PROFESSIONAL
+  WARM
+  FRIENDLY
+}
+
+enum RequestStatus {
+  PENDING
+  SENT
+  DELIVERED
+  CLICKED
+  REVIEWED
+  FAILED
+}
+
+enum Platform {
+  GOOGLE
+  YELP
+  FACEBOOK
+}
+
+enum Channel {
+  SMS
+  EMAIL
+}
+
+enum NotificationType {
+  NEW_REVIEW
+  NEGATIVE_REVIEW
+  FOLLOW_UP_SENT
+  REPLY_PUBLISHED
+}
+
+model User {
+  id                   String    @id @default(cuid())
+  email                String    @unique
+  name                 String?
+  passwordHash         String
+  plan                 Plan      @default(FREE)
+  trialEndsAt          DateTime?
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  preferredLanguage    String    @default("en")
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  businesses    Business[]
+  notifications Notification[]
+}
+
+model Business {
+  id                 String      @id @default(cuid())
+  userId             String
+  name               String
+  phone              String?
+  email              String?
+  address            String?
+  googleBusinessId   String?
+  googleAccessToken  String?
+  googleRefreshToken String?
+  googleTokenExpiry  DateTime?
+  isGoogleConnected  Boolean     @default(false)
+  category           String?
+  aiReplyTone        AiReplyTone @default(WARM)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customers      Customer[]
+  reviewRequests ReviewRequest[]
+  reviews        Review[]
+}
+
+model Customer {
+  id         String   @id @default(cuid())
+  businessId String
+  name       String
+  phone      String?
+  email      String?
+  createdAt  DateTime @default(now())
+
+  business       Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  reviewRequests ReviewRequest[]
+}
+
+model ReviewRequest {
+  id             String        @id @default(cuid())
+  businessId     String
+  customerId     String
+  status         RequestStatus @default(PENDING)
+  sentAt         DateTime?
+  clickedAt      DateTime?
+  reviewedAt     DateTime?
+  followUpCount  Int           @default(0)
+  nextFollowUpAt DateTime?
+  platform       Platform      @default(GOOGLE)
+  channel        Channel       @default(SMS)
+  messageBody    String?
+
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id               String    @id @default(cuid())
+  businessId       String
+  platform         Platform  @default(GOOGLE)
+  reviewerName     String?
+  rating           Int
+  content          String?
+  publishedAt      DateTime
+  isReplied        Boolean   @default(false)
+  replyContent     String?
+  replyPublishedAt DateTime?
+  aiDraftReply     String?
+  isNegative       Boolean   @default(false)
+  externalId       String?
+  createdAt        DateTime  @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, externalId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
