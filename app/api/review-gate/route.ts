@@ -1,0 +1,112 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getGoogleReviewUrl } from "@/lib/utils";
+
+// GET /api/review-gate?token=xxx — fetch business info for the gate page
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const token = searchParams.get("token");
+  if (!token) return NextResponse.json({ error: "Missing token" }, { status: 400 });
+
+  const reviewRequest = await prisma.reviewRequest.findUnique({
+    where: { token },
+    include: {
+      business: { select: { id: true, name: true, googleBusinessId: true, googleReviewUrl: true, category: true } },
+      customer: { select: { name: true } },
+    },
+  });
+
+  if (!reviewRequest) {
+    return NextResponse.json({ error: "Invalid link" }, { status: 404 });
+  }
+
+  // Mark as clicked if not already
+  if (!reviewRequest.clickedAt) {
+    await prisma.reviewRequest.update({
+      where: { token },
+      data: { clickedAt: new Date(), status: "DELIVERED" },
+    });
+  }
+
+  const googleUrl = reviewRequest.business.googleReviewUrl
+    || (reviewRequest.business.googleBusinessId
+        ? getGoogleReviewUrl(reviewRequest.business.googleBusinessId)
+        : `https://www.google.com/maps/search/${encodeURIComponent(reviewRequest.business.name)}`);
+
+  return NextResponse.json({
+    businessName: reviewRequest.business.name,
+    businessCategory: reviewRequest.business.category,
+    customerName: reviewRequest.customer.name,
+    googleUrl,
+    requestId: reviewRequest.id,
+  });
+}
+
+// POST /api/review-gate — submit rating + optional feedback
+export async function POST(request: Request) {
+  const { token, rating, feedback, contactPhone, contactEmail } = await request.json();
+
+  if (!token || !rating) {
+    return NextResponse.json({ error: "Missing token or rating" }, { status: 400 });
+  }
+
+  const reviewRequest = await prisma.reviewRequest.findUnique({
+    where: { token },
+    include: {
+      business: { select: { id: true, name: true, googleBusinessId: true, googleReviewUrl: true } },
+      customer: { select: { name: true } },
+    },
+  });
+
+  if (!reviewRequest) {
+    return NextResponse.json({ error: "Invalid link" }, { status: 404 });
+  }
+
+  const isNegative = rating <= 3;
+
+  // Mark request as reviewed
+  await prisma.reviewRequest.update({
+    where: { token },
+    data: { reviewedAt: new Date(), status: "REVIEWED" },
+  });
+
+  if (isNegative) {
+    // Save private feedback to Review table — never goes to Google
+    try {
+      const review = await prisma.review.create({
+        data: {
+          businessId: reviewRequest.businessId,
+          platform: "GOOGLE",
+          reviewerName: reviewRequest.customer.name,
+          rating,
+          content: feedback ?? "",
+          publishedAt: new Date(),
+          isNegative: true,
+          isReplied: false,
+          source: "PRIVATE",
+        },
+      });
+      // Save contact fields via raw SQL to avoid stale Prisma client cache issues
+      if (contactPhone || contactEmail) {
+        await prisma.$executeRawUnsafe(
+          `UPDATE "Review" SET "contactPhone" = $1, "contactEmail" = $2 WHERE id = $3`,
+          contactPhone ?? null,
+          contactEmail ?? null,
+          review.id
+        );
+      }
+    } catch (err) {
+      console.error("[review-gate POST] review.create failed:", err);
+      return NextResponse.json({ error: String(err) }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true, action: "saved" });
+  }
+
+  // Positive — return Google review URL for redirect
+  const googleUrl = reviewRequest.business.googleReviewUrl
+    || (reviewRequest.business.googleBusinessId
+        ? getGoogleReviewUrl(reviewRequest.business.googleBusinessId)
+        : `https://www.google.com/maps/search/${encodeURIComponent(reviewRequest.business.name)}`);
+
+  return NextResponse.json({ ok: true, action: "redirect", googleUrl });
+}

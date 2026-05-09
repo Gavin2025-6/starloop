@@ -10,10 +10,22 @@ export async function GET() {
 
   const business = await prisma.business.findFirst({
     where: { userId: session.user.id },
-    include: {
-      reviews: { orderBy: { publishedAt: "desc" } },
-    },
   });
 
-  return NextResponse.json({ reviews: business?.reviews ?? [] });
+  if (!business) {
+    return NextResponse.json({ reviews: [] });
+  }
+
+  // Use raw SQL to ensure new fields are returned even with stale Prisma client cache
+  const reviews = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+    `SELECT id, "businessId", platform, "reviewerName", rating, content, "publishedAt",
+            "isReplied", "replyContent", "replyPublishedAt", "aiDraftReply",
+            "isNegative", source, "contactPhone", "contactEmail", "externalId", "createdAt"
+     FROM "Review"
+     WHERE "businessId" = $1
+     ORDER BY "publishedAt" DESC`,
+    business.id
+  );
+
+  return NextResponse.json({ reviews });
 }

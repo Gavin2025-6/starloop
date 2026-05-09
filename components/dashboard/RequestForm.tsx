@@ -16,22 +16,24 @@ interface RequestFormProps {
 
 export default function RequestForm({ businessId, customers }: RequestFormProps) {
   const t = useTranslations();
-  const [mode, setMode] = useState<"existing" | "new">("existing");
+  const [mode, setMode] = useState<"existing" | "new">("new");
   const [customerId, setCustomerId] = useState("");
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
+  const [channel, setChannel] = useState<"SMS" | "EMAIL">("SMS");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [successName, setSuccessName] = useState("");
   const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setSuccess(false);
+    setSuccessName("");
 
     try {
       let targetCustomerId = customerId;
+      let displayName = newName;
 
       // Create new customer first if needed
       if (mode === "new") {
@@ -43,16 +45,19 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
         if (!res.ok) throw new Error("Failed to create customer");
         const data = await res.json();
         targetCustomerId = data.id;
+      } else {
+        const found = customers.find((c) => c.id === customerId);
+        displayName = found?.name ?? "";
       }
 
       const res = await fetch("/api/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ businessId, customerId: targetCustomerId }),
+        body: JSON.stringify({ businessId, customerId: targetCustomerId, channel }),
       });
 
       if (!res.ok) throw new Error("Failed to send request");
-      setSuccess(true);
+      setSuccessName(displayName);
       setCustomerId("");
       setNewName("");
       setNewPhone("");
@@ -71,16 +76,7 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
       {/* Mode toggle */}
       <div className="flex gap-2 mb-4">
         <button
-          onClick={() => setMode("existing")}
-          className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-            mode === "existing"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-100 text-gray-600"
-          }`}
-        >
-          Existing Customer
-        </button>
-        <button
+          type="button"
           onClick={() => setMode("new")}
           className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors ${
             mode === "new"
@@ -89,6 +85,17 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
           }`}
         >
           {t("customers.addCustomer")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("existing")}
+          className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+            mode === "existing"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-600"
+          }`}
+        >
+          Existing Customer
         </button>
       </div>
 
@@ -128,14 +135,40 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
           </>
         )}
 
+        {/* Channel selector */}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setChannel("SMS")}
+            className={`flex-1 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+              channel === "SMS"
+                ? "border-blue-500 bg-blue-50 text-blue-700"
+                : "border-gray-200 text-gray-600 hover:border-gray-300"
+            }`}
+          >
+            📱 SMS
+          </button>
+          <button
+            type="button"
+            onClick={() => setChannel("EMAIL")}
+            className={`flex-1 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+              channel === "EMAIL"
+                ? "border-blue-500 bg-blue-50 text-blue-700"
+                : "border-gray-200 text-gray-600 hover:border-gray-300"
+            }`}
+          >
+            📧 Email
+          </button>
+        </div>
+
         {error && (
           <div className="text-red-500 text-xs bg-red-50 px-3 py-2 rounded-lg">
             {error}
           </div>
         )}
-        {success && (
+        {successName && (
           <div className="text-green-600 text-xs bg-green-50 px-3 py-2 rounded-lg">
-            ✓ {t("requests.requestSent")}
+            ✓ Request sent to {successName}
           </div>
         )}
 

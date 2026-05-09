@@ -63,6 +63,9 @@ export default async function RequestsPage({
                       {t("customers.name")}
                     </th>
                     <th className="px-4 py-3 text-gray-500 font-medium">
+                      Phone
+                    </th>
+                    <th className="px-4 py-3 text-gray-500 font-medium">
                       {t("requests.status")}
                     </th>
                     <th className="px-4 py-3 text-gray-500 font-medium">
@@ -78,6 +81,9 @@ export default async function RequestsPage({
                     >
                       <td className="px-4 py-3 font-medium text-gray-900">
                         {req.customer.name}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500 text-xs">
+                        {req.customer.phone ?? "—"}
                       </td>
                       <td className="px-4 py-3">
                         <span

@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
+import { randomBytes } from "crypto";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendSms, buildReviewRequestMessage } from "@/lib/twilio";
-import { getGoogleReviewUrl, phoneToE164 } from "@/lib/utils";
+import { phoneToE164 } from "@/lib/utils";
+
+function generateToken(): string {
+  return randomBytes(16).toString("hex"); // 32-char hex, URL-safe
+}
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -26,9 +31,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Customer not found" }, { status: 404 });
   }
 
-  const reviewUrl = business.googleBusinessId
-    ? getGoogleReviewUrl(business.googleBusinessId)
-    : `${process.env.NEXT_PUBLIC_APP_URL}/review/${businessId}`;
+  // Always use review gate — it routes 4-5★ to Google, captures 1-3★ privately
+  const token = generateToken();
+  const reviewUrl = `${process.env.NEXT_PUBLIC_APP_URL}/en/review/${token}`;
 
   // Detect language from user preference
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
@@ -60,6 +65,7 @@ export async function POST(request: Request) {
     data: {
       businessId,
       customerId,
+      token,
       status,
       sentAt: status === "SENT" ? new Date() : undefined,
       channel: channel as "SMS" | "EMAIL",

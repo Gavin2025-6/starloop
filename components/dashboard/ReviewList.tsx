@@ -5,11 +5,14 @@ interface Review {
   reviewerName?: string | null;
   rating: number;
   content?: string | null;
-  publishedAt: Date;
+  publishedAt: Date | string;
   isReplied: boolean;
   isNegative: boolean;
   aiDraftReply?: string | null;
   replyContent?: string | null;
+  source?: string | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
 }
 
 interface ReviewListProps {

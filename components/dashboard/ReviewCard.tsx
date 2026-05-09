@@ -11,11 +11,14 @@ interface Review {
   reviewerName?: string | null;
   rating: number;
   content?: string | null;
-  publishedAt: Date;
+  publishedAt: Date | string;
   isReplied: boolean;
   isNegative: boolean;
   aiDraftReply?: string | null;
   replyContent?: string | null;
+  source?: string | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
 }
 
 interface ReviewCardProps {
@@ -31,6 +34,8 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
   const [publishing, setPublishing] = useState(false);
   const [published, setPublished] = useState(review.isReplied);
   const [expanded, setExpanded] = useState(false);
+
+  const isPrivate = review.source === "PRIVATE";
 
   async function handleGenerateReply() {
     setGenerating(true);
@@ -72,7 +77,7 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
   return (
     <div
       className={`bg-white rounded-2xl border p-4 ${
-        review.isNegative ? "border-red-100" : "border-gray-100"
+        isPrivate ? "border-orange-100" : review.isNegative ? "border-red-100" : "border-gray-100"
       }`}
     >
       {/* Header */}
@@ -88,8 +93,14 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
             </span>
           </div>
         </div>
-        <div className="flex gap-2">
-          {review.isNegative && (
+        <div className="flex gap-2 flex-wrap justify-end">
+          {/* Source badge */}
+          {isPrivate ? (
+            <Badge variant="warning">Private Feedback</Badge>
+          ) : (
+            <Badge variant="info">Google</Badge>
+          )}
+          {review.isNegative && !isPrivate && (
             <Badge variant="error">{t("reviews.negative")}</Badge>
           )}
           {published && (
@@ -105,8 +116,46 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
         </p>
       )}
 
-      {/* AI reply section */}
-      {!published && (
+      {/* ── PRIVATE FEEDBACK: show content box + Contact Customer ── */}
+      {isPrivate && (
+        <div className="border-t border-orange-50 pt-3">
+          <div className="space-y-2">
+            {/* Contact info pills */}
+            {(review.contactPhone || review.contactEmail) && (
+              <div className="flex gap-2 flex-wrap">
+                {review.contactPhone && (
+                  <span className="text-sm text-gray-700 bg-orange-50 border border-orange-100 px-3 py-1.5 rounded-lg font-medium">
+                    📱 {review.contactPhone}
+                  </span>
+                )}
+                {review.contactEmail && (
+                  <span className="text-sm text-gray-700 bg-orange-50 border border-orange-100 px-3 py-1.5 rounded-lg font-medium">
+                    📧 {review.contactEmail}
+                  </span>
+                )}
+              </div>
+            )}
+            {/* Contact Customer button */}
+            <button
+              onClick={() => {
+                if (review.contactEmail) {
+                  window.location.href = `mailto:${review.contactEmail}?subject=Following up on your feedback&body=Hi ${review.reviewerName ?? "there"},%0A%0AThank you for sharing your feedback with us. We'd love to make things right.%0A%0ABest regards`;
+                } else if (review.contactPhone) {
+                  alert(`Call or text: ${review.contactPhone}`);
+                } else {
+                  alert("No contact info left by customer.");
+                }
+              }}
+              className="text-sm bg-orange-500 text-white px-4 py-1.5 rounded-lg font-medium hover:bg-orange-600 transition-colors"
+            >
+              ✉️ Contact Customer
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── GOOGLE REVIEW: AI reply flow ── */}
+      {!isPrivate && !published && (
         <div className="border-t border-gray-50 pt-3">
           {!expanded && !draft && (
             <button
@@ -153,7 +202,7 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
         </div>
       )}
 
-      {published && review.replyContent && (
+      {!isPrivate && published && review.replyContent && (
         <div className="border-t border-gray-50 pt-3">
           <p className="text-xs font-medium text-gray-400 mb-1">Your reply:</p>
           <p className="text-sm text-gray-600 italic">{review.replyContent}</p>
