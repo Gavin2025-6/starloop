@@ -5,7 +5,8 @@
     "customers": "Customers",
     "requests": "Review Requests",
     "settings": "Settings",
-    "logout": "Log out"
+    "logout": "Log out",
+    "reports": "Reports"
   },
   "dashboard": {
     "title": "Dashboard",

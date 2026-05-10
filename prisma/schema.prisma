@@ -62,6 +62,7 @@ model User {
   trialEndsAt          DateTime?
   stripeCustomerId     String?   @unique
   stripeSubscriptionId String?   @unique
+  currentPeriodEnd     DateTime?
   preferredLanguage    String    @default("en")
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
@@ -74,6 +75,7 @@ model Business {
   id                 String      @id @default(cuid())
   userId             String
   name               String
+  slug               String?     @unique
   phone              String?
   email              String?
   address            String?
@@ -88,10 +90,32 @@ model Business {
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
 
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  customers      Customer[]
-  reviewRequests ReviewRequest[]
-  reviews        Review[]
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customers         Customer[]
+  reviewRequests    ReviewRequest[]
+  reviews           Review[]
+  reputationReports ReputationReport[]
+}
+
+model ReputationReport {
+  id              String   @id @default(cuid())
+  businessId      String
+  month           String   // "2025-05" format
+  avgRating       Float
+  totalReviews    Int
+  positiveCount   Int
+  negativeCount   Int
+  ratingChange    Float?
+  positiveKeywords String[]
+  negativeKeywords String[]
+  actionItems     String[]
+  summary         String
+  emailSentAt     DateTime?
+  createdAt       DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, month])
 }
 
 model Customer {
@@ -120,6 +144,7 @@ model ReviewRequest {
   platform       Platform      @default(GOOGLE)
   channel        Channel       @default(SMS)
   messageBody    String?
+  scheduledAt    DateTime?
 
   business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   customer Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)

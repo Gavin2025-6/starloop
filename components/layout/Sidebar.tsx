@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { key: "reviews",   href: "/dashboard/reviews",    icon: "⭐" },
   { key: "requests",  href: "/dashboard/requests",   icon: "📱" },
   { key: "customers", href: "/dashboard/customers",  icon: "👥" },
+  { key: "reports",   href: "/dashboard/reports",    icon: "📈" },
   { key: "settings",  href: "/dashboard/settings",   icon: "⚙️" },
 ];
 

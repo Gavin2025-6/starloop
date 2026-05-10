@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
+import AiAssistant from "@/components/dashboard/AiAssistant";
 
 export default async function DashboardLayout({
   children,
@@ -24,6 +25,7 @@ export default async function DashboardLayout({
         <Header user={session.user} />
         <main className="flex-1 overflow-auto p-6">{children}</main>
       </div>
+      <AiAssistant />
     </div>
   );
 }

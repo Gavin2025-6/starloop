@@ -5,7 +5,8 @@
     "customers": "客户列表",
     "requests": "发送邀请",
     "settings": "设置",
-    "logout": "退出登录"
+    "logout": "退出登录",
+    "reports": "月度报告"
   },
   "dashboard": {
     "title": "概览",

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import StatsOverview from "@/components/dashboard/StatsOverview";
 import ReviewList from "@/components/dashboard/ReviewList";
+import RatingChart from "@/components/dashboard/RatingChart";
 import { Link } from "@/i18n/navigation";
 
 export default async function DashboardPage({
@@ -69,6 +70,10 @@ export default async function DashboardPage({
       </div>
 
       {stats && <StatsOverview stats={stats} />}
+
+      <div className="mt-8">
+        <RatingChart />
+      </div>
 
       <div className="mt-8">
         <h2 className="text-lg font-semibold mb-4">{t("reviews.title")}</h2>

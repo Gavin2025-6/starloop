@@ -15,7 +15,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { customerId, businessId, channel = "SMS" } = await request.json();
+  const { customerId, businessId, channel = "SMS", scheduledAt } = await request.json();
+
+  // Fetch user for plan + language
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { plan: true, preferredLanguage: true },
+  });
+
+  // Free plan SMS limit: 10/month
+  if (user?.plan === "FREE" && channel === "SMS") {
+    const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0, 0, 0, 0);
+    const smsSentThisMonth = await prisma.reviewRequest.count({
+      where: { businessId, channel: "SMS", sentAt: { gte: startOfMonth } },
+    });
+    if (smsSentThisMonth >= 10) {
+      return NextResponse.json({
+        error: "Free plan limit reached (10 SMS/month). Please upgrade to send more.",
+        upgradeRequired: true,
+      }, { status: 403 });
+    }
+  }
 
   const business = await prisma.business.findUnique({
     where: { id: businessId },
@@ -36,7 +56,6 @@ export async function POST(request: Request) {
   const reviewUrl = `${process.env.NEXT_PUBLIC_APP_URL}/en/review/${token}`;
 
   // Detect language from user preference
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
   const language = (user?.preferredLanguage as "en" | "zh-CN") ?? "en";
 
   const messageBody = buildReviewRequestMessage({
@@ -49,7 +68,10 @@ export async function POST(request: Request) {
   let sentSid: string | undefined;
   let status: "SENT" | "FAILED" = "SENT";
 
-  if (channel === "SMS" && customer.phone && process.env.TWILIO_ACCOUNT_SID) {
+  // If scheduled for later, don't send now
+  const isScheduled = scheduledAt && new Date(scheduledAt) > new Date();
+
+  if (!isScheduled && channel === "SMS" && customer.phone && process.env.TWILIO_ACCOUNT_SID) {
     try {
       sentSid = await sendSms({
         to: phoneToE164(customer.phone),
@@ -61,16 +83,33 @@ export async function POST(request: Request) {
     }
   }
 
+  if (!isScheduled && channel === "EMAIL" && customer.email) {
+    try {
+      const { sendReviewRequestEmail } = await import("@/lib/resend");
+      await sendReviewRequestEmail({
+        to: customer.email,
+        customerName: customer.name,
+        businessName: business.name,
+        reviewUrl,
+        language,
+      });
+    } catch (err) {
+      console.error("[Requests/EMAIL]", err);
+      status = "FAILED";
+    }
+  }
+
   const reviewRequest = await prisma.reviewRequest.create({
     data: {
       businessId,
       customerId,
       token,
-      status,
-      sentAt: status === "SENT" ? new Date() : undefined,
+      status: isScheduled ? "PENDING" : status,
+      sentAt: (!isScheduled && status === "SENT") ? new Date() : undefined,
       channel: channel as "SMS" | "EMAIL",
       messageBody,
-      nextFollowUpAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
+      scheduledAt: scheduledAt ? new Date(scheduledAt) : undefined,
+      nextFollowUpAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     },
   });
 

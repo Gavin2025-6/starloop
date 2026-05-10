@@ -13,6 +13,7 @@ export async function GET() {
     select: {
       id: true,
       name: true,
+      slug: true,
       category: true,
       aiReplyTone: true,
       isGoogleConnected: true,
@@ -63,6 +64,14 @@ export async function PATCH(request: Request) {
 
   if (!business) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  // Validate slug uniqueness if being updated
+  if (body.slug && body.slug !== business.slug) {
+    const slugTaken = await prisma.business.findUnique({ where: { slug: body.slug } });
+    if (slugTaken) {
+      return NextResponse.json({ error: "Slug already taken" }, { status: 409 });
+    }
   }
 
   const updated = await prisma.business.update({
