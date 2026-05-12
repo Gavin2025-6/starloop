@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendSms, buildReviewRequestMessage } from "@/lib/twilio";
 import { phoneToE164 } from "@/lib/utils";
-import { sendRequestConfirmation } from "@/lib/resend";
+import { sendRequestConfirmation, sendReviewRequestEmail } from "@/lib/resend";
 
 function generateToken(): string {
   return randomBytes(16).toString("hex"); // 32-char hex, URL-safe
@@ -84,19 +84,23 @@ export async function POST(request: Request) {
     }
   }
 
-  if (!isScheduled && channel === "EMAIL" && customer.email) {
-    try {
-      const { sendReviewRequestEmail } = await import("@/lib/resend");
-      await sendReviewRequestEmail({
-        to: customer.email,
-        customerName: customer.name,
-        businessName: business.name,
-        reviewUrl,
-        language,
-      });
-    } catch (err) {
-      console.error("[Requests/EMAIL]", err);
+  if (!isScheduled && channel === "EMAIL") {
+    if (!customer.email) {
+      console.error("[Requests/EMAIL] Customer has no email address");
       status = "FAILED";
+    } else {
+      try {
+        await sendReviewRequestEmail({
+          to: customer.email,
+          customerName: customer.name,
+          businessName: business.name,
+          reviewUrl,
+          language,
+        });
+      } catch (err) {
+        console.error("[Requests/EMAIL]", err);
+        status = "FAILED";
+      }
     }
   }
 

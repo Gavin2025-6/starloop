@@ -28,10 +28,10 @@ export function buildReviewRequestMessage(params: {
   const { businessName, customerName, reviewUrl, language } = params;
 
   if (language === "zh-CN") {
-    return `嗨 ${customerName}！感谢您光顾${businessName}。您的体验感觉如何？请分享您的反馈：${reviewUrl} 只需30秒 🙏`;
+    return `嗨 ${customerName}！感谢您光顾${businessName}。您的体验感觉如何？非常期待您的反馈，谢谢！🙏`;
   }
 
-  return `Hi ${customerName}! Thank you for choosing ${businessName}. How was your experience? Please share your feedback: ${reviewUrl} Takes 30 seconds 🙏`;
+  return `Hi ${customerName}, thanks for visiting ${businessName}! How was your experience? We'd love your feedback.`;
 }
 
 export function buildFollowUpMessage(params: {
