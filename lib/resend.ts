@@ -173,6 +173,7 @@ export async function sendNegativeReviewAlert({
   content,
   contactPhone,
   contactEmail,
+  aiSuggestion,
 }: {
   to: string;
   businessName: string;
@@ -181,6 +182,7 @@ export async function sendNegativeReviewAlert({
   content: string;
   contactPhone?: string | null;
   contactEmail?: string | null;
+  aiSuggestion?: string | null;
 }) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://starloop.app";
   const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
@@ -192,8 +194,14 @@ export async function sendNegativeReviewAlert({
       ${contactEmail ? `<p style="margin:0;font-size:13px;color:#374151;">Email: <strong>${contactEmail}</strong></p>` : ""}
     </div>` : "";
 
+  const aiSection = aiSuggestion ? `
+    <div style="background:#f0fdf4;border:1px solid #a7f3d0;border-radius:10px;padding:16px;margin-bottom:20px;">
+      <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#065f46;">✨ AI-suggested reply</p>
+      <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;font-style:italic;">"${aiSuggestion}"</p>
+    </div>` : "";
+
   const body = emailShell(`
-    ${emailHeader("🚨", "Urgent: Negative Review Received", "Action needed — respond within 24 hours", "135deg,#dc2626,#b91c1c")}
+    ${emailHeader("⚠️", "您有一条新的差评需要处理", "Action needed — respond within 24 hours", "135deg,#dc2626,#b91c1c")}
     <tr><td style="padding:36px 40px 8px;">
       <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;margin-bottom:20px;">
         <p style="margin:0;font-size:13px;font-weight:700;color:#dc2626;">⚠️ NEEDS IMMEDIATE ATTENTION</p>
@@ -201,12 +209,13 @@ export async function sendNegativeReviewAlert({
       </div>
 
       <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin-bottom:20px;">
-        <p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#111827;">${reviewerName}</p>
+        <p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#111827;">${reviewerName} 说：</p>
         <p style="margin:0 0 12px;font-size:18px;color:#dc2626;letter-spacing:1px;">${stars} (${rating}/5)</p>
         ${content ? `<p style="margin:0;font-size:14px;color:#374151;line-height:1.6;font-style:italic;">"${content}"</p>` : '<p style="margin:0;font-size:13px;color:#9ca3af;">No written feedback.</p>'}
       </div>
 
       ${contactSection}
+      ${aiSection}
 
       <p style="font-size:14px;color:#374151;font-weight:600;margin:0 0 10px;">How to handle this:</p>
       <ul style="margin:0 0 24px;padding-left:20px;color:#374151;font-size:13px;line-height:2;">
@@ -223,7 +232,7 @@ export async function sendNegativeReviewAlert({
   return resend.emails.send({
     from: "StarLoop <onboarding@resend.dev>",
     to,
-    subject: `🚨 Urgent: ${rating}★ review from ${reviewerName} needs your response — ${businessName}`,
+    subject: `⚠️ 您有一条新的差评需要处理 — ${businessName}`,
     html: body,
   });
 }

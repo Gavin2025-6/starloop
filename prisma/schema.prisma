@@ -167,6 +167,9 @@ model Review {
   contactPhone     String?
   contactEmail     String?
   externalId       String?
+  taskStatus       String        @default("new")
+  resolvedAt       DateTime?
+  archivedAt       DateTime?
   createdAt        DateTime      @default(now())
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)

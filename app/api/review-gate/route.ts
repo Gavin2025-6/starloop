@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getGoogleReviewUrl } from "@/lib/utils";
 import { sendNewReviewNotification, sendNegativeReviewAlert } from "@/lib/resend";
+import { generateReviewReply } from "@/lib/claude";
 
 // GET /api/review-gate?token=xxx — fetch business info for the gate page
 export async function GET(request: Request) {
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
     where: { token },
     include: {
       business: {
-        select: { id: true, name: true, googleBusinessId: true, googleReviewUrl: true, userId: true },
+        select: { id: true, name: true, category: true, googleBusinessId: true, googleReviewUrl: true, userId: true },
       },
       customer: { select: { name: true } },
     },
@@ -105,17 +106,40 @@ export async function POST(request: Request) {
         );
       }
 
-      // Urgent negative review alert
+      // Generate AI suggestion and send urgent alert (fire-and-forget)
       if (owner?.email) {
-        sendNegativeReviewAlert({
-          to: owner.email,
-          businessName: reviewRequest.business.name,
-          reviewerName: reviewRequest.customer.name,
-          rating,
-          content: feedback ?? "",
-          contactPhone: contactPhone ?? null,
-          contactEmail: contactEmail ?? null,
-        }).catch((err) => console.error("[review-gate/negative-alert]", err));
+        (async () => {
+          let aiSuggestion: string | null = null;
+          try {
+            const { reply } = await generateReviewReply({
+              reviewContent: feedback ?? "",
+              rating,
+              reviewerName: reviewRequest.customer.name,
+              businessName: reviewRequest.business.name,
+              businessCategory: reviewRequest.business.category ?? "Business",
+              tone: "WARM",
+              language: "en",
+            });
+            aiSuggestion = reply;
+            // Save AI draft to review
+            await prisma.review.update({
+              where: { id: review.id },
+              data: { aiDraftReply: reply },
+            });
+          } catch (e) {
+            console.error("[review-gate/ai-draft]", e);
+          }
+          sendNegativeReviewAlert({
+            to: owner.email!,
+            businessName: reviewRequest.business.name,
+            reviewerName: reviewRequest.customer.name,
+            rating,
+            content: feedback ?? "",
+            contactPhone: contactPhone ?? null,
+            contactEmail: contactEmail ?? null,
+            aiSuggestion,
+          }).catch((err) => console.error("[review-gate/negative-alert]", err));
+        })();
       }
     } catch (err) {
       console.error("[review-gate POST] review.create failed:", err);
