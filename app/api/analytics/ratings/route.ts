@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
+  try {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -79,4 +80,8 @@ export async function GET() {
     signupDate: signupDate?.toISOString().slice(0, 10),
     stats: { goodThisMonth, replyRate, avgRating, beforeAvg },
   });
+  } catch (err) {
+    console.error("[Analytics/Ratings/GET]", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
 }

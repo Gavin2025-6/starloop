@@ -6,6 +6,7 @@ import Anthropic from "@anthropic-ai/sdk";
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(request: Request) {
+  try {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -99,4 +100,8 @@ RULES:
 
   const reply = response.content[0].type === "text" ? response.content[0].text : "";
   return NextResponse.json({ reply });
+  } catch (err) {
+    console.error("[AI/Chat]", err);
+    return NextResponse.json({ error: "Failed to get AI response" }, { status: 500 });
+  }
 }

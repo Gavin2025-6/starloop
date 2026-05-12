@@ -26,8 +26,23 @@ function LogoMark({ variant = "light", height = 32 }: { variant?: "dark" | "ligh
         <path d="M38 2 L39 5 L42 6 L39 7 L38 10 L37 7 L34 6 L37 5Z" fill="#00C9A7"/>
       </svg>
       <span style={{ fontWeight: 700, fontSize: Math.round(height * 0.7), lineHeight: 1 }}>
-        <span style={{ color: variant === "dark" ? "#FFFFFF" : "#0D1117" }}>star</span>
-        <span style={{ color: "#00C9A7" }}>loop</span>
+        <span style={{ color: variant === "dark" ? "#FFFFFF" : "#0D1117" }}>starl</span>
+        <svg
+          viewBox="0 0 28 16"
+          width={Math.round(height * 0.7 * 1.6)}
+          height={Math.round(height * 0.7)}
+          style={{ display: "inline-block", verticalAlign: "middle", marginBottom: "0.1em" }}
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M14 8 C14 5 11.5 3 9 3 C6 3 4 5.5 4 8 C4 10.5 6 13 9 13 C11 13 12.5 11.5 14 8 C15.5 4.5 17 3 19 3 C22 3 24 5.5 24 8 C24 10.5 22 13 19 13 C16.5 13 14 11 14 8 Z"
+            stroke="#00C9A7"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+          />
+        </svg>
+        <span style={{ color: "#00C9A7" }}>p</span>
       </span>
     </div>
   );
@@ -112,34 +127,35 @@ export default async function LandingPage({
           <h1
             className="mb-6 font-extrabold text-white"
             style={{
-              fontSize: "clamp(3rem, 8vw, 5.5rem)",
+              fontSize: "clamp(3.5rem, 8vw, 6rem)",
               fontWeight: 800,
               letterSpacing: "-0.03em",
               lineHeight: 1.05,
             }}
           >
-            Get more 5-star
+            More 5-star reviews.
             <br />
-            reviews. Automatically.
+            Less effort.
           </h1>
 
           {/* Subtitle */}
           <p
-            className="text-xl max-w-2xl mx-auto mb-10"
-            style={{ color: "#A1A1AA", lineHeight: 1.6 }}
+            className="text-xl max-w-xl mx-auto mb-10"
+            style={{ color: "#A1A1AA", lineHeight: 1.7 }}
           >
-            Block negative reviews before they reach Google. AI replies for
-            every customer. Built for Toronto&apos;s local businesses.
+            StarLoop automatically intercepts bad reviews,
+            replies to every customer with AI,
+            and grows your Google rating on autopilot.
           </p>
 
           {/* Button group */}
-          <div className="flex gap-4 justify-center mb-6 flex-wrap">
+          <div className="flex gap-4 justify-center mb-12 flex-wrap">
             <Link
               href="/auth/register"
               className="px-8 py-4 rounded-lg text-base font-semibold hover:bg-[#F0F0F0] transition-all duration-200"
               style={{ background: "#FFFFFF", color: "#0A0A0A" }}
             >
-              Start free trial →
+              Start free trial
             </Link>
             <a
               href="#features"
@@ -149,8 +165,27 @@ export default async function LandingPage({
                 color: "#A1A1AA",
               }}
             >
-              See how it works
+              See how it works ↓
             </a>
+          </div>
+
+          {/* Metrics strip */}
+          <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto mb-6">
+            <div className="text-center">
+              <div className="text-4xl font-bold text-white">8–10x</div>
+              <div className="text-sm mt-1" style={{ color: "#4F4F4F" }}>cheaper</div>
+              <div className="text-sm" style={{ color: "#4F4F4F" }}>than Birdeye</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-white">$39</div>
+              <div className="text-sm mt-1" style={{ color: "#4F4F4F" }}>per month</div>
+              <div className="text-sm" style={{ color: "#4F4F4F" }}>all features</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-white">2 min</div>
+              <div className="text-sm mt-1" style={{ color: "#4F4F4F" }}>to set up</div>
+              <div className="text-sm" style={{ color: "#4F4F4F" }}>no CRM needed</div>
+            </div>
           </div>
 
           {/* Fine print */}
@@ -161,33 +196,7 @@ export default async function LandingPage({
       </section>
 
       {/* ─── Divider ─── */}
-      <div className="mt-32" style={{ borderTop: "1px solid #1F1F1F" }} />
-
-      {/* ─── Metrics Strip ─── */}
-      <section className="py-16">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="grid grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold text-white">8–10x</div>
-              <div className="text-sm mt-1" style={{ color: "#4F4F4F" }}>
-                cheaper than competitors
-              </div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-white">$39</div>
-              <div className="text-sm mt-1" style={{ color: "#4F4F4F" }}>
-                per month, all features included
-              </div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-white">2 min</div>
-              <div className="text-sm mt-1" style={{ color: "#4F4F4F" }}>
-                setup time, no CRM needed
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <div style={{ borderTop: "1px solid #1F1F1F" }} />
 
       {/* ─── Features Section ─── */}
       <section id="features" className="py-32">
