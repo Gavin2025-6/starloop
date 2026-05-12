@@ -37,9 +37,9 @@ export default function Sidebar() {
                 <stop offset="0%" stopColor="#00C9A7"/>
                 <stop offset="100%" stopColor="#4A6FFF"/>
               </linearGradient>
-              <linearGradient id="sl-orbit" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#00C9A7" stopOpacity="0.7"/>
-                <stop offset="100%" stopColor="#4A6FFF" stopOpacity="0.7"/>
+              <linearGradient id="sl-orbit" x1="34" y1="34" x2="0" y2="0" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#00C9A7" stopOpacity="0.8"/>
+                <stop offset="100%" stopColor="#4A6FFF" stopOpacity="0.8"/>
               </linearGradient>
             </defs>
             {/* Orbit ellipse arc (behind star) */}
@@ -60,8 +60,8 @@ export default function Sidebar() {
           </svg>
 
           {/* Wordmark: "star" dark + "loop" gradient */}
-          <span className="font-bold text-base tracking-tight" style={{ letterSpacing: "-0.2px" }}>
-            <span style={{ color: "#1A1D23" }}>star</span>
+          <span className="font-semibold text-base tracking-tight" style={{ letterSpacing: "-0.2px" }}>
+            <span style={{ color: "#0D1B3E" }}>star</span>
             <span style={{
               background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
               WebkitBackgroundClip: "text",
@@ -85,7 +85,7 @@ export default function Sidebar() {
               style={
                 isActive
                   ? {
-                      background: "linear-gradient(135deg, #6C63FF 0%, #4B8EF5 100%)",
+                      background: "linear-gradient(135deg, #00C9A7 0%, #4A6FFF 100%)",
                       color: "#ffffff",
                     }
                   : {
@@ -95,8 +95,8 @@ export default function Sidebar() {
               }
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.background = "rgba(108,99,255,0.08)";
-                  e.currentTarget.style.color = "#6C63FF";
+                  e.currentTarget.style.background = "rgba(0,201,167,0.08)";
+                  e.currentTarget.style.color = "#00C9A7";
                 }
               }}
               onMouseLeave={(e) => {

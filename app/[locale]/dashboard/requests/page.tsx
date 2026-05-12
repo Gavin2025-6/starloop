@@ -7,8 +7,8 @@ import { formatRelativeTime } from "@/lib/utils";
 
 const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
   PENDING:   { bg: "rgba(107,114,128,0.1)", color: "#6B7280" },
-  SENT:      { bg: "rgba(75,142,245,0.1)",  color: "#3B82F6" },
-  DELIVERED: { bg: "rgba(75,142,245,0.1)",  color: "#3B82F6" },
+  SENT:      { bg: "rgba(74,111,255,0.1)",  color: "#3B82F6" },
+  DELIVERED: { bg: "rgba(74,111,255,0.1)",  color: "#3B82F6" },
   CLICKED:   { bg: "rgba(245,158,11,0.1)",  color: "#D97706" },
   REVIEWED:  { bg: "rgba(0,201,167,0.1)",   color: "#00C9A7" },
   FAILED:    { bg: "rgba(255,71,87,0.1)",   color: "#FF4757" },
@@ -121,7 +121,7 @@ export default async function RequestsPage({
             >
               <div
                 className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4"
-                style={{ background: "linear-gradient(135deg, rgba(108,99,255,0.1), rgba(75,142,245,0.1))" }}
+                style={{ background: "linear-gradient(135deg, rgba(74,111,255,0.1), rgba(74,111,255,0.1))" }}
               >
                 📱
               </div>

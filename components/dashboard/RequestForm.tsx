@@ -181,7 +181,7 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
               onChange={(e) => setNewName(e.target.value)}
               className="px-3 py-2.5 text-sm"
               style={inputStyle}
-              onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+              onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
               onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
             />
             <input
@@ -191,7 +191,7 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
               onChange={(e) => setNewPhone(e.target.value)}
               className="px-3 py-2.5 text-sm"
               style={inputStyle}
-              onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+              onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
               onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
             />
             <input
@@ -201,7 +201,7 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
               onChange={(e) => setNewEmail(e.target.value)}
               className="px-3 py-2.5 text-sm"
               style={inputStyle}
-              onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+              onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
               onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
             />
           </>
@@ -222,11 +222,11 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
                 className="flex-1 py-2 text-xs font-medium transition-all"
                 style={{
                   borderRadius: "8px",
-                  background: channel === ch ? "linear-gradient(135deg, #6C63FF, #4B8EF5)" : "transparent",
+                  background: channel === ch ? "linear-gradient(135deg, #00C9A7, #4A6FFF)" : "transparent",
                   color: channel === ch ? "#fff" : "#6B7280",
                   border: "none",
                   cursor: "pointer",
-                  boxShadow: channel === ch ? "0 1px 3px rgba(108,99,255,0.3)" : "none",
+                  boxShadow: channel === ch ? "0 1px 3px rgba(0,201,167,0.3)" : "none",
                 }}
               >
                 {ch === "SMS" ? "📱 SMS" : "📧 Email"}
@@ -247,9 +247,9 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
                 className="py-2.5 px-3 text-xs font-medium transition-all text-left"
                 style={{
                   borderRadius: "8px",
-                  border: timing === opt.value ? "1px solid #6C63FF" : "1px solid #E8ECEF",
-                  background: timing === opt.value ? "rgba(108,99,255,0.06)" : "#fff",
-                  color: timing === opt.value ? "#6C63FF" : "#6B7280",
+                  border: timing === opt.value ? "1px solid #4A6FFF" : "1px solid #E8ECEF",
+                  background: timing === opt.value ? "rgba(0,201,167,0.06)" : "#fff",
+                  color: timing === opt.value ? "#4A6FFF" : "#6B7280",
                   cursor: "pointer",
                 }}
               >
@@ -282,7 +282,7 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
           disabled={loading}
           className="w-full text-white py-3 text-sm font-semibold transition-opacity disabled:opacity-50"
           style={{
-            background: "linear-gradient(135deg, #6C63FF 0%, #4B8EF5 100%)",
+            background: "linear-gradient(135deg, #00C9A7 0%, #4A6FFF 100%)",
             borderRadius: "10px",
             border: "none",
             cursor: loading ? "not-allowed" : "pointer",

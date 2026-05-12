@@ -66,7 +66,7 @@ export default async function DashboardPage({
             href="/onboarding"
             className="text-white text-sm font-semibold px-4 py-2.5 transition-opacity hover:opacity-90"
             style={{
-              background: "linear-gradient(135deg, #6C63FF 0%, #4B8EF5 100%)",
+              background: "linear-gradient(135deg, #00C9A7 0%, #4A6FFF 100%)",
               borderRadius: "10px",
             }}
           >
@@ -94,7 +94,7 @@ export default async function DashboardPage({
           >
             <div
               className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4"
-              style={{ background: "linear-gradient(135deg, rgba(108,99,255,0.1), rgba(75,142,245,0.1))" }}
+              style={{ background: "linear-gradient(135deg, rgba(0,201,167,0.1), rgba(74,111,255,0.1))" }}
             >
               ⭐
             </div>
@@ -104,7 +104,7 @@ export default async function DashboardPage({
             <Link
               href="/onboarding"
               className="inline-block mt-4 text-sm font-medium hover:underline"
-              style={{ color: "#6C63FF" }}
+              style={{ color: "#4A6FFF" }}
             >
               {t("dashboard.connectGoogle")} →
             </Link>

@@ -29,11 +29,11 @@ export default async function CustomersPage({
 
   // Color palette for avatars
   const avatarGradients = [
-    "linear-gradient(135deg, #6C63FF, #4B8EF5)",
-    "linear-gradient(135deg, #00C9A7, #4B8EF5)",
-    "linear-gradient(135deg, #F59E0B, #FF4757)",
-    "linear-gradient(135deg, #4B8EF5, #6C63FF)",
-    "linear-gradient(135deg, #FF4757, #F59E0B)",
+    "linear-gradient(135deg, #00C9A7, #4A6FFF)",
+    "linear-gradient(135deg, #4A6FFF, #00C9A7)",
+    "linear-gradient(135deg, #00C9A7, #10B981)",
+    "linear-gradient(135deg, #4A6FFF, #6366F1)",
+    "linear-gradient(135deg, #6366F1, #4A6FFF)",
   ];
 
   return (
@@ -100,7 +100,7 @@ export default async function CustomersPage({
                   <td className="px-5 py-3">
                     <span
                       className="text-xs font-medium px-2.5 py-1 rounded-full"
-                      style={{ background: "rgba(108,99,255,0.1)", color: "#6C63FF" }}
+                      style={{ background: "rgba(74,111,255,0.1)", color: "#4A6FFF" }}
                     >
                       {c._count.reviewRequests} sent
                     </span>
@@ -120,7 +120,7 @@ export default async function CustomersPage({
         >
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4"
-            style={{ background: "linear-gradient(135deg, rgba(108,99,255,0.1), rgba(75,142,245,0.1))" }}
+            style={{ background: "linear-gradient(135deg, rgba(74,111,255,0.1), rgba(74,111,255,0.1))" }}
           >
             👥
           </div>

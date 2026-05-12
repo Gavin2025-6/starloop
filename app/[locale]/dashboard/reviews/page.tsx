@@ -77,7 +77,7 @@ export default function ReviewsPage() {
             style={{
               borderRadius: "10px",
               border: activeTab === tab.key ? "none" : "1px solid #E8ECEF",
-              background: activeTab === tab.key ? "linear-gradient(135deg, #6C63FF, #4B8EF5)" : "#fff",
+              background: activeTab === tab.key ? "linear-gradient(135deg, #00C9A7, #4A6FFF)" : "#fff",
               color: activeTab === tab.key ? "#fff" : "#6B7280",
               cursor: "pointer",
             }}
@@ -112,7 +112,7 @@ export default function ReviewsPage() {
         >
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4"
-            style={{ background: "linear-gradient(135deg, rgba(108,99,255,0.1), rgba(75,142,245,0.1))" }}
+            style={{ background: "linear-gradient(135deg, rgba(0,201,167,0.1), rgba(74,111,255,0.1))" }}
           >
             ⭐
           </div>

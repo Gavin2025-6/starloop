@@ -48,7 +48,7 @@ function Avatar({ name }: { name: string }) {
   return (
     <div
       className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-      style={{ background: "linear-gradient(135deg, #6C63FF, #4B8EF5)" }}
+      style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)" }}
     >
       {initial}
     </div>
@@ -106,15 +106,15 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
   }
 
   // Determine card accent bar color
-  const accentColor = isPrivate ? "#F59E0B" : isPositive ? "#00C9A7" : "#FF4757";
-  const cardBg = isPrivate ? "#FFFBF0" : review.isNegative ? "#FFF5F5" : "#FFFFFF";
+  const accentColor = isPrivate ? "#6366F1" : isPositive ? "#10B981" : "#EF4444";
+  const cardBg = isPrivate ? "#F5F3FF" : review.isNegative ? "#FFF5F5" : "#F0FFF4";
 
   return (
     <div
       className="rounded-2xl overflow-hidden"
       style={{
         background: cardBg,
-        border: `1px solid ${isPrivate ? "#FDE68A" : review.isNegative ? "#FFD0D0" : "#E8ECEF"}`,
+        border: `1px solid ${isPrivate ? "#C4B5FD" : review.isNegative ? "#FECACA" : "#A7F3D0"}`,
         boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
         display: "flex",
       }}
@@ -145,7 +145,7 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
             {isPrivate && (
               <span
                 className="text-xs px-2.5 py-1 rounded-full font-medium"
-                style={{ background: "rgba(245,158,11,0.1)", color: "#D97706" }}
+                style={{ background: "rgba(99,102,241,0.1)", color: "#6366F1" }}
               >
                 Private
               </span>
@@ -153,7 +153,7 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
             {!isPrivate && (
               <span
                 className="text-xs px-2.5 py-1 rounded-full font-medium"
-                style={{ background: "rgba(75,142,245,0.1)", color: "#3B82F6" }}
+                style={{ background: "rgba(74,111,255,0.1)", color: "#4A6FFF" }}
               >
                 Google
               </span>
@@ -195,14 +195,14 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
 
         {/* Private feedback: contact info + contact button */}
         {isPrivate && (
-          <div className="pt-3" style={{ borderTop: "1px solid rgba(245,158,11,0.2)" }}>
+          <div className="pt-3" style={{ borderTop: "1px solid rgba(99,102,241,0.2)" }}>
             <div className="space-y-2">
               {(review.contactPhone || review.contactEmail) && (
                 <div className="flex gap-2 flex-wrap">
                   {review.contactPhone && (
                     <span
                       className="text-sm font-medium px-3 py-1.5 rounded-lg"
-                      style={{ background: "rgba(245,158,11,0.08)", color: "#92400E", border: "1px solid rgba(245,158,11,0.2)" }}
+                      style={{ background: "rgba(99,102,241,0.08)", color: "#4F46E5", border: "1px solid rgba(99,102,241,0.2)" }}
                     >
                       📱 {review.contactPhone}
                     </span>
@@ -210,7 +210,7 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
                   {review.contactEmail && (
                     <span
                       className="text-sm font-medium px-3 py-1.5 rounded-lg"
-                      style={{ background: "rgba(245,158,11,0.08)", color: "#92400E", border: "1px solid rgba(245,158,11,0.2)" }}
+                      style={{ background: "rgba(99,102,241,0.08)", color: "#4F46E5", border: "1px solid rgba(99,102,241,0.2)" }}
                     >
                       📧 {review.contactEmail}
                     </span>
@@ -228,7 +228,7 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
                   }
                 }}
                 className="text-sm font-medium px-4 py-2 rounded-lg transition-opacity hover:opacity-80"
-                style={{ background: "#F59E0B", color: "#fff", border: "none", cursor: "pointer" }}
+                style={{ background: "linear-gradient(135deg, #6366F1, #4A6FFF)", color: "#fff", border: "none", cursor: "pointer" }}
               >
                 ✉️ Contact Customer
               </button>
@@ -245,7 +245,7 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
                 disabled={generating}
                 className="text-sm font-medium px-4 py-2 rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
                 style={{
-                  background: "linear-gradient(135deg, #6C63FF, #4B8EF5)",
+                  background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
                   color: "#fff",
                   border: "none",
                   cursor: generating ? "not-allowed" : "pointer",
@@ -271,7 +271,7 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
                     outline: "none",
                     color: "#1A1D23",
                   }}
-                  onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                  onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
                   onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
                   placeholder="Edit reply before publishing..."
                 />
@@ -281,7 +281,7 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
                     disabled={publishing || !draft}
                     className="text-sm font-medium px-4 py-1.5 rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
                     style={{
-                      background: "linear-gradient(135deg, #6C63FF, #4B8EF5)",
+                      background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
                       color: "#fff",
                       border: "none",
                       cursor: publishing || !draft ? "not-allowed" : "pointer",

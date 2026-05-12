@@ -18,7 +18,7 @@ export default function StatsOverview({ stats }: { stats: Stats }) {
       value: stats.totalReviews,
       trend: "+12%",
       trendUp: true,
-      iconBg: "linear-gradient(135deg, #6C63FF, #4B8EF5)",
+      iconBg: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
           <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="white"/>
@@ -30,7 +30,7 @@ export default function StatsOverview({ stats }: { stats: Stats }) {
       value: stats.averageRating,
       trend: "+0.2",
       trendUp: true,
-      iconBg: "linear-gradient(135deg, #F59E0B, #FBBF24)",
+      iconBg: "linear-gradient(135deg, #4A6FFF, #00C9A7)",
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
           <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="white"/>
@@ -42,7 +42,7 @@ export default function StatsOverview({ stats }: { stats: Stats }) {
       value: stats.pendingRequests,
       trend: "Active",
       trendUp: true,
-      iconBg: "linear-gradient(135deg, #4B8EF5, #60A5FA)",
+      iconBg: "linear-gradient(135deg, #4A6FFF, #00C9A7)",
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
           <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="white"/>

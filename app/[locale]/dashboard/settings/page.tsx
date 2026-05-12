@@ -77,7 +77,7 @@ function PasswordModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}>
       <div
         className="bg-white rounded-2xl p-6 w-full mx-4"
-        style={{ maxWidth: "400px", boxShadow: "0 4px 24px rgba(108,99,255,0.15)" }}
+        style={{ maxWidth: "400px", boxShadow: "0 4px 24px rgba(74,111,255,0.15)" }}
       >
         <h3 className="text-base font-semibold mb-1" style={{ color: "#1A1D23" }}>Confirm your password</h3>
         <p className="text-sm mb-4" style={{ color: "#6B7280" }}>Enter your current password to save these changes.</p>
@@ -95,7 +95,7 @@ function PasswordModal({
             outline: "none",
             color: "#1A1D23",
           }}
-          onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+          onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
           onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
         />
         {error && <p className="text-xs mb-3" style={{ color: "#FF4757" }}>{error}</p>}
@@ -112,7 +112,7 @@ function PasswordModal({
             disabled={checking}
             className="flex-1 py-2.5 text-sm font-semibold transition-opacity disabled:opacity-50"
             style={{
-              background: "linear-gradient(135deg, #6C63FF, #4B8EF5)",
+              background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
               borderRadius: "10px",
               color: "#fff",
               border: "none",
@@ -132,7 +132,7 @@ function PasswordModal({
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="flex items-start gap-3 mb-5">
-      <div className="w-1 h-full rounded-full mt-1 self-stretch" style={{ background: "linear-gradient(135deg, #6C63FF, #4B8EF5)", minHeight: "36px" }} />
+      <div className="w-1 h-full rounded-full mt-1 self-stretch" style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)", minHeight: "36px" }} />
       <div>
         <h2 className="font-semibold" style={{ color: "#1A1D23" }}>{title}</h2>
         {subtitle && <p className="text-xs mt-0.5" style={{ color: "#6B7280" }}>{subtitle}</p>}
@@ -345,19 +345,19 @@ export default function SettingsPage() {
                   className="rounded-xl p-4 relative"
                   style={{
                     border: isStarter
-                      ? "2px solid #6C63FF"
+                      ? "2px solid #4A6FFF"
                       : isPro
                       ? "2px solid #9C27B0"
                       : "1px solid #E8ECEF",
                     background: isPro
-                      ? "linear-gradient(135deg, #6C63FF 0%, #4B8EF5 100%)"
+                      ? "linear-gradient(135deg, #00C9A7 0%, #4A6FFF 100%)"
                       : "#fff",
                   }}
                 >
                   {isStarter && plan.badge && (
                     <div
                       className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-xs px-2.5 py-0.5 rounded-full font-semibold whitespace-nowrap"
-                      style={{ background: "#6C63FF", color: "#fff" }}
+                      style={{ background: "#4A6FFF", color: "#fff" }}
                     >
                       {plan.badge}
                     </div>
@@ -370,8 +370,8 @@ export default function SettingsPage() {
                       <span
                         className="text-xs px-2 py-0.5 rounded-full font-medium"
                         style={{
-                          background: isPro ? "rgba(255,255,255,0.2)" : "rgba(108,99,255,0.1)",
-                          color: isPro ? "#fff" : "#6C63FF",
+                          background: isPro ? "rgba(255,255,255,0.2)" : "rgba(74,111,255,0.1)",
+                          color: isPro ? "#fff" : "#4A6FFF",
                         }}
                       >
                         Current
@@ -394,8 +394,8 @@ export default function SettingsPage() {
                       disabled={upgrading === plan.key}
                       className="w-full py-1.5 rounded-lg text-xs font-semibold transition-opacity disabled:opacity-50"
                       style={{
-                        background: isPro ? "#fff" : "linear-gradient(135deg, #6C63FF, #4B8EF5)",
-                        color: isPro ? "#6C63FF" : "#fff",
+                        background: isPro ? "#fff" : "linear-gradient(135deg, #00C9A7, #4A6FFF)",
+                        color: isPro ? "#4A6FFF" : "#fff",
                         border: "none",
                         cursor: upgrading === plan.key ? "not-allowed" : "pointer",
                       }}
@@ -435,7 +435,7 @@ export default function SettingsPage() {
                 onChange={(e) => setUserName(e.target.value)}
                 className="px-3 py-2.5 text-sm"
                 style={inputStyle}
-                onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
                 onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
               />
             </div>
@@ -447,7 +447,7 @@ export default function SettingsPage() {
                 onChange={(e) => setUserEmail(e.target.value)}
                 className="px-3 py-2.5 text-sm"
                 style={inputStyle}
-                onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
                 onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
               />
             </div>
@@ -462,7 +462,7 @@ export default function SettingsPage() {
                 placeholder="Min 6 characters"
                 className="px-3 py-2.5 text-sm"
                 style={inputStyle}
-                onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
                 onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
               />
             </div>
@@ -470,7 +470,7 @@ export default function SettingsPage() {
             <button
               onClick={() => setModal("profile")}
               className="px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, #6C63FF, #4B8EF5)", borderRadius: "10px", border: "none", cursor: "pointer" }}
+              style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)", borderRadius: "10px", border: "none", cursor: "pointer" }}
             >
               {profileSaved ? "✓ Saved" : "Save Profile"}
             </button>
@@ -489,7 +489,7 @@ export default function SettingsPage() {
                 onChange={(e) => setBusinessName(e.target.value)}
                 className="px-3 py-2.5 text-sm"
                 style={inputStyle}
-                onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
                 onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
               />
             </div>
@@ -501,7 +501,7 @@ export default function SettingsPage() {
               <div
                 className="flex items-center overflow-hidden"
                 style={{ border: "1px solid #E8ECEF", borderRadius: "8px" }}
-                onFocusCapture={(e) => { e.currentTarget.style.borderColor = "#6C63FF"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                onFocusCapture={(e) => { e.currentTarget.style.borderColor = "#4A6FFF"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
                 onBlurCapture={(e) => { e.currentTarget.style.borderColor = "#E8ECEF"; e.currentTarget.style.boxShadow = "none"; }}
               >
                 <span className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ background: "#F8F9FC", borderRight: "1px solid #E8ECEF", color: "#6B7280" }}>
@@ -518,7 +518,7 @@ export default function SettingsPage() {
               </div>
               {slugError && <p className="text-xs mt-1" style={{ color: "#FF4757" }}>{slugError}</p>}
               {slug && !slugError && (
-                <a href={`/r/${slug}`} target="_blank" rel="noopener noreferrer" className="text-xs hover:underline mt-1 inline-block" style={{ color: "#6C63FF" }}>
+                <a href={`/r/${slug}`} target="_blank" rel="noopener noreferrer" className="text-xs hover:underline mt-1 inline-block" style={{ color: "#4A6FFF" }}>
                   Preview page →
                 </a>
               )}
@@ -530,7 +530,7 @@ export default function SettingsPage() {
                 onChange={(e) => setCategory(e.target.value)}
                 className="px-3 py-2.5 text-sm"
                 style={{ ...inputStyle, appearance: "auto" }}
-                onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
                 onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
               >
                 <option value="">Select category</option>
@@ -541,7 +541,7 @@ export default function SettingsPage() {
             <button
               onClick={() => setModal("business")}
               className="px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, #6C63FF, #4B8EF5)", borderRadius: "10px", border: "none", cursor: "pointer" }}
+              style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)", borderRadius: "10px", border: "none", cursor: "pointer" }}
             >
               {businessSaved ? "✓ Saved" : "Save Business"}
             </button>
@@ -562,9 +562,9 @@ export default function SettingsPage() {
                 onClick={() => setTone(opt.value)}
                 className="p-3 rounded-xl text-sm font-medium transition-all"
                 style={{
-                  border: tone === opt.value ? "2px solid #6C63FF" : "1px solid #E8ECEF",
-                  background: tone === opt.value ? "rgba(108,99,255,0.06)" : "#fff",
-                  color: tone === opt.value ? "#6C63FF" : "#6B7280",
+                  border: tone === opt.value ? "2px solid #4A6FFF" : "1px solid #E8ECEF",
+                  background: tone === opt.value ? "rgba(74,111,255,0.06)" : "#fff",
+                  color: tone === opt.value ? "#4A6FFF" : "#6B7280",
                   cursor: "pointer",
                 }}
               >
@@ -610,11 +610,11 @@ export default function SettingsPage() {
                     placeholder="https://search.google.com/local/writereview?placeid=..."
                     className="px-3 py-2.5 text-sm"
                     style={inputStyle}
-                    onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                    onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
                     onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
                   />
                   {googleReviewUrl && (
-                    <a href={googleReviewUrl} target="_blank" rel="noopener noreferrer" className="text-xs hover:underline mt-1 inline-block" style={{ color: "#6C63FF" }}>
+                    <a href={googleReviewUrl} target="_blank" rel="noopener noreferrer" className="text-xs hover:underline mt-1 inline-block" style={{ color: "#4A6FFF" }}>
                       Test this link →
                     </a>
                   )}
@@ -626,7 +626,7 @@ export default function SettingsPage() {
           <button
             onClick={handleQuickSave}
             className="mt-5 px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            style={{ background: "linear-gradient(135deg, #6C63FF, #4B8EF5)", borderRadius: "10px", border: "none", cursor: "pointer" }}
+            style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)", borderRadius: "10px", border: "none", cursor: "pointer" }}
           >
             {quickSaved ? "✓ Saved" : t("settings.save")}
           </button>

@@ -102,7 +102,7 @@ export default function ReviewGatePage() {
   const cardStyle = {
     background: "#fff",
     borderRadius: "24px",
-    boxShadow: "0 8px 32px rgba(108,99,255,0.12), 0 2px 8px rgba(0,0,0,0.06)",
+    boxShadow: "0 8px 32px rgba(74,111,255,0.12), 0 2px 8px rgba(0,0,0,0.06)",
     padding: "32px 28px",
     width: "100%",
     maxWidth: "380px",
@@ -116,7 +116,7 @@ export default function ReviewGatePage() {
           <div className="flex justify-center mb-4">
             <div
               className="w-8 h-8 rounded-full animate-pulse"
-              style={{ background: "linear-gradient(135deg, #6C63FF, #4B8EF5)" }}
+              style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)" }}
             />
           </div>
           <p className="text-sm" style={{ color: "#6B7280" }}>Loading...</p>
@@ -144,7 +144,7 @@ export default function ReviewGatePage() {
         <div style={cardStyle}>
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center text-3xl mx-auto mb-5"
-            style={{ background: "linear-gradient(135deg, rgba(0,201,167,0.15), rgba(75,142,245,0.15))" }}
+            style={{ background: "linear-gradient(135deg, rgba(0,201,167,0.15), rgba(74,111,255,0.15))" }}
           >
             🙏
           </div>
@@ -167,7 +167,7 @@ export default function ReviewGatePage() {
         <div className="mb-7">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4"
-            style={{ background: "linear-gradient(135deg, #6C63FF, #4B8EF5)" }}
+            style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)" }}
           >
             {info?.businessName?.charAt(0).toUpperCase() ?? "S"}
           </div>
@@ -269,7 +269,7 @@ export default function ReviewGatePage() {
                 outline: "none",
                 color: "#1A1D23",
               }}
-              onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+              onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
               onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
             />
 
@@ -287,7 +287,7 @@ export default function ReviewGatePage() {
                   placeholder="e.g. 416-555-0123"
                   className="w-full px-4 py-2.5 text-sm"
                   style={{ border: "1px solid #E8ECEF", borderRadius: "10px", outline: "none", color: "#1A1D23" }}
-                  onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                  onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
                   onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
                 />
               </div>
@@ -300,7 +300,7 @@ export default function ReviewGatePage() {
                   placeholder="e.g. you@example.com"
                   className="w-full px-4 py-2.5 text-sm"
                   style={{ border: "1px solid #E8ECEF", borderRadius: "10px", outline: "none", color: "#1A1D23" }}
-                  onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                  onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
                   onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
                 />
               </div>
@@ -318,7 +318,7 @@ export default function ReviewGatePage() {
               disabled={submitting}
               className="w-full py-3 text-sm font-semibold text-white transition-opacity disabled:opacity-50"
               style={{
-                background: "linear-gradient(135deg, #6C63FF, #4B8EF5)",
+                background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
                 borderRadius: "12px",
                 border: "none",
                 cursor: submitting ? "not-allowed" : "pointer",
