@@ -103,7 +103,7 @@ export async function sendWelcomeEmail({
   `);
 
   return resend.emails.send({
-    from: "StarLoop <hello@starloop.app>",
+    from: "StarLoop <onboarding@resend.dev>",
     to,
     subject: `Welcome to StarLoop, ${name}! Here's how to get started`,
     html: body,
@@ -149,7 +149,7 @@ export async function sendNewReviewNotification({
   `);
 
   return resend.emails.send({
-    from: "StarLoop <notifications@starloop.app>",
+    from: "StarLoop <onboarding@resend.dev>",
     to,
     subject: `${stars} New ${rating}-star review from ${reviewerName} — ${businessName}`,
     html: body,
@@ -214,7 +214,7 @@ export async function sendNegativeReviewAlert({
   `);
 
   return resend.emails.send({
-    from: "StarLoop Alerts <alerts@starloop.app>",
+    from: "StarLoop <onboarding@resend.dev>",
     to,
     subject: `🚨 Urgent: ${rating}★ review from ${reviewerName} needs your response — ${businessName}`,
     html: body,
@@ -289,7 +289,7 @@ export async function sendRequestConfirmation({
   `);
 
   return resend.emails.send({
-    from: "StarLoop <notifications@starloop.app>",
+    from: "StarLoop <onboarding@resend.dev>",
     to,
     subject: isScheduled
       ? `📅 Scheduled: Review request for ${customerName} — ${businessName}`
