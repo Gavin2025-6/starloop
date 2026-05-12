@@ -6,26 +6,35 @@ import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
-const LogoSVG = ({ size = 40 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="ll-star" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#00C9A7"/>
-        <stop offset="100%" stopColor="#4A6FFF"/>
-      </linearGradient>
-      <linearGradient id="ll-orbit" x1="34" y1="34" x2="0" y2="0" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#00C9A7" stopOpacity="0.8"/>
-        <stop offset="100%" stopColor="#4A6FFF" stopOpacity="0.8"/>
-      </linearGradient>
-    </defs>
-    <ellipse cx="17" cy="17" rx="14" ry="7" stroke="url(#ll-orbit)" strokeWidth="1.5" fill="none"
-      strokeDasharray="44 44" strokeDashoffset="22" transform="rotate(-30 17 17)"/>
-    <path d="M26.5 10.5 L28 13 L25 12.5Z" fill="url(#ll-orbit)"/>
-    <path d="M17 5.5 L18.8 11.8H25.4L20.1 15.6L21.9 21.9L17 18.1L12.1 21.9L13.9 15.6L8.6 11.8H15.2Z"
-      stroke="url(#ll-star)" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
-    <path d="M27 5 L27.6 6.8 L29.4 7.4 L27.6 8 L27 9.8 L26.4 8 L24.6 7.4 L26.4 6.8Z" fill="#00C9A7"/>
-  </svg>
-);
+function LogoMark({ variant = "light", height = 32 }: { variant?: "dark" | "light"; height?: number }) {
+  const iconSize = Math.round(height * 1.1);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: Math.round(height * 0.3) }}>
+      <svg width={iconSize} height={iconSize} viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="ll-star" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#00C9A7"/><stop offset="100%" stopColor="#4A6FFF"/>
+          </linearGradient>
+          <linearGradient id="ll-orbit" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#00C9A7" stopOpacity="0.85"/><stop offset="100%" stopColor="#4A6FFF" stopOpacity="0.85"/>
+          </linearGradient>
+          <marker id="ll-arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#4A6FFF" opacity="0.85"/>
+          </marker>
+        </defs>
+        <ellipse cx="22" cy="22" rx="18" ry="9" stroke="url(#ll-orbit)" strokeWidth="2" fill="none"
+          strokeDasharray="56 56" strokeDashoffset="28" transform="rotate(-25 22 22)" markerEnd="url(#ll-arrow)"/>
+        <path d="M22 4 L24.1 15H35.1L26.4 21.5L29.5 32.5L22 26.1L14.5 32.5L17.6 21.5L8.9 15H19.9Z"
+          stroke="url(#ll-star)" strokeWidth="2.5" fill="none" strokeLinejoin="round"/>
+        <path d="M38 2 L39 5 L42 6 L39 7 L38 10 L37 7 L34 6 L37 5Z" fill="#00C9A7"/>
+      </svg>
+      <span style={{ fontWeight: 700, fontSize: Math.round(height * 0.7), lineHeight: 1 }}>
+        <span style={{ color: variant === "dark" ? "#FFFFFF" : "#0D1117" }}>star</span>
+        <span style={{ color: "#00C9A7" }}>loop</span>
+      </span>
+    </div>
+  );
+}
 
 export default function LoginPage() {
   const t = useTranslations();
@@ -40,13 +49,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
+    const result = await signIn("credentials", { email, password, redirect: false });
     if (result?.error) {
       setError(t("auth.loginError"));
     } else {
@@ -56,164 +59,149 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-      {/* Left panel */}
-      <div
-        className="hidden lg:flex lg:w-[45%] flex-col justify-center px-14"
-        style={{ background: "linear-gradient(160deg, #0D1B3E 0%, #1a1a4e 100%)" }}
-      >
-        <div className="max-w-sm">
-          {/* Logo + wordmark */}
-          <div className="flex items-center gap-3 mb-12">
-            <LogoSVG size={44} />
-            <span className="font-semibold text-2xl" style={{ letterSpacing: "-0.3px" }}>
-              <span style={{ color: "#ffffff" }}>star</span>
-              <span style={{
-                background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}>loop</span>
-            </span>
-          </div>
+    <div className="min-h-screen flex" style={{ fontFamily: "var(--font-geist), -apple-system, sans-serif" }}>
+      {/* LEFT panel — 45% width, dark background */}
+      <div className="hidden lg:flex flex-col" style={{ width: "45%", background: "#0A0A0A", padding: "48px" }}>
+        {/* Top: Logo */}
+        <LogoMark variant="dark" height={28} />
 
-          <h2 className="text-3xl font-bold text-white mb-3 leading-tight">
+        {/* Middle: tagline + bullets */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", maxWidth: "380px" }}>
+          <h2 style={{ fontSize: "1.875rem", fontWeight: 700, color: "#FFFFFF", lineHeight: 1.2, marginBottom: "12px" }}>
             Get more 5-star reviews.
-            <br />
-            <span style={{
-              background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}>
-              Automatically.
-            </span>
           </h2>
-          <p className="mb-12 text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
-            Trusted by Toronto local businesses to grow their Google reputation.
+          <p style={{ fontSize: "1.125rem", fontWeight: 500, color: "#00C9A7", marginBottom: "32px" }}>
+            Automatically.
           </p>
 
-          <div className="space-y-5">
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {[
-              { dot: "#00C9A7", text: "AI-powered review replies in seconds" },
-              { dot: "#4A6FFF", text: "Block bad reviews before they hit Google" },
-              { dot: "#00C9A7", text: "Bilingual — English & 中文" },
-            ].map((item) => (
-              <div key={item.text} className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: item.dot }} />
-                <span className="text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>{item.text}</span>
+              "Block negative reviews before they reach Google",
+              "AI replies powered by Claude, not GPT",
+              "Bilingual EN/中文, built for Toronto",
+            ].map((text) => (
+              <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#00C9A7", flexShrink: 0, marginTop: "8px" }} />
+                <span style={{ fontSize: "0.875rem", color: "#A1A1AA", lineHeight: 1.5 }}>{text}</span>
               </div>
             ))}
           </div>
         </div>
+
+        {/* Bottom: copyright */}
+        <p style={{ fontSize: "0.75rem", color: "#4F4F4F" }}>© 2026 StarLoop</p>
       </div>
 
-      {/* Right panel */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12" style={{ background: "#F8F9FC" }}>
-        <div className="w-full max-w-sm">
+      {/* RIGHT panel — white, flex-1 */}
+      <div style={{ flex: 1, background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 24px" }}>
+        <div style={{ width: "100%", maxWidth: "380px" }}>
+
           {/* Mobile logo */}
-          <div className="flex items-center justify-center gap-2 mb-8 lg:hidden">
-            <LogoSVG size={36} />
-            <span className="font-semibold text-xl" style={{ letterSpacing: "-0.2px" }}>
-              <span style={{ color: "#0D1B3E" }}>star</span>
-              <span style={{
-                background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}>loop</span>
-            </span>
+          <div className="flex justify-center mb-8 lg:hidden">
+            <LogoMark variant="light" height={28} />
           </div>
 
-          <div className="bg-white rounded-2xl p-8" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.08)", border: "1px solid #E8ECEF" }}>
-            <h1 className="text-2xl font-bold mb-1" style={{ color: "#0D1B3E" }}>Welcome back</h1>
-            <p className="text-sm mb-6" style={{ color: "#6B7280" }}>Sign in to your StarLoop account</p>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#0D1117", marginBottom: "4px" }}>
+            Welcome back
+          </h1>
+          <p style={{ fontSize: "0.875rem", color: "#6B7280", marginBottom: "32px" }}>
+            Sign in to your StarLoop account
+          </p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "#0D1B3E" }}>
-                  {t("auth.email")}
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm transition-all"
-                  style={{ border: "1px solid #E8ECEF", borderRadius: "8px", outline: "none", color: "#0D1B3E" }}
-                  onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
-                  onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
-                  placeholder="you@example.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "#0D1B3E" }}>
-                  {t("auth.password")}
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm transition-all"
-                  style={{ border: "1px solid #E8ECEF", borderRadius: "8px", outline: "none", color: "#0D1B3E" }}
-                  onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
-                  onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
-                  placeholder="••••••••"
-                />
-              </div>
-
-              {error && (
-                <div className="text-sm px-3 py-2 rounded-lg" style={{ background: "#FFF5F5", color: "#EF4444", border: "1px solid #FECACA" }}>
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full text-white py-3 text-sm font-semibold transition-opacity disabled:opacity-50"
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div>
+              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, color: "#374151", marginBottom: "6px" }}>
+                {t("auth.email")}
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
                 style={{
-                  background: "linear-gradient(135deg, #00C9A7 0%, #4A6FFF 100%)",
-                  borderRadius: "10px",
-                  border: "none",
-                  cursor: loading ? "not-allowed" : "pointer",
+                  width: "100%", border: "1px solid #E5E7EB", borderRadius: "8px",
+                  padding: "12px 16px", fontSize: "0.875rem", color: "#0D1117",
+                  outline: "none", boxSizing: "border-box",
                 }}
-              >
-                {loading ? t("common.loading") : t("auth.signIn")}
-              </button>
-            </form>
-
-            {/* Divider */}
-            <div className="flex items-center gap-3 my-5">
-              <div className="flex-1 h-px" style={{ background: "#E8ECEF" }} />
-              <span className="text-xs" style={{ color: "#9CA3AF" }}>or continue with</span>
-              <div className="flex-1 h-px" style={{ background: "#E8ECEF" }} />
+                onFocus={(e) => { e.target.style.boxShadow = "0 0 0 2px #0D1117"; e.target.style.borderColor = "transparent"; }}
+                onBlur={(e) => { e.target.style.boxShadow = "none"; e.target.style.borderColor = "#E5E7EB"; }}
+              />
             </div>
 
-            {/* Google placeholder */}
+            <div>
+              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, color: "#374151", marginBottom: "6px" }}>
+                {t("auth.password")}
+              </label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                style={{
+                  width: "100%", border: "1px solid #E5E7EB", borderRadius: "8px",
+                  padding: "12px 16px", fontSize: "0.875rem", color: "#0D1117",
+                  outline: "none", boxSizing: "border-box",
+                }}
+                onFocus={(e) => { e.target.style.boxShadow = "0 0 0 2px #0D1117"; e.target.style.borderColor = "transparent"; }}
+                onBlur={(e) => { e.target.style.boxShadow = "none"; e.target.style.borderColor = "#E5E7EB"; }}
+              />
+            </div>
+
+            {error && (
+              <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "8px", padding: "10px 14px", fontSize: "0.875rem", color: "#EF4444" }}>
+                {error}
+              </div>
+            )}
+
             <button
-              type="button"
-              disabled
-              className="w-full flex items-center justify-center gap-3 py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
+              type="submit"
+              disabled={loading}
               style={{
-                border: "1px solid #E8ECEF",
-                borderRadius: "10px",
-                color: "#6B7280",
-                background: "#fff",
-                cursor: "not-allowed",
+                background: "#0D1117", color: "#FFFFFF", border: "none",
+                borderRadius: "8px", padding: "12px", fontSize: "0.875rem",
+                fontWeight: 500, cursor: loading ? "not-allowed" : "pointer",
+                opacity: loading ? 0.5 : 1, width: "100%", marginTop: "8px",
+                transition: "background 0.2s",
               }}
+              onMouseEnter={(e) => { if (!loading) (e.target as HTMLElement).style.background = "#1a1a1a"; }}
+              onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "#0D1117"; }}
             >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
-                <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
-                <path d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
-                <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-              </svg>
-              Google (coming soon)
+              {loading ? t("common.loading") : t("auth.signIn")}
             </button>
+          </form>
+
+          {/* Divider */}
+          <div style={{ display: "flex", alignItems: "center", gap: "16px", margin: "24px 0" }}>
+            <div style={{ flex: 1, height: "1px", background: "#E5E7EB" }} />
+            <span style={{ fontSize: "0.75rem", color: "#9CA3AF" }}>or</span>
+            <div style={{ flex: 1, height: "1px", background: "#E5E7EB" }} />
           </div>
 
-          <p className="text-center text-sm mt-4" style={{ color: "#6B7280" }}>
+          {/* Google button (disabled) */}
+          <button
+            disabled
+            style={{
+              border: "1px solid #E5E7EB", borderRadius: "8px", background: "#FFFFFF",
+              width: "100%", padding: "12px", fontSize: "0.875rem", color: "#6B7280",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+              cursor: "not-allowed", opacity: 0.6,
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Continue with Google · Coming soon
+          </button>
+
+          <p style={{ textAlign: "center", fontSize: "0.875rem", color: "#6B7280", marginTop: "24px" }}>
             {t("auth.noAccount")}{" "}
-            <Link href="/auth/register" className="font-medium hover:underline" style={{ color: "#4A6FFF" }}>
+            <Link href="/auth/register" style={{ color: "#0D1117", fontWeight: 500, textDecoration: "none" }}
+              className="hover:underline">
               {t("auth.signUp")}
             </Link>
           </p>

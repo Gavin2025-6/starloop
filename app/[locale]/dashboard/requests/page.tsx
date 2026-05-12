@@ -6,12 +6,12 @@ import RequestForm from "@/components/dashboard/RequestForm";
 import { formatRelativeTime } from "@/lib/utils";
 
 const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
-  PENDING:   { bg: "rgba(107,114,128,0.1)", color: "#6B7280" },
-  SENT:      { bg: "rgba(74,111,255,0.1)",  color: "#3B82F6" },
-  DELIVERED: { bg: "rgba(74,111,255,0.1)",  color: "#3B82F6" },
-  CLICKED:   { bg: "rgba(245,158,11,0.1)",  color: "#D97706" },
-  REVIEWED:  { bg: "rgba(0,201,167,0.1)",   color: "#00C9A7" },
-  FAILED:    { bg: "rgba(255,71,87,0.1)",   color: "#FF4757" },
+  REVIEWED:  { bg: "#F0FDF4", color: "#10B981" },
+  SENT:      { bg: "#EFF6FF", color: "#3B82F6" },
+  DELIVERED: { bg: "#EFF6FF", color: "#3B82F6" },
+  CLICKED:   { bg: "#FFFBEB", color: "#D97706" },
+  PENDING:   { bg: "#FFF7ED", color: "#F59E0B" },
+  FAILED:    { bg: "#FEF2F2", color: "#EF4444" },
 };
 
 export default async function RequestsPage({
@@ -38,12 +38,12 @@ export default async function RequestsPage({
   });
 
   return (
-    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div style={{ fontFamily: "var(--font-geist), -apple-system, sans-serif" }}>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-1" style={{ color: "#1A1D23" }}>
+        <h1 className="text-2xl font-bold" style={{ color: "#0D1117" }}>
           {t("requests.title")}
         </h1>
-        <p className="text-sm" style={{ color: "#6B7280" }}>Send SMS or email review requests to your customers</p>
+        <p className="text-sm mt-1" style={{ color: "#6B7280" }}>Send SMS or email review requests to your customers</p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -58,26 +58,23 @@ export default async function RequestsPage({
         {/* Request list */}
         <div className="lg:col-span-2">
           {business?.reviewRequests.length ? (
-            <div
-              className="bg-white rounded-2xl overflow-hidden"
-              style={{ border: "1px solid #E8ECEF", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}
-            >
-              <div className="px-5 py-4" style={{ borderBottom: "1px solid #F0F0F5" }}>
-                <h2 className="font-semibold text-sm" style={{ color: "#1A1D23" }}>Recent Requests</h2>
+            <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden">
+              <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                <h2 className="font-semibold text-sm" style={{ color: "#0D1117" }}>Recent Requests</h2>
               </div>
               <table className="w-full text-sm">
                 <thead>
-                  <tr style={{ borderBottom: "1px solid #F0F0F5" }}>
-                    <th className="px-5 py-3 text-left text-xs font-medium" style={{ color: "#6B7280" }}>
+                  <tr style={{ background: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
+                    <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide" style={{ color: "#6B7280" }}>
                       {t("customers.name")}
                     </th>
-                    <th className="px-5 py-3 text-left text-xs font-medium" style={{ color: "#6B7280" }}>
+                    <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide" style={{ color: "#6B7280" }}>
                       Phone
                     </th>
-                    <th className="px-5 py-3 text-left text-xs font-medium" style={{ color: "#6B7280" }}>
+                    <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide" style={{ color: "#6B7280" }}>
                       {t("requests.status")}
                     </th>
-                    <th className="px-5 py-3 text-left text-xs font-medium" style={{ color: "#6B7280" }}>
+                    <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide" style={{ color: "#6B7280" }}>
                       {t("requests.sentAt")}
                     </th>
                   </tr>
@@ -88,10 +85,10 @@ export default async function RequestsPage({
                     return (
                       <tr
                         key={req.id}
-                        className="transition-colors hover:bg-gray-50"
-                        style={{ borderBottom: "1px solid #F8F9FC" }}
+                        className="hover:bg-[#F9FAFB] transition-colors"
+                        style={{ borderBottom: "1px solid #E5E7EB" }}
                       >
-                        <td className="px-5 py-3 font-medium text-sm" style={{ color: "#1A1D23" }}>
+                        <td className="px-5 py-3 font-medium text-sm" style={{ color: "#0D1117" }}>
                           {req.customer.name}
                         </td>
                         <td className="px-5 py-3 text-xs" style={{ color: "#6B7280" }}>
@@ -116,14 +113,13 @@ export default async function RequestsPage({
             </div>
           ) : (
             <div
-              className="bg-white rounded-2xl p-12 text-center"
-              style={{ border: "1px solid #E8ECEF", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}
+              className="bg-white rounded-xl p-12 text-center"
+              style={{ border: "1px solid #E5E7EB" }}
             >
               <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4"
-                style={{ background: "linear-gradient(135deg, rgba(74,111,255,0.1), rgba(74,111,255,0.1))" }}
+                className="w-12 h-12 bg-[#F3F4F6] rounded-xl flex items-center justify-center mx-auto mb-4"
               >
-                📱
+                <span className="text-2xl">📱</span>
               </div>
               <p className="text-sm max-w-xs mx-auto" style={{ color: "#6B7280" }}>
                 No requests sent yet. Add a customer and send your first request!

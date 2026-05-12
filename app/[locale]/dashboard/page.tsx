@@ -50,24 +50,24 @@ export default async function DashboardPage({
     : null;
 
   return (
-    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div style={{ fontFamily: "var(--font-geist), -apple-system, sans-serif" }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold mb-1" style={{ color: "#1A1D23" }}>
+          <h1 className="text-2xl font-bold" style={{ color: "#0D1117" }}>
             {t("dashboard.title")}
           </h1>
-          <p className="text-sm" style={{ color: "#6B7280" }}>
-            {t("dashboard.welcomeBack")}, <span className="font-medium" style={{ color: "#1A1D23" }}>{session.user.name}</span>
+          <p className="text-sm mt-1" style={{ color: "#6B7280" }}>
+            {t("dashboard.welcomeBack")}, {session.user.name}
           </p>
         </div>
         {!business?.isGoogleConnected && (
           <Link
             href="/onboarding"
-            className="text-white text-sm font-semibold px-4 py-2.5 transition-opacity hover:opacity-90"
+            className="text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-all hover:bg-[#1a1a1a]"
             style={{
-              background: "linear-gradient(135deg, #00C9A7 0%, #4A6FFF 100%)",
-              borderRadius: "10px",
+              background: "#0D1117",
+              borderRadius: "8px",
             }}
           >
             {t("dashboard.connectGoogle")} →
@@ -82,21 +82,20 @@ export default async function DashboardPage({
       </div>
 
       <div className="mt-8">
-        <h2 className="text-lg font-semibold mb-4" style={{ color: "#1A1D23" }}>
+        <h2 className="text-lg font-semibold mb-4" style={{ color: "#0D1117" }}>
           {t("reviews.title")}
         </h2>
         {business?.reviews.length ? (
           <ReviewList reviews={business.reviews} businessId={business.id} />
         ) : (
           <div
-            className="bg-white rounded-2xl p-12 text-center"
-            style={{ border: "1px solid #E8ECEF", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}
+            className="bg-white rounded-xl p-12 text-center"
+            style={{ border: "1px solid #E5E7EB" }}
           >
             <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4"
-              style={{ background: "linear-gradient(135deg, rgba(0,201,167,0.1), rgba(74,111,255,0.1))" }}
+              className="w-12 h-12 bg-[#F3F4F6] rounded-xl flex items-center justify-center mx-auto mb-4"
             >
-              ⭐
+              <span className="text-2xl">⭐</span>
             </div>
             <p className="text-sm max-w-xs mx-auto" style={{ color: "#6B7280" }}>
               {t("dashboard.noReviews")}
@@ -104,7 +103,7 @@ export default async function DashboardPage({
             <Link
               href="/onboarding"
               className="inline-block mt-4 text-sm font-medium hover:underline"
-              style={{ color: "#4A6FFF" }}
+              style={{ color: "#0D1117" }}
             >
               {t("dashboard.connectGoogle")} →
             </Link>

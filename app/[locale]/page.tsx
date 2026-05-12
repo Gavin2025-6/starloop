@@ -2,409 +2,507 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 
-// Inline logo SVG (server component — no separate file needed)
-const LogoIcon = ({ size = 32 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="lp-star" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#00C9A7"/>
-        <stop offset="100%" stopColor="#4A6FFF"/>
-      </linearGradient>
-      <linearGradient id="lp-orbit" x1="34" y1="34" x2="0" y2="0" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#00C9A7" stopOpacity="0.8"/>
-        <stop offset="100%" stopColor="#4A6FFF" stopOpacity="0.8"/>
-      </linearGradient>
-    </defs>
-    <ellipse cx="17" cy="17" rx="14" ry="7" stroke="url(#lp-orbit)" strokeWidth="1.5" fill="none"
-      strokeDasharray="44 44" strokeDashoffset="22" transform="rotate(-30 17 17)"/>
-    <path d="M26.5 10.5 L28 13 L25 12.5Z" fill="url(#lp-orbit)"/>
-    <path d="M17 5.5 L18.8 11.8H25.4L20.1 15.6L21.9 21.9L17 18.1L12.1 21.9L13.9 15.6L8.6 11.8H15.2Z"
-      stroke="url(#lp-star)" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
-    <path d="M27 5 L27.6 6.8 L29.4 7.4 L27.6 8 L27 9.8 L26.4 8 L24.6 7.4 L26.4 6.8Z" fill="#00C9A7"/>
-  </svg>
-);
+// Inline LogoMark component (fallback until Logo component is available)
+function LogoMark({ variant = "light", height = 32 }: { variant?: "dark" | "light"; height?: number }) {
+  const iconSize = Math.round(height * 1.1);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: Math.round(height * 0.3) }}>
+      <svg width={iconSize} height={iconSize} viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lm-star" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#00C9A7"/><stop offset="100%" stopColor="#4A6FFF"/>
+          </linearGradient>
+          <linearGradient id="lm-orbit" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#00C9A7" stopOpacity="0.85"/><stop offset="100%" stopColor="#4A6FFF" stopOpacity="0.85"/>
+          </linearGradient>
+          <marker id="lm-arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#4A6FFF" opacity="0.85"/>
+          </marker>
+        </defs>
+        <ellipse cx="22" cy="22" rx="18" ry="9" stroke="url(#lm-orbit)" strokeWidth="2" fill="none"
+          strokeDasharray="56 56" strokeDashoffset="28" transform="rotate(-25 22 22)" markerEnd="url(#lm-arrow)"/>
+        <path d="M22 4 L24.1 15H35.1L26.4 21.5L29.5 32.5L22 26.1L14.5 32.5L17.6 21.5L8.9 15H19.9Z"
+          stroke="url(#lm-star)" strokeWidth="2.5" fill="none" strokeLinejoin="round"/>
+        <path d="M38 2 L39 5 L42 6 L39 7 L38 10 L37 7 L34 6 L37 5Z" fill="#00C9A7"/>
+      </svg>
+      <span style={{ fontWeight: 700, fontSize: Math.round(height * 0.7), lineHeight: 1 }}>
+        <span style={{ color: variant === "dark" ? "#FFFFFF" : "#0D1117" }}>star</span>
+        <span style={{ color: "#00C9A7" }}>loop</span>
+      </span>
+    </div>
+  );
+}
 
-const Wordmark = ({ light = false }: { light?: boolean }) => (
-  <span className="font-semibold text-lg" style={{ letterSpacing: "-0.2px" }}>
-    <span style={{ color: light ? "#ffffff" : "#0D1B3E" }}>star</span>
-    <span style={{
-      background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
-      WebkitBackgroundClip: "text",
-      WebkitTextFillColor: "transparent",
-    }}>loop</span>
-  </span>
-);
-
-export default async function LandingPage() {
+export default async function LandingPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const t = await getTranslations();
 
   return (
     <div
-      className="min-h-screen"
-      style={{ background: "#FFFFFF", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}
+      style={{
+        background: "#0A0A0A",
+        minHeight: "100vh",
+        fontFamily: "var(--font-geist), -apple-system, sans-serif",
+        color: "#FFFFFF",
+      }}
     >
-      {/* ── Sticky Navbar ── */}
+      {/* ─── Navbar ─── */}
       <nav
-        className="sticky top-0 z-50 flex items-center justify-between px-6 py-3.5"
         style={{
-          background: "rgba(255,255,255,0.95)",
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+          background: "rgba(10,10,10,0.85)",
           backdropFilter: "blur(12px)",
-          borderBottom: "1px solid #E8ECEF",
+          WebkitBackdropFilter: "blur(12px)",
+          borderBottom: "1px solid #1F1F1F",
+          height: "64px",
         }}
       >
-        <Link href="/" className="flex items-center gap-2.5 no-underline">
-          <LogoIcon size={30} />
-          <Wordmark />
-        </Link>
-        <div className="flex items-center gap-4">
-          <LanguageSwitcher />
-          <Link
-            href="/auth/login"
-            className="text-sm font-medium no-underline hidden sm:block"
-            style={{ color: "#6B7280" }}
-          >
-            {t("auth.signIn")}
-          </Link>
-          <Link
-            href="/auth/register"
-            className="text-sm font-semibold px-4 py-2 text-white no-underline transition-opacity hover:opacity-90 rounded-xl"
-            style={{ background: "linear-gradient(135deg, #00C9A7 0%, #4A6FFF 100%)" }}
-          >
-            {t("pricing.startTrial")}
-          </Link>
+        <div
+          className="max-w-6xl mx-auto px-6 flex justify-between items-center"
+          style={{ height: "64px" }}
+        >
+          <LogoMark variant="dark" height={28} />
+          <div className="flex items-center gap-4">
+            <div style={{ color: "#A1A1AA" }}>
+              <LanguageSwitcher />
+            </div>
+            <Link
+              href="/auth/login"
+              className="text-sm px-4 hover:text-white transition-colors"
+              style={{ color: "#A1A1AA" }}
+            >
+              Log in
+            </Link>
+            <Link
+              href="/auth/register"
+              className="text-sm font-medium px-4 py-2 rounded-lg hover:bg-[#F0F0F0] transition-colors"
+              style={{ background: "#FFFFFF", color: "#000000" }}
+            >
+              Start free
+            </Link>
+          </div>
         </div>
       </nav>
 
-      {/* ── Hero ── */}
+      {/* ─── Hero ─── */}
       <section
-        className="relative overflow-hidden"
-        style={{ background: "linear-gradient(160deg, #0D1B3E 0%, #1a1a4e 60%, #0D1B3E 100%)" }}
+        className="flex items-center"
+        style={{ minHeight: "100vh", paddingTop: "64px" }}
       >
-        {/* Background orbs */}
-        <div
-          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-20 pointer-events-none"
-          style={{ background: "radial-gradient(circle, #00C9A7, transparent)", transform: "translate(30%, -30%)" }}
-        />
-        <div
-          className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-10 pointer-events-none"
-          style={{ background: "radial-gradient(circle, #4A6FFF, transparent)", transform: "translate(-30%, 30%)" }}
-        />
-
-        <div className="max-w-5xl mx-auto px-6 pt-20 pb-28 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-14">
-            {/* Left: copy */}
-            <div className="flex-1 text-center lg:text-left">
-              <div
-                className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full mb-6"
-                style={{ background: "rgba(0,201,167,0.15)", color: "#00C9A7", border: "1px solid rgba(0,201,167,0.25)" }}
-              >
-                <span>🇨🇦</span>
-                <span>Built for Toronto small businesses</span>
-              </div>
-
-              <h1 className="text-4xl lg:text-5xl font-bold text-white mb-3 leading-tight">
-                把好服务，变成好口碑
-              </h1>
-              <h2
-                className="text-2xl lg:text-3xl font-bold mb-5 leading-tight"
-                style={{
-                  background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                Turn Great Service Into 5-Star Reviews
-              </h2>
-              <p className="text-base mb-1.5" style={{ color: "#9CA3AF" }}>
-                AI帮你管评价、拦差评、自动回复。
-              </p>
-              <p className="text-sm mb-8" style={{ color: "#6B7280" }}>
-                $39/mo · AI-powered review management for local businesses.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-                <Link
-                  href="/auth/register"
-                  className="text-sm font-semibold px-6 py-3.5 rounded-xl no-underline transition-all hover:opacity-90 text-center"
-                  style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)", color: "#fff" }}
-                >
-                  {t("pricing.startTrial")} →
-                </Link>
-                <a
-                  href="#features"
-                  className="text-sm font-medium px-6 py-3.5 rounded-xl no-underline transition-colors text-center"
-                  style={{ border: "1px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.7)" }}
-                >
-                  See how it works
-                </a>
-              </div>
-
-              <p className="text-xs mt-4" style={{ color: "#4B5563" }}>
-                {t("pricing.noContract")} · {t("pricing.cancelAnytime")}
-              </p>
-            </div>
-
-            {/* Right: mock dashboard card */}
-            <div className="flex-1 lg:max-w-sm w-full">
-              <div
-                className="rounded-2xl p-5"
-                style={{
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  backdropFilter: "blur(10px)",
-                }}
-              >
-                {/* Browser chrome dots */}
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-2 h-2 rounded-full" style={{ background: "#EF4444" }} />
-                  <div className="w-2 h-2 rounded-full" style={{ background: "#F59E0B" }} />
-                  <div className="w-2 h-2 rounded-full" style={{ background: "#10B981" }} />
-                  <span className="text-xs ml-2" style={{ color: "#6B7280" }}>starloop.app/dashboard</span>
-                </div>
-
-                {/* Mock stats */}
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                  {[
-                    { label: "Total Reviews", value: "147", color: "#00C9A7" },
-                    { label: "Avg Rating", value: "4.8★", color: "#4A6FFF" },
-                    { label: "Requests Sent", value: "52", color: "#00C9A7" },
-                    { label: "Needs Reply", value: "3", color: "#4A6FFF" },
-                  ].map((s) => (
-                    <div key={s.label} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.07)" }}>
-                      <div className="text-base font-bold mb-0.5" style={{ color: s.color }}>{s.value}</div>
-                      <div className="text-xs" style={{ color: "#9CA3AF" }}>{s.label}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Mock review card */}
-                <div
-                  className="rounded-xl p-3"
-                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                      style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)" }}
-                    >S</div>
-                    <div>
-                      <div className="text-xs font-medium text-white">Sarah K.</div>
-                      <div className="text-xs" style={{ color: "#F59E0B" }}>★★★★★</div>
-                    </div>
-                    <div className="ml-auto">
-                      <span
-                        className="text-xs px-2 py-0.5 rounded-full"
-                        style={{ background: "rgba(0,201,167,0.2)", color: "#00C9A7" }}
-                      >AI Replied</span>
-                    </div>
-                  </div>
-                  <p className="text-xs" style={{ color: "#9CA3AF" }}>
-                    Amazing service! They did an incredible job. Will definitely come back!
-                  </p>
-                </div>
-
-                {/* Review gate preview */}
-                <div
-                  className="mt-3 rounded-xl p-3 flex items-center gap-3"
-                  style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}
-                >
-                  <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                    style={{ background: "linear-gradient(135deg, #EF4444, #DC2626)" }}
-                  >M</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.7)" }}>2★ review blocked</div>
-                    <div className="text-xs" style={{ color: "#6B7280" }}>Sent to private inbox instead</div>
-                  </div>
-                  <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: "rgba(99,102,241,0.2)", color: "#A5B4FC" }}>🛡️ Gated</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Trust Strip ── */}
-      <section className="py-8" style={{ background: "#F8F9FC", borderBottom: "1px solid #E8ECEF" }}>
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-xs font-medium uppercase tracking-widest mb-5" style={{ color: "#9CA3AF" }}>
-            Trusted by local businesses in Toronto
-          </p>
-          <div className="flex justify-center items-center gap-8 flex-wrap">
-            {/* Google */}
-            <div className="flex items-center gap-2 opacity-60">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-              </svg>
-              <span className="text-sm font-medium" style={{ color: "#6B7280" }}>Google Reviews</span>
-            </div>
-            {/* Yelp */}
-            <div className="flex items-center gap-2 opacity-60">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="#FF1A1A">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l7 4.5-7 4.5z"/>
-              </svg>
-              <span className="text-sm font-medium" style={{ color: "#6B7280" }}>Yelp</span>
-            </div>
-            {/* Facebook */}
-            <div className="flex items-center gap-2 opacity-60">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
-              <span className="text-sm font-medium" style={{ color: "#6B7280" }}>Facebook</span>
-            </div>
-            {/* Business types */}
-            <div className="hidden sm:flex items-center gap-5" style={{ color: "#9CA3AF", fontSize: "13px" }}>
-              {["🧹 Cleaning", "🌿 Landscaping", "🍜 Restaurant", "💅 Nail Salon"].map((b) => (
-                <span key={b}>{b}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Features 3-column ── */}
-      <section id="features" className="max-w-5xl mx-auto px-6 py-24">
-        <div className="text-center mb-14">
-          <h2 className="text-3xl font-bold mb-3" style={{ color: "#0D1B3E" }}>
-            Everything you need to dominate local search
-          </h2>
-          <p className="text-base" style={{ color: "#6B7280" }}>Built for Toronto businesses. Priced for real people.</p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-6">
-          {[
-            {
-              icon: "🛡️",
-              iconBg: "linear-gradient(135deg, rgba(0,201,167,0.12), rgba(74,111,255,0.12))",
-              title: "Review Gate™",
-              titleZh: "差评永远不上Google",
-              desc: "Happy customers go to Google. Unhappy ones get a private form — so you can fix it first, before the damage is done.",
-              badge: "Patented",
-              badgeBg: "rgba(0,201,167,0.1)",
-              badgeColor: "#00C9A7",
-            },
-            {
-              icon: "🤖",
-              iconBg: "linear-gradient(135deg, rgba(74,111,255,0.12), rgba(0,201,167,0.12))",
-              title: "Claude AI Replies",
-              titleZh: "30秒生成专业回复",
-              desc: "Claude AI reads each review and writes a professional, on-brand reply. Edit and publish in one click. Both English and Chinese.",
-              badge: "Powered by Claude",
-              badgeBg: "rgba(74,111,255,0.1)",
-              badgeColor: "#4A6FFF",
-            },
-            {
-              icon: "🌐",
-              iconBg: "linear-gradient(135deg, rgba(0,201,167,0.12), rgba(74,111,255,0.08))",
-              title: "Bilingual Support",
-              titleZh: "中英文全支持",
-              desc: "Full English + Chinese (Simplified) interface. Reach your entire community — no language barrier.",
-              badge: "EN + 中文",
-              badgeBg: "rgba(0,201,167,0.1)",
-              badgeColor: "#00C9A7",
-            },
-          ].map((f) => (
-            <div
-              key={f.title}
-              className="bg-white rounded-2xl p-6"
-              style={{ border: "1px solid #E8ECEF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+        <div className="max-w-4xl mx-auto px-6 text-center w-full">
+          {/* Small tag */}
+          <div className="mb-8 flex justify-center">
+            <span
+              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm"
+              style={{
+                border: "1px solid #1F1F1F",
+                color: "#A1A1AA",
+              }}
             >
-              <div className="flex items-start justify-between mb-4">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                  style={{ background: f.iconBg }}
-                >
-                  {f.icon}
-                </div>
-                <span
-                  className="text-xs px-2.5 py-1 rounded-full font-medium"
-                  style={{ background: f.badgeBg, color: f.badgeColor }}
-                >
-                  {f.badge}
+              ✦ AI-powered review management for local businesses
+            </span>
+          </div>
+
+          {/* Headline */}
+          <h1
+            className="mb-6 font-extrabold text-white"
+            style={{
+              fontSize: "clamp(3rem, 8vw, 5.5rem)",
+              fontWeight: 800,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.05,
+            }}
+          >
+            Get more 5-star
+            <br />
+            reviews. Automatically.
+          </h1>
+
+          {/* Subtitle */}
+          <p
+            className="text-xl max-w-2xl mx-auto mb-10"
+            style={{ color: "#A1A1AA", lineHeight: 1.6 }}
+          >
+            Block negative reviews before they reach Google. AI replies for
+            every customer. Built for Toronto&apos;s local businesses.
+          </p>
+
+          {/* Button group */}
+          <div className="flex gap-4 justify-center mb-6 flex-wrap">
+            <Link
+              href="/auth/register"
+              className="px-8 py-4 rounded-lg text-base font-semibold hover:bg-[#F0F0F0] transition-all duration-200"
+              style={{ background: "#FFFFFF", color: "#0A0A0A" }}
+            >
+              Start free trial →
+            </Link>
+            <a
+              href="#features"
+              className="px-8 py-4 rounded-lg text-base hover:border-[#4F4F4F] hover:text-white transition-all"
+              style={{
+                border: "1px solid #2F2F2F",
+                color: "#A1A1AA",
+              }}
+            >
+              See how it works
+            </a>
+          </div>
+
+          {/* Fine print */}
+          <p className="text-sm" style={{ color: "#4F4F4F" }}>
+            No credit card required · No contracts · Cancel anytime
+          </p>
+        </div>
+      </section>
+
+      {/* ─── Divider ─── */}
+      <div className="mt-32" style={{ borderTop: "1px solid #1F1F1F" }} />
+
+      {/* ─── Metrics Strip ─── */}
+      <section className="py-16">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="grid grid-cols-3 gap-8 text-center">
+            <div>
+              <div className="text-4xl font-bold text-white">8–10x</div>
+              <div className="text-sm mt-1" style={{ color: "#4F4F4F" }}>
+                cheaper than competitors
+              </div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-white">$39</div>
+              <div className="text-sm mt-1" style={{ color: "#4F4F4F" }}>
+                per month, all features included
+              </div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-white">2 min</div>
+              <div className="text-sm mt-1" style={{ color: "#4F4F4F" }}>
+                setup time, no CRM needed
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Features Section ─── */}
+      <section id="features" className="py-32">
+        <div className="max-w-5xl mx-auto px-6">
+          {/* Header */}
+          <p
+            className="text-sm font-medium uppercase tracking-widest mb-4"
+            style={{ color: "#00C9A7" }}
+          >
+            FEATURES
+          </p>
+          <h2 className="text-4xl font-bold text-white mb-4">
+            Everything you need.
+          </h2>
+          <p className="mb-16" style={{ color: "#A1A1AA" }}>
+            Built for Toronto businesses. Priced for real people.
+          </p>
+
+          {/* Feature cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Card 1 */}
+            <div
+              className="rounded-2xl p-8 hover:border-[#2F2F2F] transition-all duration-200"
+              style={{
+                background: "#111111",
+                border: "1px solid #1F1F1F",
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center mb-6"
+                style={{ border: "1px solid #2F2F2F" }}
+              >
+                <span className="text-lg" style={{ color: "#00C9A7" }}>
+                  🛡️
                 </span>
               </div>
-              <h3 className="font-bold text-base mb-0.5" style={{ color: "#0D1B3E" }}>{f.titleZh}</h3>
-              <p className="text-xs mb-3" style={{ color: "#4A6FFF" }}>{f.title}</p>
-              <p className="text-sm leading-relaxed" style={{ color: "#6B7280" }}>{f.desc}</p>
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Review Gate™
+              </h3>
+              <p className="text-sm leading-relaxed" style={{ color: "#6B7280" }}>
+                1-3 star customers are redirected privately. Only happy
+                customers reach Google.
+              </p>
+              <p
+                className="mt-6 text-xs font-medium uppercase tracking-wide"
+                style={{ color: "#00C9A7" }}
+              >
+                Exclusive feature
+              </p>
             </div>
-          ))}
+
+            {/* Card 2 */}
+            <div
+              className="rounded-2xl p-8 hover:border-[#2F2F2F] transition-all duration-200"
+              style={{
+                background: "#111111",
+                border: "1px solid #1F1F1F",
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center mb-6"
+                style={{ border: "1px solid #2F2F2F" }}
+              >
+                <span className="text-lg" style={{ color: "#00C9A7" }}>
+                  ✦
+                </span>
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Claude AI Replies
+              </h3>
+              <p className="text-sm leading-relaxed" style={{ color: "#6B7280" }}>
+                Personalized replies that sound human. Competitors use GPT and
+                sound robotic.
+              </p>
+              <p
+                className="mt-6 text-xs font-medium uppercase tracking-wide"
+                style={{ color: "#00C9A7" }}
+              >
+                Powered by Claude
+              </p>
+            </div>
+
+            {/* Card 3 */}
+            <div
+              className="rounded-2xl p-8 hover:border-[#2F2F2F] transition-all duration-200"
+              style={{
+                background: "#111111",
+                border: "1px solid #1F1F1F",
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center mb-6"
+                style={{ border: "1px solid #2F2F2F" }}
+              >
+                <span className="text-lg" style={{ color: "#00C9A7" }}>
+                  🌐
+                </span>
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Built for Chinese Businesses
+              </h3>
+              <p className="text-sm leading-relaxed" style={{ color: "#6B7280" }}>
+                The only review tool with Chinese UI. Auto-detects language.
+                EN/中文 support.
+              </p>
+              <p
+                className="mt-6 text-xs font-medium uppercase tracking-wide"
+                style={{ color: "#00C9A7" }}
+              >
+                Toronto exclusive
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ── Deep-dive 1: Review Gate ── */}
-      <section className="py-20" style={{ background: "#F8F9FC" }}>
+      {/* ─── Deep-dive: Review Gate ─── */}
+      <section className="py-32">
         <div className="max-w-5xl mx-auto px-6">
-          <div className="flex flex-col lg:flex-row items-center gap-14">
-            {/* SMS mock */}
-            <div className="flex-1 lg:max-w-xs">
-              <div
-                className="rounded-3xl p-6 mx-auto"
-                style={{
-                  background: "linear-gradient(160deg, #0D1B3E, #1a1a4e)",
-                  maxWidth: "280px",
-                  boxShadow: "0 20px 60px rgba(13,27,62,0.3)",
-                }}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
+            {/* Left — text */}
+            <div>
+              <p
+                className="text-xs uppercase tracking-widest mb-4"
+                style={{ color: "#00C9A7" }}
               >
-                <div className="text-center mb-4">
-                  <div className="text-xs font-medium mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>Messages</div>
-                  <div className="text-sm font-semibold text-white">Sunshine Cleaning</div>
-                </div>
-                {/* SMS bubbles */}
-                <div className="space-y-3">
-                  <div
-                    className="rounded-2xl rounded-bl-sm px-4 py-2.5 text-xs"
-                    style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.8)", maxWidth: "85%" }}
-                  >
-                    Hi Sarah! How was your cleaning today? We&apos;d love your feedback 🙏
+                Review Gate™
+              </p>
+              <h2 className="text-3xl font-bold text-white mb-4">
+                Stop bad reviews before they go public.
+              </h2>
+              <p className="mb-8 leading-relaxed" style={{ color: "#6B7280" }}>
+                When a customer rates 1-3 stars, they&apos;re redirected to a
+                private message. You get their contact info. Google never sees
+                it.
+              </p>
+              <div className="flex flex-col gap-3">
+                {[
+                  "Collect customer phone & email automatically",
+                  "AI suggests how to recover the relationship",
+                  "Turn unhappy customers into advocates",
+                ].map((point) => (
+                  <div key={point} className="flex items-start gap-3">
+                    <span
+                      className="rounded-full mt-2 flex-shrink-0"
+                      style={{
+                        width: "6px",
+                        height: "6px",
+                        background: "#00C9A7",
+                        display: "inline-block",
+                      }}
+                    />
+                    <span className="text-sm" style={{ color: "#A1A1AA" }}>
+                      {point}
+                    </span>
                   </div>
-                  <div
-                    className="rounded-2xl rounded-br-sm px-4 py-2.5 text-xs ml-auto text-right"
-                    style={{
-                      background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
-                      color: "#fff",
-                      maxWidth: "75%",
-                    }}
-                  >
-                    It was amazing! 5 stars!
-                  </div>
-                  <div
-                    className="rounded-2xl rounded-bl-sm px-4 py-2.5 text-xs"
-                    style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.8)", maxWidth: "90%" }}
-                  >
-                    That&apos;s wonderful! Tap here to share on Google → ⭐⭐⭐⭐⭐
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
-            {/* Copy */}
-            <div className="flex-1">
-              <div
-                className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full mb-4"
-                style={{ background: "rgba(0,201,167,0.08)", color: "#00C9A7", border: "1px solid rgba(0,201,167,0.2)" }}
-              >
-                🛡️ Review Gate™
-              </div>
-              <h2 className="text-3xl font-bold mb-4 leading-tight" style={{ color: "#0D1B3E" }}>
-                Stop bad reviews<br />before they go live
-              </h2>
-              <p className="text-base leading-relaxed mb-6" style={{ color: "#6B7280" }}>
-                When customers rate 4–5★ they&apos;re sent directly to Google. When they rate 1–3★, they see a private form instead — so you can resolve it before it goes public.
+            {/* Right — mockup */}
+            <div
+              className="rounded-2xl p-6"
+              style={{
+                background: "#111111",
+                border: "1px solid #1F1F1F",
+              }}
+            >
+              <p className="text-sm font-medium text-white mb-4">
+                How was your experience?
               </p>
-              <div className="space-y-3">
+              {/* Star rating */}
+              <div className="flex gap-2 mb-4">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <svg
+                    key={star}
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill={star <= 4 ? "#00C9A7" : "none"}
+                    stroke="#00C9A7"
+                    strokeWidth="1.5"
+                  >
+                    <path
+                      d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                ))}
+              </div>
+              {/* Private form preview */}
+              <div
+                className="rounded-lg p-4"
+                style={{ background: "#0A0A0A" }}
+              >
+                <p className="text-xs mb-2" style={{ color: "#6B7280" }}>
+                  Please tell us what went wrong
+                </p>
+                <div
+                  className="rounded-lg p-3 text-xs"
+                  style={{
+                    border: "1px solid #1F1F1F",
+                    color: "#4F4F4F",
+                    height: "64px",
+                  }}
+                >
+                  We&apos;d love to resolve this privately...
+                </div>
+                <div
+                  className="mt-3 text-xs px-4 py-2 rounded-lg w-full text-center"
+                  style={{
+                    background: "#111111",
+                    border: "1px solid #2F2F2F",
+                    color: "#A1A1AA",
+                  }}
+                >
+                  Submit privately
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ─── Deep-dive: AI Replies ─── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            {/* Left — mockup */}
+            <div
+              className="rounded-2xl p-6"
+              style={{
+                background: "#111111",
+                border: "1px solid #1F1F1F",
+              }}
+            >
+              <p className="text-xs mb-3" style={{ color: "#6B7280" }}>
+                REVIEW
+              </p>
+              <div
+                className="rounded-lg p-4 mb-4 text-sm"
+                style={{ background: "#0A0A0A", color: "#A1A1AA" }}
+              >
+                <span style={{ color: "#F59E0B" }}>★★★★★</span>
+                <p className="mt-1">
+                  Amazing service! Very professional and thorough. Highly
+                  recommend to anyone in Toronto!
+                </p>
+              </div>
+              <p className="text-xs mb-3" style={{ color: "#6B7280" }}>
+                AI REPLY (Claude)
+              </p>
+              <div
+                className="rounded-lg p-4 text-sm text-white"
+                style={{
+                  background: "#0A1628",
+                  border: "1px solid rgba(0,201,167,0.2)",
+                }}
+              >
+                Thank you so much for the kind words! We truly appreciate your
+                trust and look forward to serving you again. ⭐
+              </div>
+              {/* Tone pills */}
+              <div className="flex gap-2 mt-4">
+                <span
+                  className="text-xs px-3 py-1.5 rounded-full"
+                  style={{ background: "#FFFFFF", color: "#000000" }}
+                >
+                  Professional
+                </span>
+                <span
+                  className="text-xs px-3 py-1.5 rounded-full"
+                  style={{ border: "1px solid #2F2F2F", color: "#6B7280" }}
+                >
+                  Warm
+                </span>
+                <span
+                  className="text-xs px-3 py-1.5 rounded-full"
+                  style={{ border: "1px solid #2F2F2F", color: "#6B7280" }}
+                >
+                  Casual
+                </span>
+              </div>
+            </div>
+
+            {/* Right — text */}
+            <div>
+              <p
+                className="text-xs uppercase tracking-widest mb-4"
+                style={{ color: "#00C9A7" }}
+              >
+                Claude AI
+              </p>
+              <h2 className="text-3xl font-bold text-white mb-4">
+                CEO-quality replies in seconds.
+              </h2>
+              <p className="mb-8 leading-relaxed" style={{ color: "#6B7280" }}>
+                Claude AI analyzes each review and writes a professional,
+                on-brand reply. Sounds like you wrote it yourself.
+              </p>
+              <div className="flex flex-col gap-3">
                 {[
-                  "SMS & email review requests in 2 clicks",
-                  "Smart routing — good reviews to Google, bad ones to you",
-                  "Track every request: sent → delivered → clicked → reviewed",
-                ].map((item) => (
-                  <div key={item} className="flex items-start gap-3">
-                    <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5"
-                      style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)", color: "#fff" }}
-                    >✓</div>
-                    <span className="text-sm" style={{ color: "#374151" }}>{item}</span>
+                  "Matches your tone: formal or friendly",
+                  "Bilingual — English and Chinese responses",
+                  "Edit before publishing, or publish instantly",
+                ].map((point) => (
+                  <div key={point} className="flex items-start gap-3">
+                    <span
+                      className="rounded-full mt-2 flex-shrink-0"
+                      style={{
+                        width: "6px",
+                        height: "6px",
+                        background: "#00C9A7",
+                        display: "inline-block",
+                      }}
+                    />
+                    <span className="text-sm" style={{ color: "#A1A1AA" }}>
+                      {point}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -413,330 +511,406 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ── Deep-dive 2: AI Replies ── */}
-      <section className="py-20">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="flex flex-col lg:flex-row-reverse items-center gap-14">
-            {/* AI reply UI mock */}
-            <div className="flex-1 lg:max-w-sm w-full">
-              <div
-                className="bg-white rounded-2xl p-5"
-                style={{ border: "1px solid #E8ECEF", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}
-              >
-                {/* Review card mock */}
-                <div
-                  className="rounded-xl p-4 mb-4"
-                  style={{ background: "#F0FFF4", border: "1px solid #A7F3D0" }}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                      style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)" }}
-                    >J</div>
-                    <div>
-                      <div className="text-sm font-semibold" style={{ color: "#0D1B3E" }}>Jimmy L.</div>
-                      <div className="text-xs" style={{ color: "#F59E0B" }}>★★★★★</div>
-                    </div>
-                  </div>
-                  <p className="text-xs" style={{ color: "#374151" }}>
-                    Best cleaning service in Toronto! Very professional and thorough. Highly recommend!
-                  </p>
-                </div>
-                {/* Draft reply */}
-                <div>
-                  <div className="text-xs font-medium mb-2 uppercase tracking-wide" style={{ color: "#9CA3AF" }}>
-                    AI Draft Reply
-                  </div>
-                  <div
-                    className="rounded-xl p-3 text-xs leading-relaxed mb-3"
-                    style={{ background: "#F8F9FC", border: "1px solid #E8ECEF", color: "#374151" }}
-                  >
-                    Thank you so much, Jimmy! We&apos;re thrilled to hear you had such a great experience. Our team takes pride in delivering thorough, professional service every time. We look forward to serving you again! ⭐
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      className="text-xs font-semibold px-4 py-2 rounded-lg text-white"
-                      style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)", border: "none", cursor: "default" }}
-                    >
-                      ✓ Publish to Google
-                    </button>
-                    <button
-                      className="text-xs px-3 py-2 rounded-lg"
-                      style={{ background: "#F8F9FC", color: "#6B7280", border: "1px solid #E8ECEF", cursor: "default" }}
-                    >
-                      ↻ Regenerate
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Copy */}
-            <div className="flex-1">
-              <div
-                className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full mb-4"
-                style={{ background: "rgba(74,111,255,0.08)", color: "#4A6FFF", border: "1px solid rgba(74,111,255,0.2)" }}
-              >
-                🤖 Claude AI
-              </div>
-              <h2 className="text-3xl font-bold mb-4 leading-tight" style={{ color: "#0D1B3E" }}>
-                Professional replies<br />in 30 seconds
-              </h2>
-              <p className="text-base leading-relaxed mb-6" style={{ color: "#6B7280" }}>
-                Claude AI reads each review in context and writes a warm, professional reply in your voice. Edit if you want, publish with one click — in English or Chinese.
-              </p>
-              <div className="space-y-3">
-                {[
-                  "One-click AI reply generation with Claude",
-                  "Automatically matches tone: formal or friendly",
-                  "Bilingual — reply in English, Chinese, or both",
-                ].map((item) => (
-                  <div key={item} className="flex items-start gap-3">
-                    <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5"
-                      style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)", color: "#fff" }}
-                    >✓</div>
-                    <span className="text-sm" style={{ color: "#374151" }}>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Pricing ── */}
-      <section id="pricing" className="py-24" style={{ background: "#F8F9FC" }}>
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold mb-3" style={{ color: "#0D1B3E" }}>
-              Simple, transparent pricing
-            </h2>
-            <p style={{ color: "#6B7280" }}>Way less than Birdeye ($299/mo) or Podium ($399/mo)</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-            {[
-              {
-                name: "Free",
-                nameZh: "免费版",
-                price: "$0",
-                features: ["10 SMS/month", "Review Gate™", "Private feedback inbox", "Basic dashboard"],
-                cta: "Get Started Free",
-                href: "/auth/register",
-                highlight: false,
-                badge: null,
-              },
-              {
-                name: "Starter",
-                nameZh: "基础版",
-                price: "$39",
-                features: ["Unlimited SMS & email", "AI reply generation", "Google Business sync", "Monthly AI reports", "Priority support"],
-                cta: t("pricing.startTrial"),
-                href: "/auth/register",
-                highlight: true,
-                badge: "Most Popular",
-              },
-              {
-                name: "Pro",
-                nameZh: "专业版",
-                price: "$79",
-                features: ["Up to 5 locations", "Everything in Starter", "Advanced analytics", "White-label reports", "Dedicated onboarding"],
-                cta: "Coming Soon",
-                href: "#",
-                highlight: false,
-                badge: null,
-              },
-            ].map((plan) => (
-              <div
-                key={plan.name}
-                className="rounded-2xl p-6 relative"
-                style={{
-                  background: plan.highlight ? "linear-gradient(135deg, #00C9A7 0%, #4A6FFF 100%)" : "#fff",
-                  border: plan.highlight ? "none" : "1px solid #E8ECEF",
-                  boxShadow: plan.highlight ? "0 8px 40px rgba(0,201,167,0.25)" : "0 1px 3px rgba(0,0,0,0.06)",
-                }}
-              >
-                {plan.badge && (
-                  <div
-                    className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs px-3 py-1 rounded-full font-semibold whitespace-nowrap"
-                    style={{ background: "#0D1B3E", color: "#fff" }}
-                  >
-                    {plan.badge}
-                  </div>
-                )}
-                <div className="text-sm font-semibold mb-0.5" style={{ color: plan.highlight ? "rgba(255,255,255,0.7)" : "#6B7280" }}>
-                  {plan.nameZh}
-                </div>
-                <div className="text-base font-bold mb-1" style={{ color: plan.highlight ? "#fff" : "#0D1B3E" }}>
-                  {plan.name}
-                </div>
-                <div className="text-3xl font-bold mb-1" style={{ color: plan.highlight ? "#fff" : "#0D1B3E" }}>
-                  {plan.price}
-                  <span className="text-sm font-normal" style={{ opacity: 0.65 }}>
-                    {t("pricing.perMonth")}
-                  </span>
-                </div>
-                <ul className="my-5 space-y-2.5">
-                  {plan.features.map((f) => (
-                    <li
-                      key={f}
-                      className="text-sm flex items-center gap-2"
-                      style={{ color: plan.highlight ? "rgba(255,255,255,0.85)" : "#6B7280" }}
-                    >
-                      <span style={{ color: plan.highlight ? "#fff" : "#00C9A7", fontWeight: "bold" }}>✓</span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href={plan.href}
-                  className="block text-center py-3 px-6 rounded-xl font-semibold text-sm no-underline transition-opacity hover:opacity-90"
-                  style={
-                    plan.highlight
-                      ? { background: "#fff", color: "#00C9A7" }
-                      : plan.href === "#"
-                      ? { background: "#F0F0F5", color: "#9CA3AF", pointerEvents: "none" }
-                      : { background: "linear-gradient(135deg, #00C9A7, #4A6FFF)", color: "#fff" }
-                  }
-                >
-                  {plan.cta}
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Competitor Table ── */}
-      <section className="max-w-4xl mx-auto px-6 py-20">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl font-bold mb-2" style={{ color: "#0D1B3E" }}>How we compare</h2>
-          <p className="text-sm" style={{ color: "#6B7280" }}>StarLoop vs the big guys</p>
-        </div>
-        <div className="bg-white rounded-2xl overflow-hidden" style={{ border: "1px solid #E8ECEF", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-          <table className="w-full text-sm">
-            <thead>
-              <tr style={{ background: "#F8F9FC", borderBottom: "1px solid #E8ECEF" }}>
-                <th className="px-5 py-4 text-left text-xs font-medium" style={{ color: "#6B7280" }}>Feature</th>
-                <th className="px-5 py-4 text-center text-xs font-semibold" style={{ color: "#00C9A7" }}>StarLoop</th>
-                <th className="px-5 py-4 text-center text-xs font-medium" style={{ color: "#6B7280" }}>Birdeye</th>
-                <th className="px-5 py-4 text-center text-xs font-medium" style={{ color: "#6B7280" }}>Podium</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { feature: "Price", sl: "$39/mo", bird: "$299/mo", pod: "$399/mo", highlight: true },
-                { feature: "Review Gate™", sl: "✓", bird: "✗", pod: "✗", highlight: false },
-                { feature: "AI Reply Generation", sl: "✓ Claude", bird: "✓", pod: "✓", highlight: false },
-                { feature: "Bilingual (EN + 中文)", sl: "✓", bird: "✗", pod: "✗", highlight: false },
-                { feature: "Local Business Focus", sl: "✓ Toronto", bird: "Enterprise", pod: "Enterprise", highlight: false },
-                { feature: "Monthly AI Reports", sl: "✓", bird: "✓", pod: "✓", highlight: false },
-                { feature: "Setup time", sl: "< 5 min", bird: "Hours", pod: "Hours", highlight: true },
-              ].map((row) => (
-                <tr key={row.feature} style={{ borderBottom: "1px solid #F8F9FC" }} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-5 py-3.5 text-sm font-medium" style={{ color: "#374151" }}>{row.feature}</td>
-                  <td className="px-5 py-3.5 text-center text-sm font-semibold" style={{ color: row.highlight ? "#00C9A7" : "#10B981" }}>{row.sl}</td>
-                  <td className="px-5 py-3.5 text-center text-sm" style={{ color: row.bird === "✗" ? "#EF4444" : "#6B7280" }}>{row.bird}</td>
-                  <td className="px-5 py-3.5 text-center text-sm" style={{ color: row.pod === "✗" ? "#EF4444" : "#6B7280" }}>{row.pod}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* ── Case Studies (placeholder) ── */}
-      <section className="py-16" style={{ background: "#F8F9FC" }}>
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-2xl font-bold mb-3" style={{ color: "#0D1B3E" }}>Customer stories</h2>
-          <p className="text-sm mb-10" style={{ color: "#6B7280" }}>Real results from Toronto local businesses</p>
-          <div className="grid md:grid-cols-3 gap-5">
-            {[
-              { industry: "🧹 Cleaning", name: "Sunshine Cleaning Co.", stat: "+42 reviews in 3 months" },
-              { industry: "🌿 Landscaping", name: "GreenThumb Gardens", stat: "4.2★ → 4.8★ in 60 days" },
-              { industry: "🍜 Restaurant", name: "Golden Dragon Toronto", stat: "2x more Google traffic" },
-            ].map((c) => (
-              <div
-                key={c.name}
-                className="bg-white rounded-2xl p-6 text-left"
-                style={{ border: "1px solid #E8ECEF" }}
-              >
-                <div className="text-2xl mb-3">{c.industry.split(" ")[0]}</div>
-                <div className="text-sm font-semibold mb-1" style={{ color: "#0D1B3E" }}>{c.name}</div>
-                <div
-                  className="text-xs font-medium px-2.5 py-1 rounded-full inline-block"
-                  style={{ background: "rgba(0,201,167,0.1)", color: "#00C9A7" }}
-                >
-                  {c.stat}
-                </div>
-                <div
-                  className="mt-4 pt-4 text-xs italic"
-                  style={{ borderTop: "1px solid #F0F0F5", color: "#9CA3AF" }}
-                >
-                  Case study coming soon...
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Dark CTA ── */}
+      {/* ─── Pricing Section ─── */}
       <section
-        className="py-24"
-        style={{ background: "linear-gradient(160deg, #0D1B3E 0%, #1a1a4e 100%)" }}
+        id="pricing"
+        className="py-32"
+        style={{
+          background: "#050505",
+          borderTop: "1px solid #1F1F1F",
+          borderBottom: "1px solid #1F1F1F",
+        }}
       >
-        <div className="max-w-2xl mx-auto px-6 text-center">
-          <div className="flex items-center justify-center gap-2.5 mb-6">
-            <LogoIcon size={40} />
-            <Wordmark light />
+        <div className="max-w-5xl mx-auto px-6">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">
+              Simple pricing.
+            </h2>
+            <p style={{ color: "#6B7280" }}>
+              8-10x cheaper than Birdeye or Podium. No contracts.
+            </p>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-4 leading-tight">
-            Ready to grow your<br />
-            <span style={{
-              background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}>Google reputation?</span>
+
+          {/* Pricing cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Free */}
+            <div
+              className="rounded-2xl p-8"
+              style={{
+                background: "#111111",
+                border: "1px solid #1F1F1F",
+              }}
+            >
+              <p className="text-sm mb-2" style={{ color: "#6B7280" }}>
+                Free
+              </p>
+              <div className="flex items-baseline gap-1">
+                <span
+                  className="font-bold"
+                  style={{ fontSize: "3rem", color: "#FFFFFF" }}
+                >
+                  $0
+                </span>
+                <span style={{ color: "#6B7280", fontSize: "0.875rem" }}>
+                  /month
+                </span>
+              </div>
+              <div
+                className="my-6"
+                style={{ borderTop: "1px solid #1F1F1F" }}
+              />
+              <div className="flex flex-col gap-3">
+                {["10 SMS/month", "Review Gate™", "Private feedback"].map(
+                  (feature) => (
+                    <div key={feature} className="flex items-center gap-3">
+                      <span
+                        className="text-sm font-bold"
+                        style={{ color: "#00C9A7" }}
+                      >
+                        ✓
+                      </span>
+                      <span className="text-sm" style={{ color: "#A1A1AA" }}>
+                        {feature}
+                      </span>
+                    </div>
+                  )
+                )}
+              </div>
+              <Link
+                href="/auth/register"
+                className="block mt-8 py-3 rounded-lg text-sm text-center hover:border-[#4F4F4F] hover:text-white transition-all"
+                style={{
+                  border: "1px solid #2F2F2F",
+                  color: "#A1A1AA",
+                }}
+              >
+                Get started
+              </Link>
+            </div>
+
+            {/* Starter — highlight */}
+            <div
+              className="rounded-2xl p-8"
+              style={{ background: "#FFFFFF", position: "relative" }}
+            >
+              <div
+                className="absolute text-xs font-semibold px-3 py-1 rounded-full"
+                style={{
+                  top: "-12px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  background: "#00C9A7",
+                  color: "#000000",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Most popular
+              </div>
+              <p className="text-sm mb-2" style={{ color: "#6B7280" }}>
+                Starter
+              </p>
+              <div className="flex items-baseline gap-1">
+                <span
+                  className="font-bold"
+                  style={{ fontSize: "3rem", color: "#0D1117" }}
+                >
+                  $39
+                </span>
+                <span style={{ color: "#6B7280", fontSize: "0.875rem" }}>
+                  /month
+                </span>
+              </div>
+              <div
+                className="my-6"
+                style={{ borderTop: "1px solid #E5E7EB" }}
+              />
+              <div className="flex flex-col gap-3">
+                {[
+                  "Unlimited SMS & Email",
+                  "Claude AI replies",
+                  "Google Business sync",
+                  "Monthly AI report",
+                  "Review Gate™",
+                ].map((feature) => (
+                  <div key={feature} className="flex items-center gap-3">
+                    <span
+                      className="text-sm font-bold"
+                      style={{ color: "#00C9A7" }}
+                    >
+                      ✓
+                    </span>
+                    <span className="text-sm" style={{ color: "#374151" }}>
+                      {feature}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <Link
+                href="/auth/register"
+                className="block mt-8 py-3 rounded-lg text-sm text-center font-medium hover:bg-[#1a1a1a] transition-all"
+                style={{ background: "#0D1117", color: "#FFFFFF" }}
+              >
+                Start free trial →
+              </Link>
+            </div>
+
+            {/* Pro */}
+            <div
+              className="rounded-2xl p-8"
+              style={{
+                background: "#111111",
+                border: "1px solid #1F1F1F",
+              }}
+            >
+              <p className="text-sm mb-2" style={{ color: "#6B7280" }}>
+                Pro
+              </p>
+              <div className="flex items-baseline gap-1">
+                <span
+                  className="font-bold"
+                  style={{ fontSize: "3rem", color: "#FFFFFF" }}
+                >
+                  $79
+                </span>
+                <span style={{ color: "#6B7280", fontSize: "0.875rem" }}>
+                  /month
+                </span>
+              </div>
+              <div
+                className="my-6"
+                style={{ borderTop: "1px solid #1F1F1F" }}
+              />
+              <div className="flex flex-col gap-3">
+                {[
+                  "Everything in Starter",
+                  "Up to 3 locations",
+                  "CSV import",
+                  "Priority support",
+                ].map((feature) => (
+                  <div key={feature} className="flex items-center gap-3">
+                    <span
+                      className="text-sm font-bold"
+                      style={{ color: "#00C9A7" }}
+                    >
+                      ✓
+                    </span>
+                    <span className="text-sm" style={{ color: "#A1A1AA" }}>
+                      {feature}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <Link
+                href="/auth/register"
+                className="block mt-8 py-3 rounded-lg text-sm text-center hover:bg-[#1F1F1F] transition-all"
+                style={{
+                  border: "1px solid #2F2F2F",
+                  color: "#FFFFFF",
+                }}
+              >
+                Get Pro
+              </Link>
+            </div>
+          </div>
+
+          {/* Comparison table */}
+          <div className="mt-20">
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{
+                background: "#111111",
+                border: "1px solid #1F1F1F",
+              }}
+            >
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr style={{ background: "#0A0A0A" }}>
+                      {["Feature", "StarLoop", "Birdeye", "Podium"].map(
+                        (col) => (
+                          <th
+                            key={col}
+                            className="px-6 py-4 text-left text-xs uppercase tracking-wide"
+                            style={{ color: "#6B7280" }}
+                          >
+                            {col}
+                          </th>
+                        )
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["价格", "$39/mo", "$299/mo", "$399/mo"],
+                      ["合同", "无合同", "12个月", "年付"],
+                      ["中文界面", "✅", "❌", "❌"],
+                      ["差评拦截", "✅", "❌", "❌"],
+                      ["AI引擎", "Claude", "GPT", "GPT"],
+                    ].map((row, i) => (
+                      <tr
+                        key={i}
+                        style={{ borderTop: "1px solid #1F1F1F" }}
+                      >
+                        <td
+                          className="px-6 py-4 text-sm"
+                          style={{ color: "#6B7280" }}
+                        >
+                          {row[0]}
+                        </td>
+                        <td
+                          className="px-6 py-4 text-sm font-medium"
+                          style={{ color: "#00C9A7" }}
+                        >
+                          {row[1]}
+                        </td>
+                        <td
+                          className="px-6 py-4 text-sm"
+                          style={{ color: "#A1A1AA" }}
+                        >
+                          {row[2]}
+                        </td>
+                        <td
+                          className="px-6 py-4 text-sm"
+                          style={{ color: "#A1A1AA" }}
+                        >
+                          {row[3]}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Bottom CTA ─── */}
+      <section className="py-32 text-center">
+        <div className="max-w-3xl mx-auto px-6">
+          <h2 className="text-5xl font-bold text-white mb-4">
+            Start growing your reputation today.
           </h2>
-          <p className="mb-8 text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
-            Join local businesses in Toronto who are getting more 5-star reviews every week — automatically.
+          <p className="mb-10" style={{ color: "#6B7280" }}>
+            Join local businesses in Toronto getting more 5-star reviews every
+            week.
           </p>
           <Link
             href="/auth/register"
-            className="inline-block text-sm font-semibold px-8 py-4 rounded-xl no-underline transition-opacity hover:opacity-90"
-            style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)", color: "#fff" }}
+            className="inline-block px-10 py-4 rounded-lg font-semibold text-base hover:bg-[#F0F0F0] transition-all"
+            style={{ background: "#FFFFFF", color: "#000000" }}
           >
-            {t("pricing.startTrial")} — Free for 14 days →
+            Start free trial →
           </Link>
-          <p className="text-xs mt-4" style={{ color: "rgba(255,255,255,0.3)" }}>
-            {t("pricing.noContract")} · {t("pricing.cancelAnytime")}
+          <p className="text-sm mt-4" style={{ color: "#4F4F4F" }}>
+            No credit card · No contracts · Cancel anytime
           </p>
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="py-10" style={{ borderTop: "1px solid #E8ECEF" }}>
+      {/* ─── Footer ─── */}
+      <footer style={{ borderTop: "1px solid #1F1F1F" }} className="py-12">
         <div className="max-w-5xl mx-auto px-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <Link href="/" className="flex items-center gap-2 no-underline">
-              <LogoIcon size={24} />
-              <Wordmark />
-            </Link>
-            <div className="flex items-center gap-6 text-sm" style={{ color: "#9CA3AF" }}>
-              <Link href="/auth/login" className="no-underline hover:underline" style={{ color: "#9CA3AF" }}>
-                {t("auth.signIn")}
-              </Link>
-              <Link href="/auth/register" className="no-underline hover:underline" style={{ color: "#9CA3AF" }}>
-                {t("pricing.startTrial")}
-              </Link>
-              <a href="mailto:hello@thinkmake.ai" className="no-underline hover:underline" style={{ color: "#9CA3AF" }}>
-                Contact
-              </a>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {/* Col 1 — Brand */}
+            <div>
+              <LogoMark variant="dark" height={24} />
+              <p className="text-sm mt-2" style={{ color: "#4F4F4F" }}>
+                Reviews · Reputation · Growth
+              </p>
+            </div>
+
+            {/* Col 2 — Product */}
+            <div>
+              <p
+                className="text-xs uppercase tracking-wide mb-3"
+                style={{ color: "#6B7280" }}
+              >
+                Product
+              </p>
+              <div className="flex flex-col gap-2">
+                {[
+                  { label: "Features", href: "#features" },
+                  { label: "Pricing", href: "#pricing" },
+                  { label: "Reviews", href: "#" },
+                ].map(({ label, href }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    className="text-sm hover:text-white transition-colors"
+                    style={{ color: "#4F4F4F" }}
+                  >
+                    {label}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Col 3 — Company */}
+            <div>
+              <p
+                className="text-xs uppercase tracking-wide mb-3"
+                style={{ color: "#6B7280" }}
+              >
+                Company
+              </p>
+              <div className="flex flex-col gap-2">
+                <a
+                  href="#"
+                  className="text-sm hover:text-white transition-colors"
+                  style={{ color: "#4F4F4F" }}
+                >
+                  About
+                </a>
+                <a
+                  href="mailto:hello@thinkmake.ai"
+                  className="text-sm hover:text-white transition-colors"
+                  style={{ color: "#4F4F4F" }}
+                >
+                  Contact
+                </a>
+              </div>
+            </div>
+
+            {/* Col 4 — Legal */}
+            <div>
+              <p
+                className="text-xs uppercase tracking-wide mb-3"
+                style={{ color: "#6B7280" }}
+              >
+                Legal
+              </p>
+              <div className="flex flex-col gap-2">
+                <a
+                  href="#"
+                  className="text-sm hover:text-white transition-colors"
+                  style={{ color: "#4F4F4F" }}
+                >
+                  Privacy
+                </a>
+                <a
+                  href="#"
+                  className="text-sm hover:text-white transition-colors"
+                  style={{ color: "#4F4F4F" }}
+                >
+                  Terms
+                </a>
+              </div>
             </div>
           </div>
-          <div className="mt-6 pt-6 text-center text-xs" style={{ borderTop: "1px solid #F0F0F5", color: "#9CA3AF" }}>
-            © 2026 StarLoop · <a href="https://thinkmake.ai" className="no-underline hover:underline" style={{ color: "#9CA3AF" }}>thinkmake.ai</a> · Built for local businesses in Toronto 🇨🇦
+
+          {/* Bottom bar */}
+          <div
+            className="mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4"
+            style={{ borderTop: "1px solid #1F1F1F" }}
+          >
+            <p className="text-xs" style={{ color: "#4F4F4F" }}>
+              © 2026 StarLoop · thinkmake.ai
+            </p>
+            <div className="flex gap-4 text-xs" style={{ color: "#4F4F4F" }}>
+              <LanguageSwitcher />
+            </div>
           </div>
         </div>
       </footer>

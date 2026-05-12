@@ -43,18 +43,6 @@ function StarDisplay({ rating, size = 16 }: { rating: number; size?: number }) {
   );
 }
 
-function Avatar({ name }: { name: string }) {
-  const initial = name.charAt(0).toUpperCase();
-  return (
-    <div
-      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-      style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)" }}
-    >
-      {initial}
-    </div>
-  );
-}
-
 export default function ReviewCard({ review, businessId }: ReviewCardProps) {
   const t = useTranslations();
   const locale = useLocale();
@@ -65,8 +53,11 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const isPrivate = review.source === "PRIVATE";
-  const isPositive = review.rating >= 4;
   const reviewerName = review.reviewerName ?? "Anonymous";
+  const initial = reviewerName.charAt(0).toUpperCase();
+
+  const accentColor = isPrivate ? "#6366F1" : review.isNegative ? "#EF4444" : "#10B981";
+  const borderColor = isPrivate ? "#C4B5FD" : review.isNegative ? "#FECACA" : "#A7F3D0";
 
   async function handleGenerateReply() {
     setGenerating(true);
@@ -105,35 +96,38 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
     setPublishing(false);
   }
 
-  // Determine card accent bar color
-  const accentColor = isPrivate ? "#6366F1" : isPositive ? "#10B981" : "#EF4444";
-  const cardBg = isPrivate ? "#F5F3FF" : review.isNegative ? "#FFF5F5" : "#F0FFF4";
-
   return (
-    <div
-      className="rounded-2xl overflow-hidden"
-      style={{
-        background: cardBg,
-        border: `1px solid ${isPrivate ? "#C4B5FD" : review.isNegative ? "#FECACA" : "#A7F3D0"}`,
-        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-        display: "flex",
-      }}
-    >
+    <div style={{
+      display: "flex",
+      borderRadius: "12px",
+      overflow: "hidden",
+      border: `1px solid ${borderColor}`,
+      marginBottom: "12px",
+      background: "#FFFFFF",
+    }}>
       {/* Left accent bar */}
-      <div className="w-1 flex-shrink-0" style={{ background: accentColor }} />
+      <div style={{ width: "3px", background: accentColor, flexShrink: 0 }} />
 
-      <div className="flex-1 p-5">
+      <div style={{ flex: 1, padding: "20px" }}>
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-start gap-3">
-            <Avatar name={reviewerName} />
+            {/* Avatar */}
+            <div style={{
+              width: "36px", height: "36px", borderRadius: "50%",
+              background: "#F3F4F6", display: "flex", alignItems: "center",
+              justifyContent: "center", fontSize: "0.875rem", fontWeight: 600,
+              color: "#6B7280", flexShrink: 0,
+            }}>
+              {initial}
+            </div>
             <div>
-              <div className="font-semibold text-sm" style={{ color: "#1A1D23" }}>
+              <div className="font-semibold text-sm" style={{ color: "#0D1117" }}>
                 {reviewerName}
               </div>
               <div className="flex items-center gap-2 mt-1">
                 <StarDisplay rating={review.rating} size={14} />
-                <span className="text-xs" style={{ color: "#6B7280" }}>
+                <span className="text-xs" style={{ color: "#9CA3AF" }}>
                   {formatRelativeTime(review.publishedAt, locale)}
                 </span>
               </div>
@@ -143,34 +137,22 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
           {/* Badges */}
           <div className="flex gap-2 flex-wrap justify-end">
             {isPrivate && (
-              <span
-                className="text-xs px-2.5 py-1 rounded-full font-medium"
-                style={{ background: "rgba(99,102,241,0.1)", color: "#6366F1" }}
-              >
+              <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: "#EEF2FF", color: "#6366F1" }}>
                 Private
               </span>
             )}
             {!isPrivate && (
-              <span
-                className="text-xs px-2.5 py-1 rounded-full font-medium"
-                style={{ background: "rgba(74,111,255,0.1)", color: "#4A6FFF" }}
-              >
+              <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: "#EFF6FF", color: "#3B82F6" }}>
                 Google
               </span>
             )}
             {review.isNegative && !isPrivate && (
-              <span
-                className="text-xs px-2.5 py-1 rounded-full font-medium"
-                style={{ background: "rgba(255,71,87,0.1)", color: "#FF4757" }}
-              >
+              <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: "#FEF2F2", color: "#EF4444" }}>
                 {t("reviews.negative")}
               </span>
             )}
             {published && (
-              <span
-                className="text-xs px-2.5 py-1 rounded-full font-medium"
-                style={{ background: "rgba(0,201,167,0.1)", color: "#00C9A7" }}
-              >
+              <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: "#F0FDF4", color: "#10B981" }}>
                 Replied
               </span>
             )}
@@ -227,8 +209,15 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
                     alert("No contact info left by customer.");
                   }
                 }}
-                className="text-sm font-medium px-4 py-2 rounded-lg transition-opacity hover:opacity-80"
-                style={{ background: "linear-gradient(135deg, #6366F1, #4A6FFF)", color: "#fff", border: "none", cursor: "pointer" }}
+                style={{
+                  background: "linear-gradient(135deg, #6366F1, #4A6FFF)",
+                  color: "#FFFFFF",
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  fontSize: "0.875rem",
+                  border: "none",
+                  cursor: "pointer",
+                }}
               >
                 ✉️ Contact Customer
               </button>
@@ -238,18 +227,25 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
 
         {/* Google review: AI reply flow */}
         {!isPrivate && !published && (
-          <div className="pt-3" style={{ borderTop: "1px solid #F0F0F5" }}>
+          <div className="pt-3" style={{ borderTop: "1px solid #E5E7EB" }}>
             {!expanded && !draft && (
               <button
                 onClick={handleGenerateReply}
                 disabled={generating}
-                className="text-sm font-medium px-4 py-2 rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
                 style={{
-                  background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
-                  color: "#fff",
+                  background: "#0D1117",
+                  color: "#FFFFFF",
                   border: "none",
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
                   cursor: generating ? "not-allowed" : "pointer",
+                  transition: "background 0.15s",
+                  opacity: generating ? 0.5 : 1,
                 }}
+                onMouseEnter={(e) => { if (!generating) e.currentTarget.style.background = "#1a1a1a"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#0D1117"; }}
               >
                 {generating ? t("reviews.generatingReply") : `✨ ${t("reviews.generateReply")}`}
               </button>
@@ -264,36 +260,45 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   rows={3}
-                  className="w-full text-sm px-3 py-2 resize-none"
                   style={{
-                    border: "1px solid #E8ECEF",
+                    width: "100%",
+                    border: "1px solid #E5E7EB",
                     borderRadius: "8px",
+                    padding: "12px",
+                    fontSize: "0.875rem",
+                    color: "#0D1117",
                     outline: "none",
-                    color: "#1A1D23",
+                    resize: "none",
                   }}
-                  onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
-                  onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+                  onFocus={(e) => { e.target.style.borderColor = "#0D1117"; e.target.style.boxShadow = "0 0 0 2px #0D1117"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; e.target.style.boxShadow = "none"; }}
                   placeholder="Edit reply before publishing..."
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={handlePublishReply}
                     disabled={publishing || !draft}
-                    className="text-sm font-medium px-4 py-1.5 rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
                     style={{
-                      background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
-                      color: "#fff",
+                      background: "#0D1117",
+                      color: "#FFFFFF",
                       border: "none",
+                      padding: "8px 16px",
+                      borderRadius: "8px",
+                      fontSize: "0.875rem",
+                      fontWeight: 500,
                       cursor: publishing || !draft ? "not-allowed" : "pointer",
+                      transition: "background 0.15s",
+                      opacity: publishing || !draft ? 0.5 : 1,
                     }}
+                    onMouseEnter={(e) => { if (!publishing && draft) e.currentTarget.style.background = "#1a1a1a"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "#0D1117"; }}
                   >
                     {publishing ? t("common.loading") : t("reviews.publishReply")}
                   </button>
                   <button
                     onClick={handleGenerateReply}
                     disabled={generating}
-                    className="text-sm disabled:opacity-50"
-                    style={{ color: "#6B7280", background: "none", border: "none", cursor: "pointer" }}
+                    style={{ color: "#6B7280", background: "none", border: "none", cursor: "pointer", fontSize: "0.875rem", opacity: generating ? 0.5 : 1 }}
                   >
                     {generating ? "..." : "↻ Regenerate"}
                   </button>
@@ -304,7 +309,7 @@ export default function ReviewCard({ review, businessId }: ReviewCardProps) {
         )}
 
         {!isPrivate && published && review.replyContent && (
-          <div className="pt-3" style={{ borderTop: "1px solid #F0F0F5" }}>
+          <div className="pt-3" style={{ borderTop: "1px solid #E5E7EB" }}>
             <p className="text-xs font-medium mb-1" style={{ color: "#6B7280" }}>Your reply:</p>
             <p className="text-sm italic" style={{ color: "#374151" }}>{review.replyContent}</p>
           </div>

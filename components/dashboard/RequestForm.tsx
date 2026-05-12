@@ -40,6 +40,16 @@ function getScheduledAt(timing: string): string | null {
   return null;
 }
 
+const baseInputStyle: React.CSSProperties = {
+  border: "1px solid #E5E7EB",
+  borderRadius: "8px",
+  padding: "12px 16px",
+  fontSize: "0.875rem",
+  color: "#0D1117",
+  outline: "none",
+  width: "100%",
+};
+
 export default function RequestForm({ businessId, customers }: RequestFormProps) {
   const t = useTranslations();
   const [mode, setMode] = useState<"existing" | "new">("new");
@@ -52,14 +62,6 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
   const [loading, setLoading] = useState(false);
   const [successName, setSuccessName] = useState("");
   const [error, setError] = useState("");
-
-  const inputStyle = {
-    border: "1px solid #E8ECEF",
-    borderRadius: "8px",
-    outline: "none",
-    color: "#1A1D23",
-    width: "100%",
-  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -113,45 +115,51 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
   }
 
   return (
-    <div
-      className="bg-white rounded-2xl p-6"
-      style={{ border: "1px solid #E8ECEF", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}
-    >
-      <h2 className="font-semibold mb-1" style={{ color: "#1A1D23" }}>{t("requests.sendRequest")}</h2>
+    <div className="bg-white border border-[#E5E7EB] rounded-xl p-6">
+      <h2 className="font-semibold mb-1" style={{ color: "#0D1117" }}>{t("requests.sendRequest")}</h2>
       <p className="text-xs mb-5" style={{ color: "#6B7280" }}>Send a review request to a customer</p>
 
-      {/* Mode toggle — pill style */}
-      <div
-        className="flex p-1 mb-5"
-        style={{ background: "#F0F0F5", borderRadius: "10px" }}
-      >
+      {/* Mode toggle — underline tab style */}
+      <div style={{ borderBottom: "1px solid #E5E7EB", display: "flex", gap: 0, marginBottom: "24px" }}>
         <button
           type="button"
           onClick={() => setMode("new")}
-          className="flex-1 py-1.5 text-xs font-medium transition-all"
           style={{
-            borderRadius: "8px",
-            background: mode === "new" ? "#fff" : "transparent",
-            color: mode === "new" ? "#1A1D23" : "#6B7280",
+            padding: "10px 16px",
+            fontSize: "0.875rem",
+            transition: "all 0.15s",
+            position: "relative",
+            marginBottom: "-1px",
+            color: mode === "new" ? "#0D1117" : "#6B7280",
+            fontWeight: mode === "new" ? 500 : 400,
+            background: "none",
             border: "none",
+            borderBottom: mode === "new" ? "2px solid #0D1117" : "2px solid transparent",
             cursor: "pointer",
-            boxShadow: mode === "new" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-          }}
+          } as React.CSSProperties}
+          onMouseEnter={(e) => { if (mode !== "new") e.currentTarget.style.color = "#374151"; }}
+          onMouseLeave={(e) => { if (mode !== "new") e.currentTarget.style.color = "#6B7280"; }}
         >
           {t("customers.addCustomer")}
         </button>
         <button
           type="button"
           onClick={() => setMode("existing")}
-          className="flex-1 py-1.5 text-xs font-medium transition-all"
           style={{
-            borderRadius: "8px",
-            background: mode === "existing" ? "#fff" : "transparent",
-            color: mode === "existing" ? "#1A1D23" : "#6B7280",
+            padding: "10px 16px",
+            fontSize: "0.875rem",
+            transition: "all 0.15s",
+            position: "relative",
+            marginBottom: "-1px",
+            color: mode === "existing" ? "#0D1117" : "#6B7280",
+            fontWeight: mode === "existing" ? 500 : 400,
+            background: "none",
             border: "none",
+            borderBottom: mode === "existing" ? "2px solid #0D1117" : "2px solid transparent",
             cursor: "pointer",
-            boxShadow: mode === "existing" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-          }}
+          } as React.CSSProperties}
+          onMouseEnter={(e) => { if (mode !== "existing") e.currentTarget.style.color = "#374151"; }}
+          onMouseLeave={(e) => { if (mode !== "existing") e.currentTarget.style.color = "#6B7280"; }}
         >
           Existing Customer
         </button>
@@ -163,8 +171,7 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
             required
             value={customerId}
             onChange={(e) => setCustomerId(e.target.value)}
-            className="px-3 py-2.5 text-sm"
-            style={inputStyle}
+            style={baseInputStyle}
           >
             <option value="">Select customer...</option>
             {customers.map((c) => (
@@ -179,30 +186,27 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
               placeholder={t("requests.customerName")}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              className="px-3 py-2.5 text-sm"
-              style={inputStyle}
-              onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
-              onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+              style={baseInputStyle}
+              onFocus={(e) => { e.target.style.boxShadow = "0 0 0 2px #0D1117"; e.target.style.borderColor = "transparent"; }}
+              onBlur={(e) => { e.target.style.boxShadow = "none"; e.target.style.borderColor = "#E5E7EB"; }}
             />
             <input
               type="tel"
               placeholder="Phone (for SMS)"
               value={newPhone}
               onChange={(e) => setNewPhone(e.target.value)}
-              className="px-3 py-2.5 text-sm"
-              style={inputStyle}
-              onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
-              onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+              style={baseInputStyle}
+              onFocus={(e) => { e.target.style.boxShadow = "0 0 0 2px #0D1117"; e.target.style.borderColor = "transparent"; }}
+              onBlur={(e) => { e.target.style.boxShadow = "none"; e.target.style.borderColor = "#E5E7EB"; }}
             />
             <input
               type="email"
               placeholder="Email (for email channel)"
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
-              className="px-3 py-2.5 text-sm"
-              style={inputStyle}
-              onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
-              onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+              style={baseInputStyle}
+              onFocus={(e) => { e.target.style.boxShadow = "0 0 0 2px #0D1117"; e.target.style.borderColor = "transparent"; }}
+              onBlur={(e) => { e.target.style.boxShadow = "none"; e.target.style.borderColor = "#E5E7EB"; }}
             />
           </>
         )}
@@ -210,24 +214,20 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
         {/* Channel toggle */}
         <div>
           <p className="text-xs font-medium mb-2" style={{ color: "#6B7280" }}>Send via</p>
-          <div
-            className="flex p-1"
-            style={{ background: "#F0F0F5", borderRadius: "10px" }}
-          >
+          <div className="flex gap-2">
             {(["SMS", "EMAIL"] as const).map((ch) => (
               <button
                 key={ch}
                 type="button"
                 onClick={() => setChannel(ch)}
-                className="flex-1 py-2 text-xs font-medium transition-all"
-                style={{
-                  borderRadius: "8px",
-                  background: channel === ch ? "linear-gradient(135deg, #00C9A7, #4A6FFF)" : "transparent",
-                  color: channel === ch ? "#fff" : "#6B7280",
-                  border: "none",
-                  cursor: "pointer",
-                  boxShadow: channel === ch ? "0 1px 3px rgba(0,201,167,0.3)" : "none",
-                }}
+                className="px-4 py-2 rounded-lg text-sm transition-all"
+                style={
+                  channel === ch
+                    ? { background: "#0D1117", color: "#FFFFFF", border: "1px solid #0D1117", cursor: "pointer" }
+                    : { background: "transparent", color: "#6B7280", border: "1px solid #E5E7EB", cursor: "pointer" }
+                }
+                onMouseEnter={(e) => { if (channel !== ch) e.currentTarget.style.background = "#F9FAFB"; }}
+                onMouseLeave={(e) => { if (channel !== ch) e.currentTarget.style.background = "transparent"; }}
               >
                 {ch === "SMS" ? "📱 SMS" : "📧 Email"}
               </button>
@@ -244,14 +244,14 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
                 key={opt.value}
                 type="button"
                 onClick={() => setTiming(opt.value)}
-                className="py-2.5 px-3 text-xs font-medium transition-all text-left"
-                style={{
-                  borderRadius: "8px",
-                  border: timing === opt.value ? "1px solid #4A6FFF" : "1px solid #E8ECEF",
-                  background: timing === opt.value ? "rgba(0,201,167,0.06)" : "#fff",
-                  color: timing === opt.value ? "#4A6FFF" : "#6B7280",
-                  cursor: "pointer",
-                }}
+                className="py-2.5 px-3 text-xs font-medium rounded-lg transition-all text-left"
+                style={
+                  timing === opt.value
+                    ? { background: "#F3F4F6", color: "#0D1117", border: "1px solid #E5E7EB", cursor: "pointer" }
+                    : { background: "transparent", color: "#6B7280", border: "1px solid #E5E7EB", cursor: "pointer" }
+                }
+                onMouseEnter={(e) => { if (timing !== opt.value) e.currentTarget.style.background = "#F9FAFB"; }}
+                onMouseLeave={(e) => { if (timing !== opt.value) e.currentTarget.style.background = "transparent"; }}
               >
                 <span className="mr-1.5">{opt.icon}</span>
                 {opt.label}
@@ -263,7 +263,7 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
         {error && (
           <div
             className="text-xs px-3 py-2 rounded-lg"
-            style={{ background: "#FFF5F5", color: "#FF4757", border: "1px solid #FFD0D0" }}
+            style={{ background: "#FEF2F2", color: "#EF4444", border: "1px solid #FECACA" }}
           >
             {error}
           </div>
@@ -271,7 +271,7 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
         {successName && (
           <div
             className="text-xs px-3 py-2 rounded-lg"
-            style={{ background: "rgba(0,201,167,0.08)", color: "#00C9A7", border: "1px solid rgba(0,201,167,0.2)" }}
+            style={{ background: "#F0FDF4", color: "#10B981", border: "1px solid #A7F3D0" }}
           >
             ✓ {timing === "now" ? `Request sent to ${successName}` : `Scheduled for ${successName}`}
           </div>
@@ -280,13 +280,8 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
         <button
           type="submit"
           disabled={loading}
-          className="w-full text-white py-3 text-sm font-semibold transition-opacity disabled:opacity-50"
-          style={{
-            background: "linear-gradient(135deg, #00C9A7 0%, #4A6FFF 100%)",
-            borderRadius: "10px",
-            border: "none",
-            cursor: loading ? "not-allowed" : "pointer",
-          }}
+          className="bg-[#0D1117] text-white w-full py-3 rounded-lg text-sm font-medium hover:bg-[#1a1a1a] transition-all mt-6 border-none cursor-pointer"
+          style={{ opacity: loading ? 0.5 : 1, cursor: loading ? "not-allowed" : "pointer" }}
         >
           {loading ? t("common.loading") : timing === "now" ? `📱 ${t("requests.sendNow")}` : "🕐 Schedule Send"}
         </button>

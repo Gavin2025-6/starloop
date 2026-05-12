@@ -3,126 +3,129 @@
 import { useTranslations, useLocale } from "next-intl";
 import { usePathname } from "next/navigation";
 import { Link } from "@/i18n/navigation";
+import {
+  LayoutDashboard, Star, Send, Users, BarChart2, Settings, LogOut
+} from "lucide-react";
+import { useSession } from "next-auth/react";
+
+function LogoMark({ height = 24 }: { height?: number }) {
+  const sz = Math.round(height * 1.1);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: Math.round(height * 0.3) }}>
+      <svg width={sz} height={sz} viewBox="0 0 44 44" fill="none">
+        <defs>
+          <linearGradient id="sb-star" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#00C9A7"/><stop offset="100%" stopColor="#4A6FFF"/>
+          </linearGradient>
+          <linearGradient id="sb-orbit" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#00C9A7" stopOpacity="0.85"/><stop offset="100%" stopColor="#4A6FFF" stopOpacity="0.85"/>
+          </linearGradient>
+          <marker id="sb-arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#4A6FFF" opacity="0.85"/>
+          </marker>
+        </defs>
+        <ellipse cx="22" cy="22" rx="18" ry="9" stroke="url(#sb-orbit)" strokeWidth="2" fill="none"
+          strokeDasharray="56 56" strokeDashoffset="28" transform="rotate(-25 22 22)" markerEnd="url(#sb-arrow)"/>
+        <path d="M22 4 L24.1 15H35.1L26.4 21.5L29.5 32.5L22 26.1L14.5 32.5L17.6 21.5L8.9 15H19.9Z"
+          stroke="url(#sb-star)" strokeWidth="2.5" fill="none" strokeLinejoin="round"/>
+        <path d="M38 2 L39 5 L42 6 L39 7 L38 10 L37 7 L34 6 L37 5Z" fill="#00C9A7"/>
+      </svg>
+      <span style={{ fontWeight: 700, fontSize: Math.round(height * 0.7), lineHeight: 1 }}>
+        <span style={{ color: "#0D1117" }}>star</span>
+        <span style={{ color: "#00C9A7" }}>loop</span>
+      </span>
+    </div>
+  );
+}
 
 const NAV_ITEMS = [
-  { key: "dashboard", href: "/dashboard",            icon: "📊" },
-  { key: "reviews",   href: "/dashboard/reviews",    icon: "⭐" },
-  { key: "requests",  href: "/dashboard/requests",   icon: "📱" },
-  { key: "customers", href: "/dashboard/customers",  icon: "👥" },
-  { key: "reports",   href: "/dashboard/reports",    icon: "📈" },
-  { key: "settings",  href: "/dashboard/settings",   icon: "⚙️" },
+  { key: "dashboard", href: "/dashboard",           Icon: LayoutDashboard },
+  { key: "reviews",   href: "/dashboard/reviews",   Icon: Star },
+  { key: "requests",  href: "/dashboard/requests",  Icon: Send },
+  { key: "customers", href: "/dashboard/customers", Icon: Users },
+  { key: "reports",   href: "/dashboard/reports",   Icon: BarChart2 },
+  { key: "settings",  href: "/dashboard/settings",  Icon: Settings },
 ];
 
 export default function Sidebar() {
   const t = useTranslations("nav");
   const locale = useLocale();
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   return (
-    <aside
-      className="w-56 flex flex-col"
-      style={{
-        background: "#FFFFFF",
-        borderRight: "1px solid #E8ECEF",
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      }}
-    >
+    <aside style={{
+      width: "224px",
+      minHeight: "100vh",
+      background: "#FFFFFF",
+      borderRight: "1px solid #E5E7EB",
+      display: "flex",
+      flexDirection: "column",
+      flexShrink: 0,
+      fontFamily: "var(--font-geist), -apple-system, sans-serif",
+    }}>
       {/* Logo */}
-      <div className="px-5 py-4" style={{ borderBottom: "1px solid #E8ECEF" }}>
-        <Link href="/dashboard" className="flex items-center gap-2.5 no-underline">
-          {/* StarLoop icon: star + orbit arc + sparkle */}
-          <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="sl-star" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#00C9A7"/>
-                <stop offset="100%" stopColor="#4A6FFF"/>
-              </linearGradient>
-              <linearGradient id="sl-orbit" x1="34" y1="34" x2="0" y2="0" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#00C9A7" stopOpacity="0.8"/>
-                <stop offset="100%" stopColor="#4A6FFF" stopOpacity="0.8"/>
-              </linearGradient>
-            </defs>
-            {/* Orbit ellipse arc (behind star) */}
-            <ellipse cx="17" cy="17" rx="14" ry="7" stroke="url(#sl-orbit)" strokeWidth="1.5" fill="none"
-              strokeDasharray="44 44" strokeDashoffset="22" transform="rotate(-30 17 17)"/>
-            {/* Arrowhead on orbit */}
-            <path d="M26.5 10.5 L28 13 L25 12.5Z" fill="url(#sl-orbit)"/>
-            {/* 5-point star */}
-            <path d="M17 5.5 L18.8 11.8H25.4L20.1 15.6L21.9 21.9L17 18.1L12.1 21.9L13.9 15.6L8.6 11.8H15.2Z"
-              stroke="url(#sl-star)" strokeWidth="1.4" strokeLinejoin="round"
-              fill="none"/>
-            {/* Star inner fill (subtle) */}
-            <path d="M17 7.8 L18.4 12.5H23.4L19.5 15.2L20.9 19.9L17 17.2L13.1 19.9L14.5 15.2L10.6 12.5H15.6Z"
-              fill="url(#sl-star)" fillOpacity="0.15"/>
-            {/* Sparkle top-right */}
-            <path d="M27 5 L27.6 6.8 L29.4 7.4 L27.6 8 L27 9.8 L26.4 8 L24.6 7.4 L26.4 6.8Z"
-              fill="url(#sl-star)"/>
-          </svg>
-
-          {/* Wordmark: "star" dark + "loop" gradient */}
-          <span className="font-semibold text-base tracking-tight" style={{ letterSpacing: "-0.2px" }}>
-            <span style={{ color: "#0D1B3E" }}>star</span>
-            <span style={{
-              background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}>loop</span>
-          </span>
+      <div style={{ padding: "16px", borderBottom: "1px solid #E5E7EB" }}>
+        <Link href="/dashboard" style={{ textDecoration: "none" }}>
+          <LogoMark height={24} />
         </Link>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 p-3">
-        {NAV_ITEMS.map((item) => {
-          const fullHref = `/${locale}${item.href}`;
-          const isActive = pathname === fullHref || pathname.startsWith(`${fullHref}/`);
+      <nav style={{ flex: 1, padding: "12px", display: "flex", flexDirection: "column", gap: "2px" }}>
+        {NAV_ITEMS.map(({ key, href, Icon }) => {
+          const fullHref = `/${locale}${href}`;
+          const isActive = pathname === fullHref || (href !== "/dashboard" && pathname.startsWith(`${fullHref}/`)) || (href === "/dashboard" && pathname === fullHref);
 
           return (
             <Link
-              key={item.key}
-              href={item.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-1 no-underline"
-              style={
-                isActive
-                  ? {
-                      background: "linear-gradient(135deg, #00C9A7 0%, #4A6FFF 100%)",
-                      color: "#ffffff",
-                    }
-                  : {
-                      color: "#6B7280",
-                      background: "transparent",
-                    }
-              }
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.background = "rgba(0,201,167,0.08)";
-                  e.currentTarget.style.color = "#00C9A7";
-                }
+              key={key}
+              href={href}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "10px 12px",
+                borderRadius: "8px",
+                fontSize: "0.875rem",
+                textDecoration: "none",
+                fontWeight: isActive ? 500 : 400,
+                background: isActive ? "#F3F4F6" : "transparent",
+                color: isActive ? "#0D1117" : "#6B7280",
+                transition: "all 0.15s",
               }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = "#6B7280";
-                }
-              }}
+              className={!isActive ? "hover:bg-[#F9FAFB] hover:text-[#0D1117]" : ""}
             >
-              <span>{item.icon}</span>
-              {t(item.key as keyof typeof t)}
+              <Icon size={16} strokeWidth={isActive ? 2 : 1.5} />
+              {t(key as "dashboard" | "reviews" | "requests" | "customers" | "reports" | "settings")}
             </Link>
           );
         })}
       </nav>
 
-      {/* Bottom */}
-      <div className="p-3" style={{ borderTop: "1px solid #E8ECEF" }}>
+      {/* User + logout */}
+      <div style={{ padding: "12px", borderTop: "1px solid #E5E7EB" }}>
+        {session?.user && (
+          <div style={{ marginBottom: "8px" }}>
+            <div style={{ fontSize: "0.875rem", fontWeight: 500, color: "#0D1117", paddingLeft: "12px" }}>
+              {session.user.name}
+            </div>
+            <div style={{ fontSize: "0.75rem", color: "#6B7280", paddingLeft: "12px", marginTop: "1px" }}>
+              {session.user.email}
+            </div>
+          </div>
+        )}
         <a
           href="/api/auth/signout"
-          className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm no-underline transition-all"
-          style={{ color: "#6B7280" }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "#F8F9FC"; e.currentTarget.style.color = "#FF4757"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#6B7280"; }}
+          style={{
+            display: "flex", alignItems: "center", gap: "8px",
+            padding: "8px 12px", borderRadius: "8px",
+            fontSize: "0.75rem", color: "#EF4444", textDecoration: "none",
+            transition: "all 0.15s",
+          }}
+          className="hover:bg-[#FEF2F2]"
         >
-          <span>🚪</span>
+          <LogOut size={14} />
           {t("logout")}
         </a>
       </div>
