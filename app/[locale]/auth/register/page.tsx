@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const locale = useLocale();
   const router = useRouter();
   const [name, setName] = useState("");
+  const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -23,7 +24,7 @@ export default function RegisterPage() {
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, businessName, email, password }),
     });
 
     const data = await res.json();
@@ -48,7 +49,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t("auth.name")}
+                Your Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -56,12 +57,27 @@ export default function RegisterPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Your name"
+                placeholder="Jane Smith"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t("auth.email")}
+                Business Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Sunshine Cleaning Co."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t("auth.email")} <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
@@ -72,9 +88,10 @@ export default function RegisterPage() {
                 placeholder="you@example.com"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t("auth.password")}
+                {t("auth.password")} <span className="text-red-500">*</span>
               </label>
               <input
                 type="password"

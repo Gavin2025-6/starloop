@@ -15,9 +15,9 @@ export default function Header({ user }: HeaderProps) {
         <LanguageSwitcher />
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-sm font-bold">
-            {user.name?.charAt(0).toUpperCase() ?? user.email?.charAt(0).toUpperCase() ?? "?"}
+            {user.name?.charAt(0).toUpperCase() ?? "?"}
           </div>
-          <span className="text-sm text-gray-600">{user.name ?? user.email}</span>
+          <span className="text-sm text-gray-600">{user.name ?? "Account"}</span>
         </div>
       </div>
     </header>

@@ -5,11 +5,11 @@ import { sendWelcomeEmail } from "@/lib/resend";
 
 export async function POST(request: Request) {
   try {
-    const { name, email, password } = await request.json();
+    const { name, businessName, email, password } = await request.json();
 
-    if (!email || !password || password.length < 6) {
+    if (!name || !businessName || !email || !password || password.length < 6) {
       return NextResponse.json(
-        { error: "Invalid email or password (min 6 chars)" },
+        { error: "All fields are required. Password must be at least 6 characters." },
         { status: 400 }
       );
     }
@@ -32,6 +32,14 @@ export async function POST(request: Request) {
         passwordHash,
         plan: "FREE",
         trialEndsAt,
+      },
+    });
+
+    // Create the business record immediately on registration
+    await prisma.business.create({
+      data: {
+        userId: user.id,
+        name: businessName,
       },
     });
 
