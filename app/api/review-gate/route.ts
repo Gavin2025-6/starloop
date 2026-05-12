@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getGoogleReviewUrl } from "@/lib/utils";
+import { sendNewReviewNotification, sendNegativeReviewAlert } from "@/lib/resend";
 
 // GET /api/review-gate?token=xxx — fetch business info for the gate page
 export async function GET(request: Request) {
@@ -53,7 +54,9 @@ export async function POST(request: Request) {
   const reviewRequest = await prisma.reviewRequest.findUnique({
     where: { token },
     include: {
-      business: { select: { id: true, name: true, googleBusinessId: true, googleReviewUrl: true } },
+      business: {
+        select: { id: true, name: true, googleBusinessId: true, googleReviewUrl: true, userId: true },
+      },
       customer: { select: { name: true } },
     },
   });
@@ -61,6 +64,12 @@ export async function POST(request: Request) {
   if (!reviewRequest) {
     return NextResponse.json({ error: "Invalid link" }, { status: 404 });
   }
+
+  // Fetch business owner email for notifications
+  const owner = await prisma.user.findUnique({
+    where: { id: reviewRequest.business.userId },
+    select: { email: true },
+  });
 
   const isNegative = rating <= 3;
 
@@ -95,6 +104,19 @@ export async function POST(request: Request) {
           review.id
         );
       }
+
+      // Urgent negative review alert
+      if (owner?.email) {
+        sendNegativeReviewAlert({
+          to: owner.email,
+          businessName: reviewRequest.business.name,
+          reviewerName: reviewRequest.customer.name,
+          rating,
+          content: feedback ?? "",
+          contactPhone: contactPhone ?? null,
+          contactEmail: contactEmail ?? null,
+        }).catch((err) => console.error("[review-gate/negative-alert]", err));
+      }
     } catch (err) {
       console.error("[review-gate POST] review.create failed:", err);
       return NextResponse.json({ error: String(err) }, { status: 500 });
@@ -102,7 +124,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, action: "saved" });
   }
 
-  // Positive — return Google review URL for redirect
+  // Positive — notify owner and redirect to Google
+  if (owner?.email) {
+    sendNewReviewNotification({
+      to: owner.email,
+      businessName: reviewRequest.business.name,
+      reviewerName: reviewRequest.customer.name,
+      rating,
+      content: feedback ?? "",
+      reviewId: reviewRequest.id,
+    }).catch((err) => console.error("[review-gate/new-review-notify]", err));
+  }
+
   const googleUrl = reviewRequest.business.googleReviewUrl
     || (reviewRequest.business.googleBusinessId
         ? getGoogleReviewUrl(reviewRequest.business.googleBusinessId)

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { sendWelcomeEmail } from "@/lib/resend";
 
 export async function POST(request: Request) {
   try {
@@ -33,6 +34,10 @@ export async function POST(request: Request) {
         trialEndsAt,
       },
     });
+
+    // Fire-and-forget welcome email
+    sendWelcomeEmail({ to: user.email, name: user.name ?? user.email.split("@")[0] })
+      .catch((err) => console.error("[Register/welcome-email]", err));
 
     return NextResponse.json({ id: user.id, email: user.email });
   } catch (err) {

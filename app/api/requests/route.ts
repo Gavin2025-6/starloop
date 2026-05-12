@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendSms, buildReviewRequestMessage } from "@/lib/twilio";
 import { phoneToE164 } from "@/lib/utils";
+import { sendRequestConfirmation } from "@/lib/resend";
 
 function generateToken(): string {
   return randomBytes(16).toString("hex"); // 32-char hex, URL-safe
@@ -112,6 +113,17 @@ export async function POST(request: Request) {
       nextFollowUpAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     },
   });
+
+  // Confirmation email to business owner (fire-and-forget)
+  if (session.user.email && (!isScheduled && status === "SENT" || isScheduled)) {
+    sendRequestConfirmation({
+      to: session.user.email,
+      businessName: business.name,
+      customerName: customer.name,
+      channel: channel as "SMS" | "EMAIL",
+      scheduledAt: isScheduled ? new Date(scheduledAt) : null,
+    }).catch((err) => console.error("[Requests/confirmation-email]", err));
+  }
 
   return NextResponse.json({ ok: true, requestId: reviewRequest.id, sid: sentSid });
 }
