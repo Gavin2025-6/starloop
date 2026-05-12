@@ -5,6 +5,7 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import LocaleDetector from "@/components/layout/LocaleDetector";
+import AuthProvider from "@/components/layout/AuthProvider";
 import "../globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
@@ -33,10 +34,12 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className={geist.variable}>
       <body className="min-h-screen bg-gray-50 text-gray-900 antialiased">
-        <NextIntlClientProvider messages={messages}>
-          <LocaleDetector />
-          {children}
-        </NextIntlClientProvider>
+        <AuthProvider>
+          <NextIntlClientProvider messages={messages}>
+            <LocaleDetector />
+            {children}
+          </NextIntlClientProvider>
+        </AuthProvider>
       </body>
     </html>
   );
