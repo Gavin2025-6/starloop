@@ -16,10 +16,10 @@ interface RequestFormProps {
 }
 
 const TIMING_OPTIONS = [
-  { label: "Send now", value: "now" },
-  { label: "In 2 hours", value: "2h" },
-  { label: "Tomorrow 9am", value: "tomorrow9" },
-  { label: "24h after service", value: "24h" },
+  { label: "Send now",          value: "now",       icon: "⚡" },
+  { label: "In 2 hours",        value: "2h",        icon: "⏰" },
+  { label: "Tomorrow 9am",      value: "tomorrow9", icon: "🌅" },
+  { label: "24h after service", value: "24h",       icon: "🕐" },
 ];
 
 function getScheduledAt(timing: string): string | null {
@@ -52,6 +52,14 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
   const [loading, setLoading] = useState(false);
   const [successName, setSuccessName] = useState("");
   const [error, setError] = useState("");
+
+  const inputStyle = {
+    border: "1px solid #E8ECEF",
+    borderRadius: "8px",
+    outline: "none",
+    color: "#1A1D23",
+    width: "100%",
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -105,25 +113,59 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5">
-      <h2 className="font-semibold text-gray-900 mb-4">{t("requests.sendRequest")}</h2>
+    <div
+      className="bg-white rounded-2xl p-6"
+      style={{ border: "1px solid #E8ECEF", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}
+    >
+      <h2 className="font-semibold mb-1" style={{ color: "#1A1D23" }}>{t("requests.sendRequest")}</h2>
+      <p className="text-xs mb-5" style={{ color: "#6B7280" }}>Send a review request to a customer</p>
 
-      {/* Mode toggle */}
-      <div className="flex gap-2 mb-4">
-        <button type="button" onClick={() => setMode("new")}
-          className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors ${mode === "new" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}>
+      {/* Mode toggle — pill style */}
+      <div
+        className="flex p-1 mb-5"
+        style={{ background: "#F0F0F5", borderRadius: "10px" }}
+      >
+        <button
+          type="button"
+          onClick={() => setMode("new")}
+          className="flex-1 py-1.5 text-xs font-medium transition-all"
+          style={{
+            borderRadius: "8px",
+            background: mode === "new" ? "#fff" : "transparent",
+            color: mode === "new" ? "#1A1D23" : "#6B7280",
+            border: "none",
+            cursor: "pointer",
+            boxShadow: mode === "new" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+          }}
+        >
           {t("customers.addCustomer")}
         </button>
-        <button type="button" onClick={() => setMode("existing")}
-          className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors ${mode === "existing" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}>
+        <button
+          type="button"
+          onClick={() => setMode("existing")}
+          className="flex-1 py-1.5 text-xs font-medium transition-all"
+          style={{
+            borderRadius: "8px",
+            background: mode === "existing" ? "#fff" : "transparent",
+            color: mode === "existing" ? "#1A1D23" : "#6B7280",
+            border: "none",
+            cursor: "pointer",
+            boxShadow: mode === "existing" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+          }}
+        >
           Existing Customer
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {mode === "existing" ? (
-          <select required value={customerId} onChange={(e) => setCustomerId(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <select
+            required
+            value={customerId}
+            onChange={(e) => setCustomerId(e.target.value)}
+            className="px-3 py-2.5 text-sm"
+            style={inputStyle}
+          >
             <option value="">Select customer...</option>
             {customers.map((c) => (
               <option key={c.id} value={c.id}>{c.name} {c.phone ? `— ${c.phone}` : ""}</option>
@@ -131,57 +173,121 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
           </select>
         ) : (
           <>
-            <input type="text" required placeholder={t("requests.customerName")} value={newName}
+            <input
+              type="text"
+              required
+              placeholder={t("requests.customerName")}
+              value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <input type="tel" placeholder="Phone (for SMS)" value={newPhone}
+              className="px-3 py-2.5 text-sm"
+              style={inputStyle}
+              onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+              onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+            />
+            <input
+              type="tel"
+              placeholder="Phone (for SMS)"
+              value={newPhone}
               onChange={(e) => setNewPhone(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <input type="email" placeholder="Email (for email channel)" value={newEmail}
+              className="px-3 py-2.5 text-sm"
+              style={inputStyle}
+              onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+              onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+            />
+            <input
+              type="email"
+              placeholder="Email (for email channel)"
+              value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="px-3 py-2.5 text-sm"
+              style={inputStyle}
+              onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+              onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+            />
           </>
         )}
 
-        {/* Channel */}
+        {/* Channel toggle */}
         <div>
-          <p className="text-xs text-gray-500 mb-1.5">Send via</p>
-          <div className="flex gap-2">
+          <p className="text-xs font-medium mb-2" style={{ color: "#6B7280" }}>Send via</p>
+          <div
+            className="flex p-1"
+            style={{ background: "#F0F0F5", borderRadius: "10px" }}
+          >
             {(["SMS", "EMAIL"] as const).map((ch) => (
-              <button key={ch} type="button" onClick={() => setChannel(ch)}
-                className={`flex-1 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-                  channel === ch ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600 hover:border-gray-300"
-                }`}>
+              <button
+                key={ch}
+                type="button"
+                onClick={() => setChannel(ch)}
+                className="flex-1 py-2 text-xs font-medium transition-all"
+                style={{
+                  borderRadius: "8px",
+                  background: channel === ch ? "linear-gradient(135deg, #6C63FF, #4B8EF5)" : "transparent",
+                  color: channel === ch ? "#fff" : "#6B7280",
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: channel === ch ? "0 1px 3px rgba(108,99,255,0.3)" : "none",
+                }}
+              >
                 {ch === "SMS" ? "📱 SMS" : "📧 Email"}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Timing */}
+        {/* Timing grid */}
         <div>
-          <p className="text-xs text-gray-500 mb-1.5">When to send</p>
-          <div className="grid grid-cols-2 gap-1.5">
+          <p className="text-xs font-medium mb-2" style={{ color: "#6B7280" }}>When to send</p>
+          <div className="grid grid-cols-2 gap-2">
             {TIMING_OPTIONS.map((opt) => (
-              <button key={opt.value} type="button" onClick={() => setTiming(opt.value)}
-                className={`py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-                  timing === opt.value ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600 hover:border-gray-300"
-                }`}>
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setTiming(opt.value)}
+                className="py-2.5 px-3 text-xs font-medium transition-all text-left"
+                style={{
+                  borderRadius: "8px",
+                  border: timing === opt.value ? "1px solid #6C63FF" : "1px solid #E8ECEF",
+                  background: timing === opt.value ? "rgba(108,99,255,0.06)" : "#fff",
+                  color: timing === opt.value ? "#6C63FF" : "#6B7280",
+                  cursor: "pointer",
+                }}
+              >
+                <span className="mr-1.5">{opt.icon}</span>
                 {opt.label}
               </button>
             ))}
           </div>
         </div>
 
-        {error && <div className="text-red-500 text-xs bg-red-50 px-3 py-2 rounded-lg">{error}</div>}
+        {error && (
+          <div
+            className="text-xs px-3 py-2 rounded-lg"
+            style={{ background: "#FFF5F5", color: "#FF4757", border: "1px solid #FFD0D0" }}
+          >
+            {error}
+          </div>
+        )}
         {successName && (
-          <div className="text-green-600 text-xs bg-green-50 px-3 py-2 rounded-lg">
+          <div
+            className="text-xs px-3 py-2 rounded-lg"
+            style={{ background: "rgba(0,201,167,0.08)", color: "#00C9A7", border: "1px solid rgba(0,201,167,0.2)" }}
+          >
             ✓ {timing === "now" ? `Request sent to ${successName}` : `Scheduled for ${successName}`}
           </div>
         )}
 
-        <button type="submit" disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors">
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full text-white py-3 text-sm font-semibold transition-opacity disabled:opacity-50"
+          style={{
+            background: "linear-gradient(135deg, #6C63FF 0%, #4B8EF5 100%)",
+            borderRadius: "10px",
+            border: "none",
+            cursor: loading ? "not-allowed" : "pointer",
+          }}
+        >
           {loading ? t("common.loading") : timing === "now" ? `📱 ${t("requests.sendNow")}` : "🕐 Schedule Send"}
         </button>
       </form>

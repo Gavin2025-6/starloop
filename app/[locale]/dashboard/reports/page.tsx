@@ -42,41 +42,64 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="max-w-3xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Reputation Reports</h1>
-        <p className="text-gray-500 text-sm mt-1">Monthly AI-generated analysis of your reviews</p>
+    <div
+      className="max-w-3xl"
+      style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}
+    >
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold mb-1" style={{ color: "#1A1D23" }}>Reputation Reports</h1>
+        <p className="text-sm" style={{ color: "#6B7280" }}>Monthly AI-generated analysis of your reviews</p>
       </div>
 
       {loading && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center text-gray-400 text-sm">
-          Loading reports...
+        <div
+          className="bg-white rounded-2xl p-12 text-center text-sm"
+          style={{ border: "1px solid #E8ECEF" }}
+        >
+          <div className="flex justify-center mb-3">
+            <div
+              className="w-8 h-8 rounded-full animate-pulse"
+              style={{ background: "linear-gradient(135deg, #6C63FF, #4B8EF5)" }}
+            />
+          </div>
+          <span style={{ color: "#6B7280" }}>Loading reports...</span>
         </div>
       )}
 
       {!loading && reports.length === 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-          <div className="text-4xl mb-4">📊</div>
-          <p className="text-gray-500 text-sm max-w-xs mx-auto">
+        <div
+          className="bg-white rounded-2xl p-12 text-center"
+          style={{ border: "1px solid #E8ECEF", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}
+        >
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4"
+            style={{ background: "linear-gradient(135deg, rgba(108,99,255,0.1), rgba(75,142,245,0.1))" }}
+          >
+            📊
+          </div>
+          <p className="text-sm max-w-xs mx-auto mb-2" style={{ color: "#6B7280" }}>
             No reports yet. Your first report will be generated automatically on the 1st of next month.
           </p>
-          <p className="text-xs text-gray-400 mt-2">Available for Starter & Pro plans.</p>
+          <p className="text-xs" style={{ color: "#9CA3AF" }}>Available for Starter &amp; Pro plans.</p>
         </div>
       )}
 
       {!loading && reports.length > 0 && (
         <div className="flex gap-6">
-          {/* Sidebar */}
-          <div className="w-40 shrink-0 space-y-1.5">
+          {/* Month sidebar */}
+          <div className="w-44 shrink-0 space-y-1.5">
             {reports.map((r) => (
               <button
                 key={r.id}
                 onClick={() => setSelected(r)}
-                className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  selected?.id === r.id
-                    ? "bg-blue-600 text-white"
-                    : "bg-white border border-gray-100 text-gray-700 hover:bg-gray-50"
-                }`}
+                className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
+                style={{
+                  background: selected?.id === r.id ? "linear-gradient(135deg, #6C63FF, #4B8EF5)" : "#fff",
+                  color: selected?.id === r.id ? "#fff" : "#6B7280",
+                  border: selected?.id === r.id ? "none" : "1px solid #E8ECEF",
+                  cursor: "pointer",
+                  boxShadow: selected?.id === r.id ? "0 2px 8px rgba(108,99,255,0.2)" : "none",
+                }}
               >
                 {monthLabel(r.month)}
               </button>
@@ -86,29 +109,43 @@ export default function ReportsPage() {
           {/* Report detail */}
           {selected && (
             <div className="flex-1 space-y-4">
-              <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
-                <p className="text-blue-200 text-xs mb-2">{monthLabel(selected.month)}</p>
-                <p className="text-sm leading-relaxed opacity-90">{selected.summary}</p>
+              {/* Summary card */}
+              <div
+                className="rounded-2xl p-6 text-white"
+                style={{ background: "linear-gradient(135deg, #6C63FF 0%, #4B8EF5 100%)" }}
+              >
+                <p className="text-xs mb-2" style={{ color: "rgba(255,255,255,0.6)" }}>
+                  {monthLabel(selected.month)}
+                </p>
+                <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.9)" }}>
+                  {selected.summary}
+                </p>
               </div>
 
-              {/* Stats */}
+              {/* Stats row */}
               <div className="grid grid-cols-4 gap-3">
                 {[
-                  { label: "Avg Rating", value: `${selected.avgRating}★`, color: "text-green-700", bg: "bg-green-50" },
-                  { label: "Total Reviews", value: selected.totalReviews, color: "text-blue-700", bg: "bg-blue-50" },
-                  { label: "Positive", value: selected.positiveCount, color: "text-yellow-700", bg: "bg-yellow-50" },
+                  { label: "Avg Rating", value: `${selected.avgRating}★`, iconBg: "rgba(0,201,167,0.1)", color: "#00C9A7" },
+                  { label: "Total Reviews", value: selected.totalReviews, iconBg: "rgba(75,142,245,0.1)", color: "#4B8EF5" },
+                  { label: "Positive", value: selected.positiveCount, iconBg: "rgba(245,158,11,0.1)", color: "#F59E0B" },
                   {
                     label: "vs Last Month",
                     value: selected.ratingChange !== null
                       ? `${selected.ratingChange >= 0 ? "+" : ""}${selected.ratingChange}`
                       : "—",
-                    color: selected.ratingChange !== null && selected.ratingChange >= 0 ? "text-green-700" : "text-red-600",
-                    bg: "bg-gray-50",
+                    iconBg: selected.ratingChange !== null && selected.ratingChange >= 0
+                      ? "rgba(0,201,167,0.1)"
+                      : "rgba(255,71,87,0.1)",
+                    color: selected.ratingChange !== null && selected.ratingChange >= 0 ? "#00C9A7" : "#FF4757",
                   },
                 ].map((s) => (
-                  <div key={s.label} className={`${s.bg} rounded-xl p-3 text-center`}>
-                    <div className={`text-xl font-bold ${s.color}`}>{s.value}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
+                  <div
+                    key={s.label}
+                    className="bg-white rounded-xl p-3 text-center"
+                    style={{ border: "1px solid #E8ECEF" }}
+                  >
+                    <div className="text-xl font-bold mb-0.5" style={{ color: s.color }}>{s.value}</div>
+                    <div className="text-xs" style={{ color: "#6B7280" }}>{s.label}</div>
                   </div>
                 ))}
               </div>
@@ -116,11 +153,18 @@ export default function ReportsPage() {
               {/* Keywords */}
               <div className="grid grid-cols-2 gap-4">
                 {selected.positiveKeywords.length > 0 && (
-                  <div className="bg-white rounded-2xl border border-gray-100 p-4">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Customers loved</h3>
+                  <div
+                    className="bg-white rounded-2xl p-4"
+                    style={{ border: "1px solid #E8ECEF" }}
+                  >
+                    <h3 className="text-sm font-semibold mb-3" style={{ color: "#1A1D23" }}>Customers loved</h3>
                     <div className="flex flex-wrap gap-2">
                       {selected.positiveKeywords.map((k) => (
-                        <span key={k} className="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">
+                        <span
+                          key={k}
+                          className="text-xs px-2.5 py-1 rounded-full font-medium"
+                          style={{ background: "rgba(0,201,167,0.1)", color: "#00C9A7" }}
+                        >
                           ✓ {k}
                         </span>
                       ))}
@@ -128,11 +172,18 @@ export default function ReportsPage() {
                   </div>
                 )}
                 {selected.negativeKeywords.length > 0 && (
-                  <div className="bg-white rounded-2xl border border-gray-100 p-4">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Needs improvement</h3>
+                  <div
+                    className="bg-white rounded-2xl p-4"
+                    style={{ border: "1px solid #E8ECEF" }}
+                  >
+                    <h3 className="text-sm font-semibold mb-3" style={{ color: "#1A1D23" }}>Needs improvement</h3>
                     <div className="flex flex-wrap gap-2">
                       {selected.negativeKeywords.map((k) => (
-                        <span key={k} className="bg-red-50 text-red-600 text-xs px-2.5 py-1 rounded-full font-medium">
+                        <span
+                          key={k}
+                          className="text-xs px-2.5 py-1 rounded-full font-medium"
+                          style={{ background: "rgba(255,71,87,0.1)", color: "#FF4757" }}
+                        >
                           ! {k}
                         </span>
                       ))}
@@ -143,12 +194,18 @@ export default function ReportsPage() {
 
               {/* Action items */}
               {selected.actionItems.length > 0 && (
-                <div className="bg-white rounded-2xl border border-gray-100 p-5">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Action plan for next month</h3>
+                <div
+                  className="bg-white rounded-2xl p-5"
+                  style={{ border: "1px solid #E8ECEF" }}
+                >
+                  <h3 className="text-sm font-semibold mb-3" style={{ color: "#1A1D23" }}>Action plan for next month</h3>
                   <ol className="space-y-3">
                     {selected.actionItems.map((item, i) => (
-                      <li key={i} className="flex gap-3 text-sm text-gray-700">
-                        <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold">
+                      <li key={i} className="flex gap-3 text-sm" style={{ color: "#374151" }}>
+                        <span
+                          className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                          style={{ background: "rgba(108,99,255,0.1)", color: "#6C63FF" }}
+                        >
                           {i + 1}
                         </span>
                         {item}

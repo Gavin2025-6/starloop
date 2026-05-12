@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import StatsOverview from "@/components/dashboard/StatsOverview";
 import ReviewList from "@/components/dashboard/ReviewList";
@@ -51,18 +50,25 @@ export default async function DashboardPage({
     : null;
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t("dashboard.title")}</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            {t("dashboard.welcomeBack")}, {session.user.name}
+          <h1 className="text-2xl font-bold mb-1" style={{ color: "#1A1D23" }}>
+            {t("dashboard.title")}
+          </h1>
+          <p className="text-sm" style={{ color: "#6B7280" }}>
+            {t("dashboard.welcomeBack")}, <span className="font-medium" style={{ color: "#1A1D23" }}>{session.user.name}</span>
           </p>
         </div>
         {!business?.isGoogleConnected && (
           <Link
             href="/onboarding"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
+            className="text-white text-sm font-semibold px-4 py-2.5 transition-opacity hover:opacity-90"
+            style={{
+              background: "linear-gradient(135deg, #6C63FF 0%, #4B8EF5 100%)",
+              borderRadius: "10px",
+            }}
           >
             {t("dashboard.connectGoogle")} →
           </Link>
@@ -76,18 +82,29 @@ export default async function DashboardPage({
       </div>
 
       <div className="mt-8">
-        <h2 className="text-lg font-semibold mb-4">{t("reviews.title")}</h2>
+        <h2 className="text-lg font-semibold mb-4" style={{ color: "#1A1D23" }}>
+          {t("reviews.title")}
+        </h2>
         {business?.reviews.length ? (
           <ReviewList reviews={business.reviews} businessId={business.id} />
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-            <div className="text-4xl mb-4">⭐</div>
-            <p className="text-gray-500 text-sm max-w-xs mx-auto">
+          <div
+            className="bg-white rounded-2xl p-12 text-center"
+            style={{ border: "1px solid #E8ECEF", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}
+          >
+            <div
+              className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4"
+              style={{ background: "linear-gradient(135deg, rgba(108,99,255,0.1), rgba(75,142,245,0.1))" }}
+            >
+              ⭐
+            </div>
+            <p className="text-sm max-w-xs mx-auto" style={{ color: "#6B7280" }}>
               {t("dashboard.noReviews")}
             </p>
             <Link
               href="/onboarding"
-              className="inline-block mt-4 text-blue-600 text-sm hover:underline"
+              className="inline-block mt-4 text-sm font-medium hover:underline"
+              style={{ color: "#6C63FF" }}
             >
               {t("dashboard.connectGoogle")} →
             </Link>

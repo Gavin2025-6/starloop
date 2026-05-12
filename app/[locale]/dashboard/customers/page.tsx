@@ -27,47 +27,87 @@ export default async function CustomersPage({
 
   const customers = business?.customers ?? [];
 
+  // Color palette for avatars
+  const avatarGradients = [
+    "linear-gradient(135deg, #6C63FF, #4B8EF5)",
+    "linear-gradient(135deg, #00C9A7, #4B8EF5)",
+    "linear-gradient(135deg, #F59E0B, #FF4757)",
+    "linear-gradient(135deg, #4B8EF5, #6C63FF)",
+    "linear-gradient(135deg, #FF4757, #F59E0B)",
+  ];
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
-          {t("customers.title")}
-        </h1>
+    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold mb-1" style={{ color: "#1A1D23" }}>
+            {t("customers.title")}
+          </h1>
+          <p className="text-sm" style={{ color: "#6B7280" }}>
+            {customers.length} customer{customers.length !== 1 ? "s" : ""}
+          </p>
+        </div>
       </div>
 
       {customers.length > 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div
+          className="bg-white rounded-2xl overflow-hidden"
+          style={{ border: "1px solid #E8ECEF", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}
+        >
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 text-left">
-                <th className="px-4 py-3 text-gray-500 font-medium">
+              <tr style={{ borderBottom: "1px solid #F0F0F5" }}>
+                <th className="px-5 py-4 text-left text-xs font-medium" style={{ color: "#6B7280" }}>
                   {t("customers.name")}
                 </th>
-                <th className="px-4 py-3 text-gray-500 font-medium">
+                <th className="px-5 py-4 text-left text-xs font-medium" style={{ color: "#6B7280" }}>
                   {t("customers.phone")}
                 </th>
-                <th className="px-4 py-3 text-gray-500 font-medium">
+                <th className="px-5 py-4 text-left text-xs font-medium" style={{ color: "#6B7280" }}>
                   {t("customers.totalRequests")}
                 </th>
-                <th className="px-4 py-3 text-gray-500 font-medium">
+                <th className="px-5 py-4 text-left text-xs font-medium" style={{ color: "#6B7280" }}>
                   {t("customers.lastContact")}
                 </th>
               </tr>
             </thead>
             <tbody>
-              {customers.map((c) => (
+              {customers.map((c, idx) => (
                 <tr
                   key={c.id}
-                  className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                  className="group transition-colors"
+                  style={{ borderBottom: "1px solid #F8F9FC" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#F8F9FC")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                 >
-                  <td className="px-4 py-3 font-medium text-gray-900">
-                    {c.name}
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                        style={{ background: avatarGradients[idx % avatarGradients.length] }}
+                      >
+                        {c.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="font-medium text-sm" style={{ color: "#1A1D23" }}>{c.name}</div>
+                        {c.email && (
+                          <div className="text-xs" style={{ color: "#6B7280" }}>{c.email}</div>
+                        )}
+                      </div>
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">{c.phone ?? "—"}</td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {c._count.reviewRequests}
+                  <td className="px-5 py-3 text-sm" style={{ color: "#6B7280" }}>
+                    {c.phone ?? "—"}
                   </td>
-                  <td className="px-4 py-3 text-gray-500">
+                  <td className="px-5 py-3">
+                    <span
+                      className="text-xs font-medium px-2.5 py-1 rounded-full"
+                      style={{ background: "rgba(108,99,255,0.1)", color: "#6C63FF" }}
+                    >
+                      {c._count.reviewRequests} sent
+                    </span>
+                  </td>
+                  <td className="px-5 py-3 text-xs" style={{ color: "#6B7280" }}>
                     {formatDate(c.createdAt, locale)}
                   </td>
                 </tr>
@@ -76,9 +116,19 @@ export default async function CustomersPage({
           </table>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-          <div className="text-4xl mb-4">👥</div>
-          <p className="text-gray-500 text-sm">{t("customers.noCustomers")}</p>
+        <div
+          className="bg-white rounded-2xl p-12 text-center"
+          style={{ border: "1px solid #E8ECEF", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}
+        >
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4"
+            style={{ background: "linear-gradient(135deg, rgba(108,99,255,0.1), rgba(75,142,245,0.1))" }}
+          >
+            👥
+          </div>
+          <p className="text-sm max-w-xs mx-auto" style={{ color: "#6B7280" }}>
+            {t("customers.noCustomers")}
+          </p>
         </div>
       )}
     </div>

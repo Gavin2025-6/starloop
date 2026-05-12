@@ -15,24 +15,22 @@ const PLANS = [
     name: "Free",
     price: "$0",
     features: ["10 SMS/month", "Review Gate", "Private feedback capture"],
-    color: "border-gray-200",
-    badge: "bg-gray-100 text-gray-600",
+    isHighlight: false,
   },
   {
     key: "STARTER",
     name: "Starter",
     price: "$39/mo",
     features: ["Unlimited SMS", "AI reply generation", "Google Business sync", "Email channel"],
-    color: "border-blue-500",
-    badge: "bg-blue-100 text-blue-700",
+    isHighlight: true,
+    badge: "Most Popular",
   },
   {
     key: "PRO",
     name: "Pro",
     price: "$79/mo",
     features: ["Everything in Starter", "Up to 5 locations", "Analytics & reporting", "Priority support"],
-    color: "border-purple-500",
-    badge: "bg-purple-100 text-purple-700",
+    isHighlight: false,
   },
 ];
 
@@ -76,10 +74,13 @@ function PasswordModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
-        <h3 className="text-base font-semibold text-gray-900 mb-1">Confirm your password</h3>
-        <p className="text-sm text-gray-500 mb-4">Enter your current password to save these changes.</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}>
+      <div
+        className="bg-white rounded-2xl p-6 w-full mx-4"
+        style={{ maxWidth: "400px", boxShadow: "0 4px 24px rgba(108,99,255,0.15)" }}
+      >
+        <h3 className="text-base font-semibold mb-1" style={{ color: "#1A1D23" }}>Confirm your password</h3>
+        <p className="text-sm mb-4" style={{ color: "#6B7280" }}>Enter your current password to save these changes.</p>
         <input
           ref={inputRef}
           type="password"
@@ -87,24 +88,54 @@ function PasswordModal({
           onChange={(e) => { setPwd(e.target.value); setError(""); }}
           onKeyDown={(e) => { if (e.key === "Enter") handleConfirm(); if (e.key === "Escape") onCancel(); }}
           placeholder="Current password"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+          className="w-full px-3 py-2.5 text-sm mb-2"
+          style={{
+            border: "1px solid #E8ECEF",
+            borderRadius: "8px",
+            outline: "none",
+            color: "#1A1D23",
+          }}
+          onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+          onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
         />
-        {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
+        {error && <p className="text-xs mb-3" style={{ color: "#FF4757" }}>{error}</p>}
         <div className="flex gap-2 mt-2">
           <button
             onClick={onCancel}
-            className="flex-1 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+            className="flex-1 py-2.5 text-sm font-medium transition-colors"
+            style={{ border: "1px solid #E8ECEF", borderRadius: "10px", color: "#6B7280", background: "#fff", cursor: "pointer" }}
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={checking}
-            className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="flex-1 py-2.5 text-sm font-semibold transition-opacity disabled:opacity-50"
+            style={{
+              background: "linear-gradient(135deg, #6C63FF, #4B8EF5)",
+              borderRadius: "10px",
+              color: "#fff",
+              border: "none",
+              cursor: checking ? "not-allowed" : "pointer",
+            }}
           >
             {checking ? "Checking…" : "Confirm"}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Section header with purple accent ───────────────────────────────────────
+
+function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <div className="flex items-start gap-3 mb-5">
+      <div className="w-1 h-full rounded-full mt-1 self-stretch" style={{ background: "linear-gradient(135deg, #6C63FF, #4B8EF5)", minHeight: "36px" }} />
+      <div>
+        <h2 className="font-semibold" style={{ color: "#1A1D23" }}>{title}</h2>
+        {subtitle && <p className="text-xs mt-0.5" style={{ color: "#6B7280" }}>{subtitle}</p>}
       </div>
     </div>
   );
@@ -118,14 +149,12 @@ export default function SettingsPage() {
   const googleParam = searchParams.get("google");
   const paymentParam = searchParams.get("payment");
 
-  // ── Personal profile
   const [userName, setUserName]       = useState("");
   const [userEmail, setUserEmail]     = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileError, setProfileError] = useState("");
 
-  // ── Business profile
   const [businessName, setBusinessName] = useState("");
   const [slug, setSlug]               = useState("");
   const [slugError, setSlugError]     = useState("");
@@ -133,23 +162,27 @@ export default function SettingsPage() {
   const [businessSaved, setBusinessSaved] = useState(false);
   const [businessError, setBusinessError] = useState("");
 
-  // ── Quick-save fields (no password)
   const [tone, setTone]               = useState("WARM");
   const [googleReviewUrl, setGoogleReviewUrl] = useState("");
   const [quickSaved, setQuickSaved]   = useState(false);
   const [isGoogleConnected, setIsGoogleConnected] = useState(false);
 
-  // ── Subscription
   const [currentPlan, setCurrentPlan] = useState("FREE");
   const [upgrading, setUpgrading]     = useState<string | null>(null);
 
-  // ── Widget
   const [businessId, setBusinessId]   = useState("");
   const [widgetCopied, setWidgetCopied] = useState(false);
 
-  // ── Loading / modal
   const [loading, setLoading]         = useState(true);
   const [modal, setModal]             = useState<"profile" | "business" | null>(null);
+
+  const inputStyle = {
+    border: "1px solid #E8ECEF",
+    borderRadius: "8px",
+    outline: "none",
+    color: "#1A1D23",
+    width: "100%",
+  };
 
   useEffect(() => {
     fetch("/api/user/profile")
@@ -182,8 +215,6 @@ export default function SettingsPage() {
   useEffect(() => {
     if (googleParam === "connected") setIsGoogleConnected(true);
   }, [googleParam]);
-
-  // ── Save handlers (called after password confirmed)
 
   async function doSaveProfile() {
     setProfileError("");
@@ -250,8 +281,16 @@ export default function SettingsPage() {
     finally { setUpgrading(null); }
   }
 
+  const cardStyle = {
+    background: "#fff",
+    borderRadius: "16px",
+    border: "1px solid #E8ECEF",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+    padding: "24px",
+  };
+
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <PasswordModal
         open={modal !== null}
         onConfirm={async () => {
@@ -262,52 +301,119 @@ export default function SettingsPage() {
         onCancel={() => setModal(null)}
       />
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">{t("settings.title")}</h1>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold mb-1" style={{ color: "#1A1D23" }}>{t("settings.title")}</h1>
+        <p className="text-sm" style={{ color: "#6B7280" }}>Manage your account and business settings</p>
+      </div>
 
       {/* Banners */}
       {googleParam === "error" && (
-        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">Google授权失败，请重试。</div>
+        <div className="mb-4 px-4 py-3 rounded-xl text-sm" style={{ background: "#FFF5F5", border: "1px solid #FFD0D0", color: "#FF4757" }}>
+          Google授权失败，请重试。
+        </div>
       )}
       {googleParam === "connected" && (
-        <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700">Google Business 已成功连接！</div>
+        <div className="mb-4 px-4 py-3 rounded-xl text-sm" style={{ background: "rgba(0,201,167,0.08)", border: "1px solid rgba(0,201,167,0.2)", color: "#00C9A7" }}>
+          Google Business 已成功连接！
+        </div>
       )}
       {paymentParam === "success" && (
-        <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700">🎉 Payment successful! Your plan has been upgraded.</div>
+        <div className="mb-4 px-4 py-3 rounded-xl text-sm" style={{ background: "rgba(0,201,167,0.08)", border: "1px solid rgba(0,201,167,0.2)", color: "#00C9A7" }}>
+          Payment successful! Your plan has been upgraded.
+        </div>
       )}
       {paymentParam === "cancelled" && (
-        <div className="mb-4 px-4 py-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-700">Payment cancelled. Your plan was not changed.</div>
+        <div className="mb-4 px-4 py-3 rounded-xl text-sm" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", color: "#D97706" }}>
+          Payment cancelled. Your plan was not changed.
+        </div>
       )}
 
       <div className="space-y-6">
 
         {/* ── Subscription ── */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h2 className="font-semibold text-gray-900 mb-1">Subscription Plan</h2>
-          <p className="text-xs text-gray-400 mb-4">Current plan: <span className="font-semibold text-gray-700">{currentPlan}</span></p>
+        <div style={cardStyle}>
+          <SectionHeader title="Subscription Plan" subtitle={`Current plan: ${currentPlan}`} />
           <div className="grid grid-cols-3 gap-3">
             {PLANS.map((plan) => {
               const isCurrent = currentPlan === plan.key;
+              const isStarter = plan.key === "STARTER";
+              const isPro = plan.key === "PRO";
+
               return (
-                <div key={plan.key} className={`rounded-xl border-2 p-4 ${isCurrent ? plan.color : "border-gray-100"}`}>
+                <div
+                  key={plan.key}
+                  className="rounded-xl p-4 relative"
+                  style={{
+                    border: isStarter
+                      ? "2px solid #6C63FF"
+                      : isPro
+                      ? "2px solid #9C27B0"
+                      : "1px solid #E8ECEF",
+                    background: isPro
+                      ? "linear-gradient(135deg, #6C63FF 0%, #4B8EF5 100%)"
+                      : "#fff",
+                  }}
+                >
+                  {isStarter && plan.badge && (
+                    <div
+                      className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-xs px-2.5 py-0.5 rounded-full font-semibold whitespace-nowrap"
+                      style={{ background: "#6C63FF", color: "#fff" }}
+                    >
+                      {plan.badge}
+                    </div>
+                  )}
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-gray-900 text-sm">{plan.name}</span>
-                    {isCurrent && <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${plan.badge}`}>Current</span>}
+                    <span className="font-bold text-sm" style={{ color: isPro ? "#fff" : "#1A1D23" }}>
+                      {plan.name}
+                    </span>
+                    {isCurrent && (
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full font-medium"
+                        style={{
+                          background: isPro ? "rgba(255,255,255,0.2)" : "rgba(108,99,255,0.1)",
+                          color: isPro ? "#fff" : "#6C63FF",
+                        }}
+                      >
+                        Current
+                      </span>
+                    )}
                   </div>
-                  <div className="text-xl font-bold text-gray-900 mb-3">{plan.price}</div>
+                  <div className="text-xl font-bold mb-3" style={{ color: isPro ? "#fff" : "#1A1D23" }}>
+                    {plan.price}
+                  </div>
                   <ul className="space-y-1 mb-4">
                     {plan.features.map((f) => (
-                      <li key={f} className="text-xs text-gray-500 flex gap-1"><span className="text-green-500">✓</span> {f}</li>
+                      <li key={f} className="text-xs flex gap-1" style={{ color: isPro ? "rgba(255,255,255,0.85)" : "#6B7280" }}>
+                        <span style={{ color: isPro ? "#fff" : "#00C9A7" }}>✓</span> {f}
+                      </li>
                     ))}
                   </ul>
                   {!isCurrent && plan.key !== "FREE" && (
-                    <button onClick={() => handleUpgrade(plan.key)} disabled={upgrading === plan.key}
-                      className={`w-full py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 ${plan.key === "PRO" ? "bg-purple-600 text-white hover:bg-purple-700" : "bg-blue-600 text-white hover:bg-blue-700"}`}>
+                    <button
+                      onClick={() => handleUpgrade(plan.key)}
+                      disabled={upgrading === plan.key}
+                      className="w-full py-1.5 rounded-lg text-xs font-semibold transition-opacity disabled:opacity-50"
+                      style={{
+                        background: isPro ? "#fff" : "linear-gradient(135deg, #6C63FF, #4B8EF5)",
+                        color: isPro ? "#6C63FF" : "#fff",
+                        border: "none",
+                        cursor: upgrading === plan.key ? "not-allowed" : "pointer",
+                      }}
+                    >
                       {upgrading === plan.key ? "..." : `Upgrade to ${plan.name}`}
                     </button>
                   )}
                   {isCurrent && plan.key !== "FREE" && (
-                    <button onClick={() => handleUpgrade(plan.key)}
-                      className="w-full py-1.5 rounded-lg text-xs font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors">
+                    <button
+                      onClick={() => handleUpgrade(plan.key)}
+                      className="w-full py-1.5 rounded-lg text-xs font-medium transition-colors"
+                      style={{
+                        background: "transparent",
+                        color: isPro ? "rgba(255,255,255,0.7)" : "#6B7280",
+                        border: isPro ? "1px solid rgba(255,255,255,0.3)" : "1px solid #E8ECEF",
+                        cursor: "pointer",
+                      }}
+                    >
                       Manage Billing
                     </button>
                   )}
@@ -318,136 +424,223 @@ export default function SettingsPage() {
         </div>
 
         {/* ── Personal Profile ── */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h2 className="font-semibold text-gray-900 mb-1">Personal Profile</h2>
-          <p className="text-xs text-gray-400 mb-4">Password required to save changes</p>
+        <div style={cardStyle}>
+          <SectionHeader title="Personal Profile" subtitle="Password required to save changes" />
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Your Name</label>
-              <input type="text" value={userName} onChange={(e) => setUserName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>Your Name</label>
+              <input
+                type="text"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                className="px-3 py-2.5 text-sm"
+                style={inputStyle}
+                onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+              />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Email</label>
-              <input type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>Email</label>
+              <input
+                type="email"
+                value={userEmail}
+                onChange={(e) => setUserEmail(e.target.value)}
+                className="px-3 py-2.5 text-sm"
+                style={inputStyle}
+                onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+              />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">New Password <span className="text-gray-400 text-xs">(leave blank to keep current)</span></label>
-              <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+              <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>
+                New Password <span className="text-xs" style={{ color: "#6B7280" }}>(leave blank to keep current)</span>
+              </label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Min 6 characters"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="px-3 py-2.5 text-sm"
+                style={inputStyle}
+                onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+              />
             </div>
-            {profileError && <p className="text-xs text-red-500">{profileError}</p>}
-            <button onClick={() => setModal("profile")}
-              className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
+            {profileError && <p className="text-xs" style={{ color: "#FF4757" }}>{profileError}</p>}
+            <button
+              onClick={() => setModal("profile")}
+              className="px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              style={{ background: "linear-gradient(135deg, #6C63FF, #4B8EF5)", borderRadius: "10px", border: "none", cursor: "pointer" }}
+            >
               {profileSaved ? "✓ Saved" : "Save Profile"}
             </button>
           </div>
         </div>
 
         {/* ── Business Profile ── */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h2 className="font-semibold text-gray-900 mb-1">Business Profile</h2>
-          <p className="text-xs text-gray-400 mb-4">Password required to save changes</p>
+        <div style={cardStyle}>
+          <SectionHeader title="Business Profile" subtitle="Password required to save changes" />
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">{t("settings.businessName")}</label>
-              <input type="text" value={businessName} onChange={(e) => setBusinessName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>{t("settings.businessName")}</label>
+              <input
+                type="text"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                className="px-3 py-2.5 text-sm"
+                style={inputStyle}
+                onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+              />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">
+              <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>
                 Mini-Website URL slug
-                <span className="text-xs text-gray-400 ml-2">(your public review page)</span>
+                <span className="text-xs ml-2" style={{ color: "#6B7280" }}>(your public review page)</span>
               </label>
-              <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
-                <span className="bg-gray-50 border-r border-gray-300 px-3 py-2 text-xs text-gray-400 whitespace-nowrap">starloop.app/r/</span>
-                <input type="text" value={slug} onChange={(e) => { setSlug(e.target.value); setSlugError(""); }}
+              <div
+                className="flex items-center overflow-hidden"
+                style={{ border: "1px solid #E8ECEF", borderRadius: "8px" }}
+                onFocusCapture={(e) => { e.currentTarget.style.borderColor = "#6C63FF"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                onBlurCapture={(e) => { e.currentTarget.style.borderColor = "#E8ECEF"; e.currentTarget.style.boxShadow = "none"; }}
+              >
+                <span className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ background: "#F8F9FC", borderRight: "1px solid #E8ECEF", color: "#6B7280" }}>
+                  starloop.app/r/
+                </span>
+                <input
+                  type="text"
+                  value={slug}
+                  onChange={(e) => { setSlug(e.target.value); setSlugError(""); }}
                   placeholder="my-business-name"
-                  className="flex-1 px-3 py-2 text-sm focus:outline-none" />
+                  className="flex-1 px-3 py-2.5 text-sm"
+                  style={{ outline: "none", color: "#1A1D23" }}
+                />
               </div>
-              {slugError && <p className="text-xs text-red-500 mt-1">{slugError}</p>}
+              {slugError && <p className="text-xs mt-1" style={{ color: "#FF4757" }}>{slugError}</p>}
               {slug && !slugError && (
-                <a href={`/r/${slug}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline mt-1 inline-block">Preview page →</a>
+                <a href={`/r/${slug}`} target="_blank" rel="noopener noreferrer" className="text-xs hover:underline mt-1 inline-block" style={{ color: "#6C63FF" }}>
+                  Preview page →
+                </a>
               )}
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">{t("settings.businessCategory")}</label>
-              <select value={category} onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>{t("settings.businessCategory")}</label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="px-3 py-2.5 text-sm"
+                style={{ ...inputStyle, appearance: "auto" }}
+                onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+              >
                 <option value="">Select category</option>
                 {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
-            {businessError && <p className="text-xs text-red-500">{businessError}</p>}
-            <button onClick={() => setModal("business")}
-              className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
+            {businessError && <p className="text-xs" style={{ color: "#FF4757" }}>{businessError}</p>}
+            <button
+              onClick={() => setModal("business")}
+              className="px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              style={{ background: "linear-gradient(135deg, #6C63FF, #4B8EF5)", borderRadius: "10px", border: "none", cursor: "pointer" }}
+            >
               {businessSaved ? "✓ Saved" : "Save Business"}
             </button>
           </div>
         </div>
 
-        {/* ── AI Tone (no password) ── */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h2 className="font-semibold text-gray-900 mb-1">{t("settings.aiTone")}</h2>
-          <p className="text-xs text-gray-400 mb-4">Saves instantly — no password needed</p>
-          <div className="grid grid-cols-3 gap-3 mb-4">
+        {/* ── AI Tone ── */}
+        <div style={cardStyle}>
+          <SectionHeader title={t("settings.aiTone")} subtitle="Saves instantly — no password needed" />
+          <div className="grid grid-cols-3 gap-3 mb-5">
             {[
               { value: "PROFESSIONAL", label: t("settings.professional"), emoji: "👔" },
               { value: "WARM",         label: t("settings.warm"),         emoji: "😊" },
               { value: "FRIENDLY",     label: t("settings.friendly"),     emoji: "🤝" },
             ].map((opt) => (
-              <button key={opt.value} onClick={() => setTone(opt.value)}
-                className={`p-3 rounded-xl border text-sm font-medium transition-colors ${tone === opt.value ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600 hover:border-gray-300"}`}>
+              <button
+                key={opt.value}
+                onClick={() => setTone(opt.value)}
+                className="p-3 rounded-xl text-sm font-medium transition-all"
+                style={{
+                  border: tone === opt.value ? "2px solid #6C63FF" : "1px solid #E8ECEF",
+                  background: tone === opt.value ? "rgba(108,99,255,0.06)" : "#fff",
+                  color: tone === opt.value ? "#6C63FF" : "#6B7280",
+                  cursor: "pointer",
+                }}
+              >
                 <div className="text-xl mb-1">{opt.emoji}</div>
                 {opt.label}
               </button>
             ))}
           </div>
 
-          {/* Google Review Link — also quick-save */}
-          <h3 className="font-medium text-gray-900 text-sm mb-2 mt-4">{t("settings.googleConnection")}</h3>
-          {loading ? (
-            <div className="text-sm text-gray-400">Loading...</div>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className={`w-2 h-2 rounded-full ${isGoogleConnected ? "bg-green-500" : "bg-gray-300"}`} />
-                <span className="text-sm text-gray-700">{isGoogleConnected ? t("settings.connected") : t("settings.notConnected")}</span>
-                {!isGoogleConnected && (
-                  <a href="/api/google/connect" className="ml-auto text-sm bg-white border border-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">{t("settings.connect")}</a>
-                )}
-                {isGoogleConnected && <span className="ml-auto text-xs text-green-600 font-medium">✓ Google Business</span>}
+          <div className="pt-4" style={{ borderTop: "1px solid #F0F0F5" }}>
+            <h3 className="font-medium text-sm mb-3" style={{ color: "#1A1D23" }}>{t("settings.googleConnection")}</h3>
+            {loading ? (
+              <div className="text-sm" style={{ color: "#6B7280" }}>Loading...</div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full" style={{ background: isGoogleConnected ? "#00C9A7" : "#D1D5DB" }} />
+                  <span className="text-sm" style={{ color: "#374151" }}>
+                    {isGoogleConnected ? t("settings.connected") : t("settings.notConnected")}
+                  </span>
+                  {!isGoogleConnected && (
+                    <a
+                      href="/api/google/connect"
+                      className="ml-auto text-sm px-3 py-1.5 rounded-lg transition-colors hover:bg-gray-100"
+                      style={{ border: "1px solid #E8ECEF", color: "#6B7280", background: "#fff" }}
+                    >
+                      {t("settings.connect")}
+                    </a>
+                  )}
+                  {isGoogleConnected && (
+                    <span className="ml-auto text-xs font-medium" style={{ color: "#00C9A7" }}>✓ Google Business</span>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>
+                    Google Review Link
+                    <span className="text-xs ml-2" style={{ color: "#6B7280" }}>(customers sent here after 4-5★)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={googleReviewUrl}
+                    onChange={(e) => setGoogleReviewUrl(e.target.value)}
+                    placeholder="https://search.google.com/local/writereview?placeid=..."
+                    className="px-3 py-2.5 text-sm"
+                    style={inputStyle}
+                    onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.1)"; }}
+                    onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+                  />
+                  {googleReviewUrl && (
+                    <a href={googleReviewUrl} target="_blank" rel="noopener noreferrer" className="text-xs hover:underline mt-1 inline-block" style={{ color: "#6C63FF" }}>
+                      Test this link →
+                    </a>
+                  )}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">
-                  Google Review Link
-                  <span className="text-xs text-gray-400 ml-2">(customers sent here after 4-5★ rating)</span>
-                </label>
-                <input type="url" value={googleReviewUrl} onChange={(e) => setGoogleReviewUrl(e.target.value)}
-                  placeholder="https://search.google.com/local/writereview?placeid=..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                {googleReviewUrl && (
-                  <a href={googleReviewUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline mt-1 inline-block">Test this link →</a>
-                )}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          <button onClick={handleQuickSave}
-            className="mt-4 bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
+          <button
+            onClick={handleQuickSave}
+            className="mt-5 px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            style={{ background: "linear-gradient(135deg, #6C63FF, #4B8EF5)", borderRadius: "10px", border: "none", cursor: "pointer" }}
+          >
             {quickSaved ? "✓ Saved" : t("settings.save")}
           </button>
         </div>
 
         {/* ── Website Widget ── */}
         {businessId && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h2 className="font-semibold text-gray-900 mb-1">Website Widget</h2>
-            <p className="text-xs text-gray-400 mb-4">Embed your 5-star reviews on any website. Paste this code before &lt;/body&gt;.</p>
+          <div style={cardStyle}>
+            <SectionHeader title="Website Widget" subtitle="Embed your 5-star reviews on any website. Paste this code before </body>." />
             <div className="relative">
-              <pre className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-xs text-gray-700 overflow-x-auto whitespace-pre-wrap break-all">
+              <pre
+                className="rounded-xl p-4 text-xs overflow-x-auto whitespace-pre-wrap break-all"
+                style={{ background: "#F8F9FC", border: "1px solid #E8ECEF", color: "#374151" }}
+              >
 {`<div id="starloop-widget"></div>
 <script src="${typeof window !== "undefined" ? window.location.origin : "https://starloop.app"}/widget.js" data-business-id="${businessId}"></script>`}
               </pre>
@@ -458,7 +651,8 @@ export default function SettingsPage() {
                   setWidgetCopied(true);
                   setTimeout(() => setWidgetCopied(false), 2000);
                 }}
-                className="absolute top-2 right-2 bg-white border border-gray-200 text-xs px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                className="absolute top-2 right-2 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
+                style={{ background: "#fff", border: "1px solid #E8ECEF", color: "#6B7280", cursor: "pointer" }}
               >
                 {widgetCopied ? "Copied!" : "Copy"}
               </button>
