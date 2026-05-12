@@ -88,10 +88,8 @@ export default async function RequestsPage({
                     return (
                       <tr
                         key={req.id}
-                        className="transition-colors"
+                        className="transition-colors hover:bg-gray-50"
                         style={{ borderBottom: "1px solid #F8F9FC" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "#F8F9FC")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                       >
                         <td className="px-5 py-3 font-medium text-sm" style={{ color: "#1A1D23" }}>
                           {req.customer.name}

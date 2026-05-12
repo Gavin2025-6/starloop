@@ -28,14 +28,46 @@ export default function Sidebar() {
       }}
     >
       {/* Logo */}
-      <div className="p-5" style={{ borderBottom: "1px solid #E8ECEF" }}>
+      <div className="px-5 py-4" style={{ borderBottom: "1px solid #E8ECEF" }}>
         <Link href="/dashboard" className="flex items-center gap-2.5 no-underline">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="16" cy="16" r="15" stroke="url(#sidebarGrad)" strokeWidth="2" fill="none"/>
-            <path d="M16 8 L17.5 13H22.5L18.5 16L20 21L16 18L12 21L13.5 16L9.5 13H14.5Z" fill="url(#sidebarGrad)"/>
-            <defs><linearGradient id="sidebarGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#6C63FF"/><stop offset="100%" stopColor="#4B8EF5"/></linearGradient></defs>
+          {/* StarLoop icon: star + orbit arc + sparkle */}
+          <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="sl-star" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#00C9A7"/>
+                <stop offset="100%" stopColor="#4A6FFF"/>
+              </linearGradient>
+              <linearGradient id="sl-orbit" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#00C9A7" stopOpacity="0.7"/>
+                <stop offset="100%" stopColor="#4A6FFF" stopOpacity="0.7"/>
+              </linearGradient>
+            </defs>
+            {/* Orbit ellipse arc (behind star) */}
+            <ellipse cx="17" cy="17" rx="14" ry="7" stroke="url(#sl-orbit)" strokeWidth="1.5" fill="none"
+              strokeDasharray="44 44" strokeDashoffset="22" transform="rotate(-30 17 17)"/>
+            {/* Arrowhead on orbit */}
+            <path d="M26.5 10.5 L28 13 L25 12.5Z" fill="url(#sl-orbit)"/>
+            {/* 5-point star */}
+            <path d="M17 5.5 L18.8 11.8H25.4L20.1 15.6L21.9 21.9L17 18.1L12.1 21.9L13.9 15.6L8.6 11.8H15.2Z"
+              stroke="url(#sl-star)" strokeWidth="1.4" strokeLinejoin="round"
+              fill="none"/>
+            {/* Star inner fill (subtle) */}
+            <path d="M17 7.8 L18.4 12.5H23.4L19.5 15.2L20.9 19.9L17 17.2L13.1 19.9L14.5 15.2L10.6 12.5H15.6Z"
+              fill="url(#sl-star)" fillOpacity="0.15"/>
+            {/* Sparkle top-right */}
+            <path d="M27 5 L27.6 6.8 L29.4 7.4 L27.6 8 L27 9.8 L26.4 8 L24.6 7.4 L26.4 6.8Z"
+              fill="url(#sl-star)"/>
           </svg>
-          <span className="font-bold text-base" style={{ color: "#1A1D23" }}>StarLoop</span>
+
+          {/* Wordmark: "star" dark + "loop" gradient */}
+          <span className="font-bold text-base tracking-tight" style={{ letterSpacing: "-0.2px" }}>
+            <span style={{ color: "#1A1D23" }}>star</span>
+            <span style={{
+              background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}>loop</span>
+          </span>
         </Link>
       </div>
 

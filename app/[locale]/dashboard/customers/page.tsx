@@ -75,10 +75,8 @@ export default async function CustomersPage({
               {customers.map((c, idx) => (
                 <tr
                   key={c.id}
-                  className="group transition-colors"
+                  className="group transition-colors hover:bg-gray-50"
                   style={{ borderBottom: "1px solid #F8F9FC" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#F8F9FC")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                 >
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
