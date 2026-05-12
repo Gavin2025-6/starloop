@@ -324,7 +324,8 @@ export async function sendReviewRequestEmail({
     : buildEnTemplate({ customerName, businessName, reviewUrl });
 
   return resend.emails.send({
-    from: `${businessName} <noreply@starloop.app>`,
+    // TODO (before go-live): verify starloop.app in Resend → can use noreply@starloop.app
+    from: `${businessName} <onboarding@resend.dev>`,
     to,
     subject,
     html,

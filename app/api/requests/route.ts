@@ -67,42 +67,64 @@ export async function POST(request: Request) {
   });
 
   let sentSid: string | undefined;
+  // Default PENDING for scheduled; for immediate: assume SENT until proven otherwise
   let status: "SENT" | "FAILED" = "SENT";
 
-  // If scheduled for later, don't send now
-  const isScheduled = scheduledAt && new Date(scheduledAt) > new Date();
+  // If scheduled for later, skip all sending now
+  const isScheduled = !!(scheduledAt && new Date(scheduledAt) > new Date());
 
-  if (!isScheduled && channel === "SMS" && customer.phone && process.env.TWILIO_ACCOUNT_SID) {
-    try {
-      sentSid = await sendSms({
-        to: phoneToE164(customer.phone),
-        body: messageBody,
-      });
-    } catch (err) {
-      console.error("[Requests/SMS]", err);
+  console.log(`[Requests] channel=${channel} isScheduled=${isScheduled} customer.email=${customer.email ?? "none"} customer.phone=${customer.phone ?? "none"}`);
+
+  if (!isScheduled && channel === "SMS") {
+    // TODO: upgrade Twilio account before go-live — Trial accounts block links (Error 30044)
+    // and can only send to verified numbers. Use plain-text body until upgraded.
+    if (!customer.phone) {
+      console.error("[Requests/SMS] Customer has no phone number — marking FAILED");
       status = "FAILED";
+    } else if (!process.env.TWILIO_ACCOUNT_SID) {
+      console.error("[Requests/SMS] TWILIO_ACCOUNT_SID not set — marking FAILED");
+      status = "FAILED";
+    } else {
+      try {
+        console.log(`[Requests/SMS] Sending to ${customer.phone}`);
+        sentSid = await sendSms({
+          to: phoneToE164(customer.phone),
+          body: messageBody,
+        });
+        console.log(`[Requests/SMS] Sent OK — sid=${sentSid}`);
+      } catch (err) {
+        console.error("[Requests/SMS] Send failed:", err);
+        status = "FAILED";
+      }
     }
   }
 
   if (!isScheduled && channel === "EMAIL") {
     if (!customer.email) {
-      console.error("[Requests/EMAIL] Customer has no email address");
+      console.error("[Requests/EMAIL] Customer has no email address — marking FAILED");
+      status = "FAILED";
+    } else if (!process.env.RESEND_API_KEY) {
+      console.error("[Requests/EMAIL] RESEND_API_KEY not set — marking FAILED");
       status = "FAILED";
     } else {
       try {
-        await sendReviewRequestEmail({
+        console.log(`[Requests/EMAIL] Sending to ${customer.email}`);
+        const result = await sendReviewRequestEmail({
           to: customer.email,
           customerName: customer.name,
           businessName: business.name,
           reviewUrl,
           language,
         });
+        console.log(`[Requests/EMAIL] Sent OK — id=${JSON.stringify(result)}`);
       } catch (err) {
-        console.error("[Requests/EMAIL]", err);
+        console.error("[Requests/EMAIL] Send failed:", err);
         status = "FAILED";
       }
     }
   }
+
+  console.log(`[Requests] Final status=${isScheduled ? "PENDING" : status}`);
 
   const reviewRequest = await prisma.reviewRequest.create({
     data: {
@@ -119,7 +141,8 @@ export async function POST(request: Request) {
   });
 
   // Confirmation email to business owner (fire-and-forget)
-  if (session.user.email && (!isScheduled && status === "SENT" || isScheduled)) {
+  // Bug fix: correct operator precedence — wrap the OR condition in parens
+  if (session.user.email && ((!isScheduled && status === "SENT") || isScheduled)) {
     sendRequestConfirmation({
       to: session.user.email,
       businessName: business.name,
@@ -129,5 +152,5 @@ export async function POST(request: Request) {
     }).catch((err) => console.error("[Requests/confirmation-email]", err));
   }
 
-  return NextResponse.json({ ok: true, requestId: reviewRequest.id, sid: sentSid });
+  return NextResponse.json({ ok: true, requestId: reviewRequest.id, sid: sentSid, status: isScheduled ? "PENDING" : status });
 }
