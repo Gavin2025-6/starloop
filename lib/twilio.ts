@@ -40,11 +40,11 @@ export function buildFollowUpMessage(params: {
   reviewUrl: string;
   language: "en" | "zh-CN";
 }): string {
-  const { businessName, customerName, reviewUrl, language } = params;
+  const { businessName, customerName, language } = params;
 
   if (language === "zh-CN") {
-    return `${customerName} 您好，${businessName} 再次感谢您的光临！如果方便，希望您能分享一下这次体验 😊 ${reviewUrl}`;
+    return `${customerName} 您好，${businessName} 再次感谢您的光临！如果方便，希望您能分享一下这次体验 😊`;
   }
 
-  return `Hi ${customerName}, ${businessName} here again! We hope you had a great experience and would really appreciate a quick review when you get a chance. 😊 ${reviewUrl}`;
+  return `Hi ${customerName}, ${businessName} here again! We hope you had a great experience and would really appreciate a quick review when you get a chance. 😊`;
 }

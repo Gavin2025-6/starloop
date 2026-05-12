@@ -485,7 +485,7 @@ export async function sendReputationReportEmail({
 </html>`;
 
   return resend.emails.send({
-    from: `StarLoop Reports <reports@starloop.app>`,
+    from: `StarLoop Reports <onboarding@resend.dev>`,
     to,
     subject: `📊 ${businessName} — ${monthLabel} Reputation Report`,
     html,
