@@ -1,5 +1,5 @@
-// Root layout — minimal, just for Next.js internals
-// The actual layout is in app/[locale]/layout.tsx
+// Root layout — minimal shell required by Next.js App Router.
+// html/body/lang are rendered in app/[locale]/layout.tsx so lang={locale} is correct.
 export default function RootLayout({
   children,
 }: {

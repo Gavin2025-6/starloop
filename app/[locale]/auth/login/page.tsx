@@ -3,45 +3,17 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useTranslations, useLocale } from "next-intl";
+import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
-
-function LogoMark({ variant = "light", height = 32 }: { variant?: "dark" | "light"; height?: number }) {
-  const iconSize = Math.round(height * 1.1);
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: Math.round(height * 0.3) }}>
-      <svg width={iconSize} height={iconSize} viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="ll-star" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#00C9A7"/><stop offset="100%" stopColor="#4A6FFF"/>
-          </linearGradient>
-          <linearGradient id="ll-orbit" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#00C9A7" stopOpacity="0.85"/><stop offset="100%" stopColor="#4A6FFF" stopOpacity="0.85"/>
-          </linearGradient>
-          <marker id="ll-arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-            <path d="M0,0 L6,3 L0,6 Z" fill="#4A6FFF" opacity="0.85"/>
-          </marker>
-        </defs>
-        <ellipse cx="22" cy="22" rx="18" ry="9" stroke="url(#ll-orbit)" strokeWidth="2" fill="none"
-          strokeDasharray="56 56" strokeDashoffset="28" transform="rotate(-25 22 22)" markerEnd="url(#ll-arrow)"/>
-        <path d="M22 4 L24.1 15H35.1L26.4 21.5L29.5 32.5L22 26.1L14.5 32.5L17.6 21.5L8.9 15H19.9Z"
-          stroke="url(#ll-star)" strokeWidth="2.5" fill="none" strokeLinejoin="round"/>
-        <path d="M38 2 L39 5 L42 6 L39 7 L38 10 L37 7 L34 6 L37 5Z" fill="#00C9A7"/>
-      </svg>
-      <span style={{ fontWeight: 700, fontSize: Math.round(height * 0.7), lineHeight: 1 }}>
-        <span style={{ color: variant === "dark" ? "#FFFFFF" : "#0D1117" }}>star</span>
-        <span style={{ color: "#00C9A7" }}>loop</span>
-      </span>
-    </div>
-  );
-}
+import Logo from "@/components/ui/Logo";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
-  const t = useTranslations();
-  const locale = useLocale();
   const router = useRouter();
+  const locale = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -51,7 +23,7 @@ export default function LoginPage() {
     setLoading(true);
     const result = await signIn("credentials", { email, password, redirect: false });
     if (result?.error) {
-      setError(t("auth.loginError"));
+      setError("Invalid email or password");
     } else {
       router.push(`/${locale}/dashboard`);
     }
@@ -59,154 +31,111 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ fontFamily: "var(--font-geist), -apple-system, sans-serif" }}>
-      {/* LEFT panel — 45% width, dark background */}
-      <div className="hidden lg:flex flex-col" style={{ width: "45%", background: "#0A0A0A", padding: "48px" }}>
-        {/* Top: Logo */}
-        <LogoMark variant="dark" height={28} />
-
-        {/* Middle: tagline + bullets */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", maxWidth: "380px" }}>
-          <h2 style={{ fontSize: "1.875rem", fontWeight: 700, color: "#FFFFFF", lineHeight: 1.2, marginBottom: "12px" }}>
-            Get more 5-star reviews.
-          </h2>
-          <p style={{ fontSize: "1.125rem", fontWeight: 500, color: "#00C9A7", marginBottom: "32px" }}>
-            Automatically.
+    <div className="min-h-screen bg-[#F6F8FB] lg:grid lg:grid-cols-[0.95fr_1.05fr]" style={{ fontFamily: "var(--font-geist), -apple-system, sans-serif" }}>
+      <section className="hidden min-h-screen flex-col justify-between bg-[#070A12] p-10 text-white lg:flex">
+        <Logo variant="dark" height={30} showTagline />
+        <div className="max-w-lg">
+          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: "#18D6C6" }}>
+            Reputation work, organized
           </p>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <h1 className="text-5xl font-bold leading-tight">
+            Get more 5-star reviews. Automatically.
+          </h1>
+          <div className="mt-9 space-y-3">
             {[
-              "Block negative reviews before they reach Google",
-              "AI replies powered by Claude, not GPT",
-              "Bilingual EN/中文, built for Toronto",
-            ].map((text) => (
-              <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#00C9A7", flexShrink: 0, marginTop: "8px" }} />
-                <span style={{ fontSize: "0.875rem", color: "#A1A1AA", lineHeight: 1.5 }}>{text}</span>
+              "Auto-send review requests after purchases",
+              "Win back unhappy customers with one click",
+              "Catch at-risk customers before they churn",
+            ].map((item) => (
+              <div key={item} className="rounded-xl border border-white/10 bg-white/[0.045] p-4 text-sm" style={{ color: "#D9E0EF" }}>
+                {item}
               </div>
             ))}
           </div>
         </div>
+        <p className="text-xs" style={{ color: "#6F7A94" }}>© 2026 StarLoop</p>
+      </section>
 
-        {/* Bottom: copyright */}
-        <p style={{ fontSize: "0.75rem", color: "#4F4F4F" }}>© 2026 StarLoop</p>
-      </div>
-
-      {/* RIGHT panel — white, flex-1 */}
-      <div style={{ flex: 1, background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 24px" }}>
-        <div style={{ width: "100%", maxWidth: "380px" }}>
-
-          {/* Mobile logo */}
-          <div className="flex justify-center mb-8 lg:hidden">
-            <LogoMark variant="light" height={28} />
+      <section className="flex min-h-screen items-center justify-center px-5 py-10">
+        <div className="w-full max-w-[420px]">
+          <div className="mb-10 lg:hidden">
+            <Logo height={30} />
+          </div>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold" style={{ color: "#07142F" }}>Welcome back</h1>
+            <p className="mt-2 text-sm" style={{ color: "#5D6880" }}>
+              See what needs your attention today.
+            </p>
           </div>
 
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#0D1117", marginBottom: "4px" }}>
-            Welcome back
-          </h1>
-          <p style={{ fontSize: "0.875rem", color: "#6B7280", marginBottom: "32px" }}>
-            Sign in to your StarLoop account
-          </p>
-
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-[#E1E7F0] bg-white p-6 shadow-sm">
             <div>
-              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, color: "#374151", marginBottom: "6px" }}>
-                {t("auth.email")}
-              </label>
+              <label className="mb-1.5 block text-sm font-medium" style={{ color: "#28354D" }}>Email</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                style={{
-                  width: "100%", border: "1px solid #E5E7EB", borderRadius: "8px",
-                  padding: "12px 16px", fontSize: "0.875rem", color: "#0D1117",
-                  outline: "none", boxSizing: "border-box",
-                }}
-                onFocus={(e) => { e.target.style.boxShadow = "0 0 0 2px #0D1117"; e.target.style.borderColor = "transparent"; }}
-                onBlur={(e) => { e.target.style.boxShadow = "none"; e.target.style.borderColor = "#E5E7EB"; }}
+                className="w-full rounded-lg border border-[#DCE3EE] px-4 py-3 text-sm outline-none focus:border-[#07142F] focus:ring-2 focus:ring-[#07142F]/10"
+                style={{ color: "#07142F" }}
               />
             </div>
-
             <div>
-              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, color: "#374151", marginBottom: "6px" }}>
-                {t("auth.password")}
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                style={{
-                  width: "100%", border: "1px solid #E5E7EB", borderRadius: "8px",
-                  padding: "12px 16px", fontSize: "0.875rem", color: "#0D1117",
-                  outline: "none", boxSizing: "border-box",
-                }}
-                onFocus={(e) => { e.target.style.boxShadow = "0 0 0 2px #0D1117"; e.target.style.borderColor = "transparent"; }}
-                onBlur={(e) => { e.target.style.boxShadow = "none"; e.target.style.borderColor = "#E5E7EB"; }}
-              />
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="text-sm font-medium" style={{ color: "#28354D" }}>Password</label>
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-xs hover:underline"
+                  style={{ color: "#5D6880" }}
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full rounded-lg border border-[#DCE3EE] px-4 py-3 pr-11 text-sm outline-none focus:border-[#07142F] focus:ring-2 focus:ring-[#07142F]/10"
+                  style={{ color: "#07142F" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8896B0] hover:text-[#07142F]"
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
-
             {error && (
-              <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "8px", padding: "10px 14px", fontSize: "0.875rem", color: "#EF4444" }}>
+              <div className="rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#B91C1C]">
                 {error}
               </div>
             )}
-
             <button
               type="submit"
               disabled={loading}
-              style={{
-                background: "#0D1117", color: "#FFFFFF", border: "none",
-                borderRadius: "8px", padding: "12px", fontSize: "0.875rem",
-                fontWeight: 500, cursor: loading ? "not-allowed" : "pointer",
-                opacity: loading ? 0.5 : 1, width: "100%", marginTop: "8px",
-                transition: "background 0.2s",
-              }}
-              onMouseEnter={(e) => { if (!loading) (e.target as HTMLElement).style.background = "#1a1a1a"; }}
-              onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "#0D1117"; }}
+              className="w-full rounded-lg px-4 py-3 text-sm font-bold transition-opacity disabled:opacity-50"
+              style={{ background: "#07142F", color: "#FFFFFF" }}
             >
-              {loading ? t("common.loading") : t("auth.signIn")}
+              {loading ? "Loading..." : "Sign in"}
             </button>
           </form>
 
-          {/* Divider */}
-          <div style={{ display: "flex", alignItems: "center", gap: "16px", margin: "24px 0" }}>
-            <div style={{ flex: 1, height: "1px", background: "#E5E7EB" }} />
-            <span style={{ fontSize: "0.75rem", color: "#9CA3AF" }}>or</span>
-            <div style={{ flex: 1, height: "1px", background: "#E5E7EB" }} />
-          </div>
-
-          {/* Google button (disabled) */}
-          <button
-            disabled
-            style={{
-              border: "1px solid #E5E7EB", borderRadius: "8px", background: "#FFFFFF",
-              width: "100%", padding: "12px", fontSize: "0.875rem", color: "#6B7280",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-              cursor: "not-allowed", opacity: 0.6,
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Continue with Google · Coming soon
-          </button>
-
-          <p style={{ textAlign: "center", fontSize: "0.875rem", color: "#6B7280", marginTop: "24px" }}>
-            {t("auth.noAccount")}{" "}
-            <Link href="/auth/register" style={{ color: "#0D1117", fontWeight: 500, textDecoration: "none" }}
-              className="hover:underline">
-              {t("auth.signUp")}
+          <p className="mt-6 text-center text-sm" style={{ color: "#5D6880" }}>
+            Don&apos;t have an account?{" "}
+            <Link href="/auth/register" className="font-semibold hover:underline" style={{ color: "#07142F" }}>
+              Sign up
             </Link>
           </p>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

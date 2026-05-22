@@ -46,8 +46,8 @@ export async function POST(request: Request) {
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
-      success_url: `${appUrl}/en/dashboard/settings?payment=success`,
-      cancel_url: `${appUrl}/en/dashboard/settings?payment=cancelled`,
+      success_url: `${appUrl}/en/dashboard/billing?payment=success`,
+      cancel_url: `${appUrl}/en/dashboard/billing?payment=cancelled`,
     });
 
     return NextResponse.json({ url: checkoutSession.url });

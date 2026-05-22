@@ -461,10 +461,10 @@ export default function ReviewsPage() {
   const privateReviews = reviews.filter((r) => r.source === "PRIVATE");
 
   const tabs: { key: Tab; label: string; count: number }[] = [
-    { key: "tasks",    label: "⚠️ 待处理",  count: taskReviews.filter(r => ["new","in_progress"].includes(r.taskStatus ?? "new")).length },
-    { key: "positive", label: "⭐ 好评",     count: positiveReviews.length },
-    { key: "private",  label: "🔒 私信",     count: privateReviews.length },
-    { key: "all",      label: "全部",        count: reviews.length },
+    { key: "tasks",    label: "Recovery tasks",  count: taskReviews.filter(r => ["new","in_progress"].includes(r.taskStatus ?? "new")).length },
+    { key: "positive", label: "Public praise",   count: positiveReviews.length },
+    { key: "private",  label: "Private feedback", count: privateReviews.length },
+    { key: "all",      label: "All signals",      count: reviews.length },
   ];
 
   const displayed =
@@ -479,26 +479,26 @@ export default function ReviewsPage() {
     <div style={{ fontFamily: "var(--font-geist), -apple-system, sans-serif" }}>
       {/* Page header */}
       <div style={{ marginBottom: "28px" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#0D1117", margin: 0 }}>口碑工作台</h1>
-        <p style={{ fontSize: "0.875rem", color: "#6B7280", marginTop: "4px" }}>管理差评、回复好评，提升整体评分</p>
+        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#0D1117", margin: 0 }}>Customer signals</h1>
+        <p style={{ fontSize: "0.875rem", color: "#6B7280", marginTop: "4px" }}>Recover unhappy customers, publish with care, and turn feedback into operating insight.</p>
       </div>
 
       {/* 3-number stats header */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "28px" }}>
         <div style={{ background: "#FFFFFF", border: "1px solid #FECACA", borderRadius: "12px", padding: "20px" }}>
           <div style={{ fontSize: "2rem", fontWeight: 700, color: "#DC2626" }}>{needsAction}</div>
-          <div style={{ fontSize: "0.8125rem", color: "#6B7280", marginTop: "4px" }}>⚠️ 需要处理</div>
-          <div style={{ fontSize: "0.75rem", color: "#9CA3AF", marginTop: "2px" }}>差评未处理数量</div>
+          <div style={{ fontSize: "0.8125rem", color: "#6B7280", marginTop: "4px" }}>Needs action</div>
+          <div style={{ fontSize: "0.75rem", color: "#9CA3AF", marginTop: "2px" }}>Open recovery items</div>
         </div>
         <div style={{ background: "#FFFFFF", border: "1px solid #A7F3D0", borderRadius: "12px", padding: "20px" }}>
           <div style={{ fontSize: "2rem", fontWeight: 700, color: "#059669" }}>{doneThisWeek}</div>
-          <div style={{ fontSize: "0.8125rem", color: "#6B7280", marginTop: "4px" }}>✅ 本周完成</div>
-          <div style={{ fontSize: "0.75rem", color: "#9CA3AF", marginTop: "2px" }}>本周已处理数量</div>
+          <div style={{ fontSize: "0.8125rem", color: "#6B7280", marginTop: "4px" }}>Closed this week</div>
+          <div style={{ fontSize: "0.75rem", color: "#9CA3AF", marginTop: "2px" }}>Resolved customer tasks</div>
         </div>
         <div style={{ background: "#FFFFFF", border: "1px solid #FDE68A", borderRadius: "12px", padding: "20px" }}>
           <div style={{ fontSize: "2rem", fontWeight: 700, color: "#D97706" }}>{fiveStarThisWeek}</div>
-          <div style={{ fontSize: "0.8125rem", color: "#6B7280", marginTop: "4px" }}>⭐ 好评</div>
-          <div style={{ fontSize: "0.75rem", color: "#9CA3AF", marginTop: "2px" }}>本周5星数量</div>
+          <div style={{ fontSize: "0.8125rem", color: "#6B7280", marginTop: "4px" }}>New promoters</div>
+          <div style={{ fontSize: "0.75rem", color: "#9CA3AF", marginTop: "2px" }}>5-star signals this week</div>
         </div>
       </div>
 

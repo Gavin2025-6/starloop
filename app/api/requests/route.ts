@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     });
     if (smsSentThisMonth >= 10) {
       return NextResponse.json({
-        error: "Free plan limit reached (10 SMS/month). Please upgrade to send more.",
+        error: "Free plan limit reached (10 SMS/month). Upgrade to continue sending SMS requests.",
         upgradeRequired: true,
       }, { status: 403 });
     }

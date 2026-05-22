@@ -4,37 +4,7 @@ import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { redirect } from "next/navigation";
-
-function LogoMark({ height = 28 }: { height?: number }) {
-  const sz = Math.round(height * 1.1);
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: Math.round(height * 0.3) }}>
-      <svg width={sz} height={sz} viewBox="0 0 44 44" fill="none">
-        <defs>
-          <linearGradient id="ob-star" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#00C9A7"/><stop offset="100%" stopColor="#4A6FFF"/>
-          </linearGradient>
-          <linearGradient id="ob-orbit" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#00C9A7" stopOpacity="0.85"/><stop offset="100%" stopColor="#4A6FFF" stopOpacity="0.85"/>
-          </linearGradient>
-          <marker id="ob-arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-            <path d="M0,0 L6,3 L0,6 Z" fill="#4A6FFF" opacity="0.85"/>
-          </marker>
-        </defs>
-        <ellipse cx="22" cy="22" rx="18" ry="9" stroke="url(#ob-orbit)" strokeWidth="2" fill="none"
-          strokeDasharray="56 56" strokeDashoffset="28" transform="rotate(-25 22 22)" markerEnd="url(#ob-arrow)"/>
-        <path d="M22 4 L24.1 15H35.1L26.4 21.5L29.5 32.5L22 26.1L14.5 32.5L17.6 21.5L8.9 15H19.9Z"
-          stroke="url(#ob-star)" strokeWidth="2.5" fill="none" strokeLinejoin="round"/>
-        <path d="M38 2 L39 5 L42 6 L39 7 L38 10 L37 7 L34 6 L37 5Z" fill="#00C9A7"/>
-      </svg>
-      <span style={{ fontWeight: 700, fontSize: Math.round(height * 0.7), lineHeight: 1 }}>
-        <span style={{ color: "#FFFFFF" }}>star</span>
-        <span style={{ color: "#00C9A7" }}>loop</span>
-      </span>
-    </div>
-  );
-}
+import Logo from "@/components/ui/Logo";
 
 const CATEGORIES = [
   "Cleaning", "Landscaping", "Restaurant", "Renovation",
@@ -95,7 +65,7 @@ export default function OnboardingPage() {
     }}>
       {/* Top nav */}
       <div style={{ padding: "24px" }}>
-        <LogoMark height={28} />
+        <Logo variant="dark" height={28} />
       </div>
 
       {/* Content */}
@@ -141,9 +111,9 @@ export default function OnboardingPage() {
             {/* 3 feature previews */}
             <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "40px" }}>
               {[
-                { icon: "🛡️", title: "Block negative reviews", desc: "Bad reviews go to you, not Google" },
-                { icon: "✦", title: "AI replies for every review", desc: "Claude handles responses automatically" },
-                { icon: "📊", title: "Track your reputation", desc: "See your rating improve over time" },
+                { icon: "1", title: "Recover unhappy customers", desc: "Capture issues early and give owners a clear next step" },
+                { icon: "2", title: "Reply with the right voice", desc: "Draft calm, specific replies for public reviews" },
+                { icon: "3", title: "Track reputation signals", desc: "See requests, replies, feedback, and rating movement together" },
               ].map((item) => (
                 <div key={item.title} style={{
                   display: "flex", alignItems: "flex-start", gap: "16px",

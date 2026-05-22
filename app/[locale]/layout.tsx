@@ -11,9 +11,9 @@ import "../globals.css";
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 
 export const metadata: Metadata = {
-  title: "StarLoop — Automate Your Google Reviews",
+  title: "StarLoop — Customer Feedback to Business Actions",
   description:
-    "Help your local business collect more Google reviews and respond with AI-powered replies.",
+    "Request feedback, recover unhappy customers, guide happy customers to reviews, and turn customer signals into weekly business actions.",
 };
 
 export default async function LocaleLayout({

@@ -188,3 +188,132 @@ model Notification {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+enum ProblemCategory {
+  WAITING_TIME
+  PRICE
+  ATTITUDE
+  APPOINTMENT
+  QUALITY
+  COMMUNICATION
+  BILLING
+  CLEANLINESS
+  PARKING
+  OTHER
+}
+
+enum Severity {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum OutcomeResult {
+  SAVED
+  LOST
+  PENDING
+  REVIEW_UPDATED
+  NO_RESPONSE
+}
+
+enum ProspectPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum OutreachStatus {
+  NEW
+  CONTACTED
+  REPLIED
+  CONVERTED
+  NOT_INTERESTED
+}
+
+model IndustryBenchmark {
+  id               String          @id @default(cuid())
+  industry         String
+  industryCategory String
+  city             String
+  stateProvince    String
+  country          String
+  tier             Int
+  problemCategory  ProblemCategory
+  severity         Severity
+  count            Int             @default(0)
+  percentage       Float           @default(0)
+  sampleSize       Int             @default(0)
+  suggestedAction  String
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model RecoveryPlaybook {
+  id                   String          @id @default(cuid())
+  industry             String
+  problemCategory      ProblemCategory
+  recommendedAction    String
+  successRate          Float           @default(0)
+  totalAttempts        Int             @default(0)
+  avgRevenueRecovered  Float           @default(0)
+  notes                String?
+  updatedAt            DateTime        @updatedAt
+}
+
+model OutcomeTracking {
+  id               String          @id @default(cuid())
+  businessId       String
+  industry         String
+  city             String
+  problemCategory  ProblemCategory
+  actionTaken      String
+  result           OutcomeResult
+  revenueRecovered Float           @default(0)
+  daysToResolve    Int?
+  createdAt        DateTime        @default(now())
+}
+
+model ReviewQueue {
+  id               String   @id @default(cuid())
+  googlePlaceId    String
+  businessName     String
+  industry         String
+  industryCategory String
+  city             String
+  stateProvince    String
+  country          String
+  tier             Int
+  rawText          String
+  authorName       String?
+  rating           Int
+  problemCategory  String   @default("PENDING")
+  severity         String?
+  suggestedAction  String?
+  analysisStatus   String   @default("PENDING")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model BusinessProspects {
+  id                 String           @id @default(cuid())
+  businessName       String
+  industry           String
+  industryCategory   String
+  address            String
+  city               String
+  stateProvince      String
+  country            String
+  tier               Int
+  phone              String?
+  website            String?
+  googlePlaceId      String           @unique
+  googleRating       Float?
+  totalReviews       Int              @default(0)
+  negativeReviews    Int              @default(0)
+  negativeReviewRate Float            @default(0)
+  priority           ProspectPriority @default(MEDIUM)
+  outreachStatus     OutreachStatus   @default(NEW)
+  outreachNote       String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+}

@@ -1,47 +1,100 @@
-export default function Logo({ variant = 'light', height = 32 }: { variant?: 'dark' | 'light'; height?: number }) {
-  const iconSize = height * 1.1;
+import { useId } from "react";
+
+type LogoProps = {
+  variant?: "dark" | "light";
+  height?: number;
+  showTagline?: boolean;
+};
+
+export default function Logo({
+  variant = "light",
+  height = 32,
+  showTagline = false,
+}: LogoProps) {
+  const id = useId().replace(/:/g, "");
+  const iconSize = Math.round(height * 1.22);
+  const textColor = variant === "dark" ? "#FFFFFF" : "#07142F";
+  const subText = variant === "dark" ? "#A7B0C4" : "#536079";
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: height * 0.3 }}>
-      <svg width={iconSize} height={iconSize} viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <div style={{ display: "flex", alignItems: "center", gap: Math.round(height * 0.34) }}>
+      <svg
+        width={iconSize}
+        height={iconSize}
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
         <defs>
-          <linearGradient id="logo-star" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#00C9A7" />
-            <stop offset="100%" stopColor="#4A6FFF" />
+          <linearGradient id={`${id}-mark`} x1="10" y1="8" x2="52" y2="56" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#18D6C6" />
+            <stop offset="0.52" stopColor="#1FA4F5" />
+            <stop offset="1" stopColor="#5268FF" />
           </linearGradient>
-          <linearGradient id="logo-orbit" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#00C9A7" stopOpacity="0.85" />
-            <stop offset="100%" stopColor="#4A6FFF" stopOpacity="0.85" />
+          <linearGradient id={`${id}-shine`} x1="42" y1="7" x2="57" y2="21" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#42F2D5" />
+            <stop offset="1" stopColor="#1FA4F5" />
           </linearGradient>
-          <marker id="logo-arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-            <path d="M0,0 L6,3 L0,6 Z" fill="url(#logo-orbit)" />
-          </marker>
+          <filter id={`${id}-shadow`} x="-10" y="-8" width="84" height="84" colorInterpolationFilters="sRGB">
+            <feDropShadow dx="0" dy="4" stdDeviation="3" floodColor="#1E6BFF" floodOpacity="0.13" />
+          </filter>
         </defs>
-        <ellipse
-          cx="22"
-          cy="22"
-          rx="18"
-          ry="9"
-          stroke="url(#logo-orbit)"
-          strokeWidth="2"
-          fill="none"
-          strokeDasharray="56 56"
-          strokeDashoffset="28"
-          transform="rotate(-25 22 22)"
-          markerEnd="url(#logo-arrow)"
-        />
-        <polygon
-          points="22,4 24.1,15 35.1,15 26.4,21.5 29.5,32.5 22,26.1 14.5,32.5 17.6,21.5 8.9,15 19.9,15"
-          stroke="url(#logo-star)"
-          strokeWidth="2.5"
-          fill="none"
-          strokeLinejoin="round"
-        />
-        <path d="M38 2 L39 5 L42 6 L39 7 L38 10 L37 7 L34 6 L37 5Z" fill="#00C9A7" />
+        <g filter={`url(#${id}-shadow)`}>
+          <path
+            d="M32 10.4L37.1 24.4H51.7L40 33.2L44.6 47.6L32 39.1L19.4 47.6L24 33.2L12.3 24.4H26.9L32 10.4Z"
+            stroke={`url(#${id}-mark)`}
+            strokeWidth="4"
+            strokeLinejoin="round"
+            fill="rgba(255,255,255,0.02)"
+          />
+        </g>
+        <path d="M49.1 7.2L50.9 12.4L56.1 14.2L50.9 16L49.1 21.2L47.3 16L42.1 14.2L47.3 12.4L49.1 7.2Z" fill={`url(#${id}-shine)`} />
       </svg>
-      <span style={{ fontWeight: 700, fontSize: height * 0.7, lineHeight: 1 }}>
-        <span style={{ color: variant === 'dark' ? '#FFFFFF' : '#0D1117' }}>star</span>
-        <span style={{ color: '#00C9A7' }}>loop</span>
-      </span>
+      <div style={{ display: "flex", flexDirection: "column", gap: Math.max(2, Math.round(height * 0.08)) }}>
+        <div
+          style={{
+            color: textColor,
+            fontSize: Math.round(height * 0.92),
+            fontWeight: 760,
+            lineHeight: 0.9,
+            letterSpacing: 0,
+          }}
+        >
+          starl
+          <svg
+            viewBox="0 0 34 18"
+            width={Math.round(height * 0.98)}
+            height={Math.round(height * 0.54)}
+            style={{ display: "inline-block", verticalAlign: "-0.04em", margin: "0 1px" }}
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M17 9C13.7 3.9 10.8 2.6 7.8 3.2C4.7 3.9 3 6.1 3 9C3 11.9 5.1 14.4 8.2 14.7C11.6 15.1 14.3 12.3 17 9ZM17 9C20.3 14.1 23.2 15.4 26.2 14.8C29.3 14.1 31 11.9 31 9C31 6.1 28.9 3.6 25.8 3.3C22.4 2.9 19.7 5.7 17 9Z"
+              stroke="#18D6C6"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          p
+        </div>
+        {showTagline && (
+          <div
+            style={{
+              color: subText,
+              fontSize: Math.max(8, Math.round(height * 0.22)),
+              fontWeight: 650,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Reviews · Reputation · Growth
+          </div>
+        )}
+      </div>
     </div>
   );
 }

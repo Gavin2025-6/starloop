@@ -9,31 +9,6 @@ const CATEGORIES = [
   "Auto Repair", "Plumbing", "Electrical", "Moving", "Other",
 ];
 
-const PLANS = [
-  {
-    key: "FREE",
-    name: "Free",
-    price: "$0",
-    features: ["10 SMS/month", "Review Gate", "Private feedback capture"],
-    isHighlight: false,
-  },
-  {
-    key: "STARTER",
-    name: "Starter",
-    price: "$39/mo",
-    features: ["Unlimited SMS", "AI reply generation", "Google Business sync", "Email channel"],
-    isHighlight: true,
-    badge: "Most Popular",
-  },
-  {
-    key: "PRO",
-    name: "Pro",
-    price: "$79/mo",
-    features: ["Everything in Starter", "Up to 5 locations", "Analytics & reporting", "Priority support"],
-    isHighlight: false,
-  },
-];
-
 // ─── Password confirm modal ───────────────────────────────────────────────────
 
 function PasswordModal({
@@ -147,7 +122,6 @@ export default function SettingsPage() {
   const t = useTranslations();
   const searchParams = useSearchParams();
   const googleParam = searchParams.get("google");
-  const paymentParam = searchParams.get("payment");
 
   const [userName, setUserName]       = useState("");
   const [userEmail, setUserEmail]     = useState("");
@@ -166,9 +140,6 @@ export default function SettingsPage() {
   const [googleReviewUrl, setGoogleReviewUrl] = useState("");
   const [quickSaved, setQuickSaved]   = useState(false);
   const [isGoogleConnected, setIsGoogleConnected] = useState(false);
-
-  const [currentPlan, setCurrentPlan] = useState("FREE");
-  const [upgrading, setUpgrading]     = useState<string | null>(null);
 
   const [businessId, setBusinessId]   = useState("");
   const [widgetCopied, setWidgetCopied] = useState(false);
@@ -206,10 +177,6 @@ export default function SettingsPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
 
-    fetch("/api/user/plan")
-      .then((r) => r.json())
-      .then((d) => setCurrentPlan(d.plan ?? "FREE"))
-      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -261,26 +228,6 @@ export default function SettingsPage() {
     if (res.ok) { setQuickSaved(true); setTimeout(() => setQuickSaved(false), 2500); }
   }
 
-  async function handleUpgrade(planKey: string) {
-    setUpgrading(planKey);
-    try {
-      if (currentPlan !== "FREE") {
-        const res = await fetch("/api/stripe/portal", { method: "POST" });
-        const data = await res.json();
-        if (data.url) window.location.href = data.url;
-        return;
-      }
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planKey }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch { /* ignore */ }
-    finally { setUpgrading(null); }
-  }
-
   const cardStyle = {
     background: "#fff",
     borderRadius: "16px",
@@ -303,7 +250,7 @@ export default function SettingsPage() {
 
       <div className="mb-8">
         <h1 className="text-2xl font-bold mb-1" style={{ color: "#1A1D23" }}>{t("settings.title")}</h1>
-        <p className="text-sm" style={{ color: "#6B7280" }}>Manage your account and business settings</p>
+        <p className="text-sm" style={{ color: "#6B7280" }}>Manage your business profile, Google review flow, and how StarLoop handles customer actions.</p>
       </div>
 
       {/* Banners */}
@@ -317,111 +264,7 @@ export default function SettingsPage() {
           Google Business 已成功连接！
         </div>
       )}
-      {paymentParam === "success" && (
-        <div className="mb-4 px-4 py-3 rounded-xl text-sm" style={{ background: "rgba(0,201,167,0.08)", border: "1px solid rgba(0,201,167,0.2)", color: "#00C9A7" }}>
-          Payment successful! Your plan has been upgraded.
-        </div>
-      )}
-      {paymentParam === "cancelled" && (
-        <div className="mb-4 px-4 py-3 rounded-xl text-sm" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", color: "#D97706" }}>
-          Payment cancelled. Your plan was not changed.
-        </div>
-      )}
-
       <div className="space-y-6">
-
-        {/* ── Subscription ── */}
-        <div style={cardStyle}>
-          <SectionHeader title="Subscription Plan" subtitle={`Current plan: ${currentPlan}`} />
-          <div className="grid grid-cols-3 gap-3">
-            {PLANS.map((plan) => {
-              const isCurrent = currentPlan === plan.key;
-              const isStarter = plan.key === "STARTER";
-              const isPro = plan.key === "PRO";
-
-              return (
-                <div
-                  key={plan.key}
-                  className="rounded-xl p-4 relative"
-                  style={{
-                    border: isStarter
-                      ? "2px solid #4A6FFF"
-                      : isPro
-                      ? "2px solid #9C27B0"
-                      : "1px solid #E8ECEF",
-                    background: isPro
-                      ? "linear-gradient(135deg, #00C9A7 0%, #4A6FFF 100%)"
-                      : "#fff",
-                  }}
-                >
-                  {isStarter && plan.badge && (
-                    <div
-                      className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-xs px-2.5 py-0.5 rounded-full font-semibold whitespace-nowrap"
-                      style={{ background: "#4A6FFF", color: "#fff" }}
-                    >
-                      {plan.badge}
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-sm" style={{ color: isPro ? "#fff" : "#1A1D23" }}>
-                      {plan.name}
-                    </span>
-                    {isCurrent && (
-                      <span
-                        className="text-xs px-2 py-0.5 rounded-full font-medium"
-                        style={{
-                          background: isPro ? "rgba(255,255,255,0.2)" : "rgba(74,111,255,0.1)",
-                          color: isPro ? "#fff" : "#4A6FFF",
-                        }}
-                      >
-                        Current
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xl font-bold mb-3" style={{ color: isPro ? "#fff" : "#1A1D23" }}>
-                    {plan.price}
-                  </div>
-                  <ul className="space-y-1 mb-4">
-                    {plan.features.map((f) => (
-                      <li key={f} className="text-xs flex gap-1" style={{ color: isPro ? "rgba(255,255,255,0.85)" : "#6B7280" }}>
-                        <span style={{ color: isPro ? "#fff" : "#00C9A7" }}>✓</span> {f}
-                      </li>
-                    ))}
-                  </ul>
-                  {!isCurrent && plan.key !== "FREE" && (
-                    <button
-                      onClick={() => handleUpgrade(plan.key)}
-                      disabled={upgrading === plan.key}
-                      className="w-full py-1.5 rounded-lg text-xs font-semibold transition-opacity disabled:opacity-50"
-                      style={{
-                        background: isPro ? "#fff" : "linear-gradient(135deg, #00C9A7, #4A6FFF)",
-                        color: isPro ? "#4A6FFF" : "#fff",
-                        border: "none",
-                        cursor: upgrading === plan.key ? "not-allowed" : "pointer",
-                      }}
-                    >
-                      {upgrading === plan.key ? "..." : `Upgrade to ${plan.name}`}
-                    </button>
-                  )}
-                  {isCurrent && plan.key !== "FREE" && (
-                    <button
-                      onClick={() => handleUpgrade(plan.key)}
-                      className="w-full py-1.5 rounded-lg text-xs font-medium transition-colors"
-                      style={{
-                        background: "transparent",
-                        color: isPro ? "rgba(255,255,255,0.7)" : "#6B7280",
-                        border: isPro ? "1px solid rgba(255,255,255,0.3)" : "1px solid #E8ECEF",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Manage Billing
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
 
         {/* ── Personal Profile ── */}
         <div style={cardStyle}>
@@ -548,14 +391,14 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* ── AI Tone ── */}
+        {/* ── Action Tone ── */}
         <div style={cardStyle}>
-          <SectionHeader title={t("settings.aiTone")} subtitle="Saves instantly — no password needed" />
+          <SectionHeader title="Customer Action Voice" subtitle="Saves instantly — this controls the tone for recovery actions and public responses" />
           <div className="grid grid-cols-3 gap-3 mb-5">
             {[
-              { value: "PROFESSIONAL", label: t("settings.professional"), emoji: "👔" },
-              { value: "WARM",         label: t("settings.warm"),         emoji: "😊" },
-              { value: "FRIENDLY",     label: t("settings.friendly"),     emoji: "🤝" },
+              { value: "PROFESSIONAL", label: "Professional", helper: "Clear and polished" },
+              { value: "WARM",         label: "Warm", helper: "Caring and human" },
+              { value: "FRIENDLY",     label: "Direct", helper: "Simple and action-focused" },
             ].map((opt) => (
               <button
                 key={opt.value}
@@ -568,8 +411,8 @@ export default function SettingsPage() {
                   cursor: "pointer",
                 }}
               >
-                <div className="text-xl mb-1">{opt.emoji}</div>
-                {opt.label}
+                <div>{opt.label}</div>
+                <div className="mt-1 text-xs font-normal" style={{ color: tone === opt.value ? "#4A6FFF" : "#8A94A8" }}>{opt.helper}</div>
               </button>
             ))}
           </div>
@@ -601,7 +444,7 @@ export default function SettingsPage() {
                 <div>
                   <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>
                     Google Review Link
-                    <span className="text-xs ml-2" style={{ color: "#6B7280" }}>(customers sent here after 4-5★)</span>
+                    <span className="text-xs ml-2" style={{ color: "#6B7280" }}>(shown as a public review option)</span>
                   </label>
                   <input
                     type="url"
