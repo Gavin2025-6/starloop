@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import EmptyState from "@/components/ui/EmptyState";
 
 export default async function ReportsPage({
   params,
@@ -18,12 +19,11 @@ export default async function ReportsPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-2" style={{ color: "#0D1117" }}>
-        {t("nav.reports")}
-      </h1>
-      <p className="text-sm" style={{ color: "#6B7280" }}>
-        Analytics and reporting coming soon.
-      </p>
+      <EmptyState
+        type="reports"
+        title={t("nav.reports")}
+        description="Analytics and reporting coming soon. StarLoop is building detailed reports to help you track review trends, customer satisfaction, and business growth over time."
+      />
     </div>
   );
 }

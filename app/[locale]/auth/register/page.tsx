@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import Logo from "@/components/ui/Logo";
-import { Eye, EyeOff } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -12,15 +11,34 @@ export default function RegisterPage() {
   const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [focused, setFocused] = useState<string | null>(null);
+  const [passwordChecks, setPasswordChecks] = useState({
+    minLength: false,
+    hasUpper: false,
+    hasLower: false,
+    hasNumber: false,
+    hasSpecial: false,
+  });
+
+  function checkPassword(pwd: string) {
+    setPasswordChecks({
+      minLength: pwd.length >= 8,
+      hasUpper: /[A-Z]/.test(pwd),
+      hasLower: /[a-z]/.test(pwd),
+      hasNumber: /[0-9]/.test(pwd),
+      hasSpecial: /[!@#$%^&*()_+\-=\[\]{}|;':",.\/<>?]/.test(pwd),
+    });
+  }
+
+  const metCount = Object.values(passwordChecks).filter(Boolean).length;
+  const allMet = metCount === 5;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -35,134 +53,273 @@ export default function RegisterPage() {
     setLoading(false);
   }
 
+  const inputStyle = (name: string): React.CSSProperties => ({
+    width: "100%",
+    boxSizing: "border-box",
+    height: "44px",
+    padding: "0 12px",
+    fontSize: "0.875rem",
+    color: "#000",
+    background: "#fff",
+    border: `1px solid ${focused === name ? "#000" : "#E5E5E5"}`,
+    borderRadius: "6px",
+    outline: "none",
+    fontFamily: "inherit",
+    transition: "border-color 0.15s, box-shadow 0.15s",
+    boxShadow: focused === name ? "0 0 0 3px rgba(0,0,0,0.06)" : "none",
+  });
+
   return (
-    <div className="min-h-screen bg-[#F6F8FB] lg:grid lg:grid-cols-[0.95fr_1.05fr]" style={{ fontFamily: "var(--font-geist), -apple-system, sans-serif" }}>
-      <section className="hidden min-h-screen flex-col justify-between bg-[#070A12] p-10 text-white lg:flex">
-        <Logo variant="dark" height={30} showTagline />
-        <div className="max-w-lg">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: "#18D6C6" }}>
-            Free for your first location
-          </p>
-          <h1 className="text-5xl font-bold leading-tight">
-            Get more 5-star reviews. Automatically.
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      fontFamily: "var(--font-geist), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      background: "#fff",
+    }}>
+      {/* Left panel */}
+      <div style={{
+        flex: "0 0 48%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: "0 80px",
+        background: "#FAFAFA",
+        borderRight: "1px solid #F0F0F0",
+      }}>
+        <div style={{ position: "absolute", top: "32px", left: "40px" }}>
+          <Logo height={26} />
+        </div>
+        <div style={{ maxWidth: "420px" }}>
+          <h1 style={{
+            fontSize: "2.5rem",
+            fontWeight: 700,
+            color: "#000",
+            lineHeight: 1.12,
+            letterSpacing: "-0.03em",
+            marginBottom: "16px",
+          }}>
+            Start collecting reviews today
           </h1>
-          <div className="mt-9 grid grid-cols-2 gap-3">
+          <p style={{ fontSize: "0.9375rem", color: "#666", lineHeight: 1.6, marginBottom: "40px" }}>
+            Free for your first location. No credit card required.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             {[
-              ["Review requests", "Auto-sent at the perfect moment"],
-              ["Recovery actions", "Win back unhappy customers"],
-              ["Risk inbox", "Catch at-risk customers early"],
-              ["Weekly trust report", "Know what to improve"],
-            ].map(([title, body]) => (
-              <div key={title} className="rounded-xl border border-white/10 bg-white/[0.045] p-4">
-                <p className="text-sm font-semibold">{title}</p>
-                <p className="mt-1 text-xs leading-5" style={{ color: "#A7B0C4" }}>{body}</p>
+              {
+                title: "Review requests",
+                desc: "Auto-sent at the perfect moment via SMS or email.",
+              },
+              {
+                title: "Recovery actions",
+                desc: "Win back unhappy customers before they post.",
+              },
+              {
+                title: "Weekly trust report",
+                desc: "Know exactly what to improve every Monday.",
+              },
+            ].map(({ title, desc }) => (
+              <div key={title} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                <div style={{
+                  width: "20px", height: "20px", borderRadius: "4px",
+                  background: "#000", display: "flex", alignItems: "center",
+                  justifyContent: "center", flexShrink: 0, marginTop: "2px",
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "#000", marginBottom: "2px" }}>{title}</div>
+                  <div style={{ fontSize: "0.8125rem", color: "#888", lineHeight: 1.5 }}>{desc}</div>
+                </div>
               </div>
             ))}
           </div>
         </div>
-        <p className="text-xs" style={{ color: "#6F7A94" }}>No credit card required to start.</p>
-      </section>
+      </div>
 
-      <section className="flex min-h-screen items-center justify-center px-5 py-10">
-        <div className="w-full max-w-[460px]">
-          <div className="mb-10 lg:hidden">
-            <Logo height={30} />
-          </div>
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold" style={{ color: "#07142F" }}>Create your account</h1>
-            <p className="mt-2 text-sm" style={{ color: "#5D6880" }}>
-              Start collecting reviews in minutes. No credit card needed.
-            </p>
-          </div>
+      {/* Right panel — form */}
+      <div style={{
+        flex: "0 0 52%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "40px",
+        background: "#fff",
+      }}>
+        <div style={{ width: "100%", maxWidth: "400px" }}>
+          <h2 style={{
+            fontSize: "1.5rem", fontWeight: 700, color: "#000",
+            letterSpacing: "-0.02em", marginBottom: "6px",
+          }}>
+            Create your account
+          </h2>
+          <p style={{ fontSize: "0.875rem", color: "#888", marginBottom: "28px" }}>
+            Start collecting reviews in minutes.
+          </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-[#E1E7F0] bg-white p-6 shadow-sm">
-            <div className="grid gap-4 sm:grid-cols-2">
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
               <div>
-                <label className="mb-1.5 block text-sm font-medium" style={{ color: "#28354D" }}>Your name</label>
+                <label style={{
+                  display: "block", fontSize: "0.75rem", fontWeight: 500,
+                  color: "#555", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em",
+                }}>
+                  Your name
+                </label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  onFocus={() => setFocused("name")}
+                  onBlur={() => setFocused(null)}
                   placeholder="Jane Smith"
-                  className="w-full rounded-lg border border-[#DCE3EE] px-4 py-3 text-sm outline-none focus:border-[#07142F] focus:ring-2 focus:ring-[#07142F]/10"
-                  style={{ color: "#07142F" }}
+                  style={inputStyle("name")}
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium" style={{ color: "#28354D" }}>Business name</label>
+                <label style={{
+                  display: "block", fontSize: "0.75rem", fontWeight: 500,
+                  color: "#555", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em",
+                }}>
+                  Business name
+                </label>
                 <input
                   type="text"
                   required
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
+                  onFocus={() => setFocused("businessName")}
+                  onBlur={() => setFocused(null)}
                   placeholder="Bright Dental"
-                  className="w-full rounded-lg border border-[#DCE3EE] px-4 py-3 text-sm outline-none focus:border-[#07142F] focus:ring-2 focus:ring-[#07142F]/10"
-                  style={{ color: "#07142F" }}
+                  style={inputStyle("businessName")}
                 />
               </div>
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium" style={{ color: "#28354D" }}>Email</label>
+              <label style={{
+                display: "block", fontSize: "0.75rem", fontWeight: 500,
+                color: "#555", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em",
+              }}>
+                Email
+              </label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onFocus={() => setFocused("email")}
+                onBlur={() => setFocused(null)}
                 placeholder="you@example.com"
-                className="w-full rounded-lg border border-[#DCE3EE] px-4 py-3 text-sm outline-none focus:border-[#07142F] focus:ring-2 focus:ring-[#07142F]/10"
-                style={{ color: "#07142F" }}
+                style={inputStyle("email")}
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium" style={{ color: "#28354D" }}>Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 6 characters"
-                  className="w-full rounded-lg border border-[#DCE3EE] px-4 py-3 pr-11 text-sm outline-none focus:border-[#07142F] focus:ring-2 focus:ring-[#07142F]/10"
-                  style={{ color: "#07142F" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8896B0] hover:text-[#07142F]"
-                  tabIndex={-1}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
+              <label style={{
+                display: "block", fontSize: "0.75rem", fontWeight: 500,
+                color: "#555", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em",
+              }}>
+                Password
+              </label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); checkPassword(e.target.value); }}
+                onFocus={() => setFocused("password")}
+                onBlur={() => setFocused(null)}
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
+                style={inputStyle("password")}
+              />
+              {/* Password strength */}
+              {password.length > 0 && (
+                <div style={{ marginTop: "10px" }}>
+                  <div style={{
+                    display: "flex", gap: "4px", marginBottom: "6px",
+                  }}>
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} style={{
+                        flex: 1, height: "2px", borderRadius: "1px",
+                        background: i <= metCount
+                          ? metCount <= 2 ? "#EAB308" : metCount <= 3 ? "#EAB308" : "#22C55E"
+                          : "#EEE",
+                        transition: "background 0.3s",
+                      }}/>
+                    ))}
+                  </div>
+                  <p style={{
+                    fontSize: "0.6875rem", fontWeight: 500,
+                    color: metCount <= 2 ? "#A3A300" : metCount <= 3 ? "#CA8A04" : "#16A34A",
+                    marginBottom: metCount < 5 ? "6px" : "0",
+                    transition: "color 0.2s",
+                  }}>
+                    {metCount <= 2 ? "Weak" : metCount <= 3 ? "Fair" : "Strong"}{allMet ? " — your password is ready" : ""}
+                  </p>
+                  {!allMet && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+                      {[
+                        { met: passwordChecks.minLength, text: "At least 8 characters" },
+                        { met: passwordChecks.hasUpper, text: "One uppercase letter" },
+                        { met: passwordChecks.hasLower, text: "One lowercase letter" },
+                        { met: passwordChecks.hasNumber, text: "One number" },
+                        { met: passwordChecks.hasSpecial, text: "One special character" },
+                      ].map(({ met, text }) => (
+                        <span key={text} style={{
+                          fontSize: "0.6875rem",
+                          color: met ? "#999" : "#666",
+                          textDecoration: met ? "line-through" : "none",
+                          transition: "color 0.2s",
+                        }}>
+                          {text}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             {error && (
-              <div className="rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#B91C1C]">
+              <div style={{
+                padding: "10px 14px", borderRadius: "6px",
+                background: "#FFF5F5", border: "1px solid #FED7D7",
+                fontSize: "0.8125rem", color: "#C53030",
+              }}>
                 {error}
               </div>
             )}
             <button
               type="submit"
-              disabled={loading}
-              className="w-full rounded-lg px-4 py-3 text-sm font-bold transition-opacity disabled:opacity-50"
-              style={{ background: "#07142F", color: "#FFFFFF" }}
+              disabled={loading || !allMet}
+              style={{
+                width: "100%", height: "44px",
+                background: "#000", color: "#fff",
+                border: "none", borderRadius: "6px",
+                fontSize: "0.875rem", fontWeight: 600,
+                cursor: loading || !allMet ? "not-allowed" : "pointer",
+                opacity: loading || !allMet ? 0.5 : 1,
+                transition: "transform 0.1s, opacity 0.15s",
+                fontFamily: "inherit",
+              }}
+              onMouseEnter={(e) => { if (!loading && allMet) e.currentTarget.style.transform = "scale(1.01)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
             >
-              {loading ? "Loading..." : "Get started free →"}
+              {loading ? "Creating account…" : "Create account"}
             </button>
-            <p className="text-center text-xs" style={{ color: "#7F8AA3" }}>
-              ✓ No credit card &nbsp;·&nbsp; ✓ Free for 1 location
+            <p style={{ textAlign: "center", fontSize: "0.75rem", color: "#BBB" }}>
+              Free for 1 location · No credit card required
             </p>
           </form>
 
-          <p className="mt-6 text-center text-sm" style={{ color: "#5D6880" }}>
+          <p style={{ textAlign: "center", fontSize: "0.8125rem", color: "#888", marginTop: "20px" }}>
             Already have an account?{" "}
-            <Link href="/auth/login" className="font-semibold hover:underline" style={{ color: "#07142F" }}>
+            <Link href="/auth/login" style={{ color: "#000", fontWeight: 600, textDecoration: "none" }}>
               Sign in
             </Link>
           </p>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

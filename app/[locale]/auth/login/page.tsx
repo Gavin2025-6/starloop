@@ -6,16 +6,15 @@ import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import Logo from "@/components/ui/Logo";
-import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const locale = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [focused, setFocused] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,112 +29,197 @@ export default function LoginPage() {
     setLoading(false);
   }
 
+  const inputStyle = (name: string): React.CSSProperties => ({
+    width: "100%",
+    boxSizing: "border-box",
+    height: "44px",
+    padding: "0 12px",
+    fontSize: "0.875rem",
+    color: "#000",
+    background: "#fff",
+    border: `1px solid ${focused === name ? "#000" : "#E5E5E5"}`,
+    borderRadius: "6px",
+    outline: "none",
+    fontFamily: "inherit",
+    transition: "border-color 0.15s, box-shadow 0.15s",
+    boxShadow: focused === name ? "0 0 0 3px rgba(0,0,0,0.06)" : "none",
+  });
+
   return (
-    <div className="min-h-screen bg-[#F6F8FB] lg:grid lg:grid-cols-[0.95fr_1.05fr]" style={{ fontFamily: "var(--font-geist), -apple-system, sans-serif" }}>
-      <section className="hidden min-h-screen flex-col justify-between bg-[#070A12] p-10 text-white lg:flex">
-        <Logo variant="dark" height={30} showTagline />
-        <div className="max-w-lg">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: "#18D6C6" }}>
-            Reputation work, organized
-          </p>
-          <h1 className="text-5xl font-bold leading-tight">
-            Get more 5-star reviews. Automatically.
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      fontFamily: "var(--font-geist), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      background: "#fff",
+    }}>
+      {/* Left panel */}
+      <div style={{
+        flex: "0 0 48%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: "0 80px",
+        background: "#FAFAFA",
+        borderRight: "1px solid #F0F0F0",
+      }}>
+        <div style={{ position: "absolute", top: "32px", left: "40px" }}>
+          <Logo height={26} />
+        </div>
+        <div style={{ maxWidth: "420px" }}>
+          <h1 style={{
+            fontSize: "2.5rem",
+            fontWeight: 700,
+            color: "#000",
+            lineHeight: 1.12,
+            letterSpacing: "-0.03em",
+            marginBottom: "16px",
+          }}>
+            Turn customer feedback into action
           </h1>
-          <div className="mt-9 space-y-3">
+          <p style={{ fontSize: "0.9375rem", color: "#666", lineHeight: 1.6, marginBottom: "40px" }}>
+            StarLoop watches your reviews, flags problems, and helps you respond — so nothing slips through.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             {[
-              "Auto-send review requests after purchases",
-              "Win back unhappy customers with one click",
-              "Catch at-risk customers before they churn",
-            ].map((item) => (
-              <div key={item} className="rounded-xl border border-white/10 bg-white/[0.045] p-4 text-sm" style={{ color: "#D9E0EF" }}>
-                {item}
+              {
+                title: "Auto-send review requests",
+                desc: "Customers get an SMS or email at the perfect moment.",
+              },
+              {
+                title: "Recover unhappy customers",
+                desc: "Flag issues early and give owners clear next steps.",
+              },
+              {
+                title: "Weekly reputation reports",
+                desc: "See what's moving your rating and what to fix first.",
+              },
+            ].map(({ title, desc }) => (
+              <div key={title} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                <div style={{
+                  width: "20px", height: "20px", borderRadius: "4px",
+                  background: "#000", display: "flex", alignItems: "center",
+                  justifyContent: "center", flexShrink: 0, marginTop: "2px",
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "#000", marginBottom: "2px" }}>{title}</div>
+                  <div style={{ fontSize: "0.8125rem", color: "#888", lineHeight: 1.5 }}>{desc}</div>
+                </div>
               </div>
             ))}
           </div>
         </div>
-        <p className="text-xs" style={{ color: "#6F7A94" }}>© 2026 StarLoop</p>
-      </section>
+      </div>
 
-      <section className="flex min-h-screen items-center justify-center px-5 py-10">
-        <div className="w-full max-w-[420px]">
-          <div className="mb-10 lg:hidden">
-            <Logo height={30} />
-          </div>
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold" style={{ color: "#07142F" }}>Welcome back</h1>
-            <p className="mt-2 text-sm" style={{ color: "#5D6880" }}>
-              See what needs your attention today.
-            </p>
-          </div>
+      {/* Right panel — form */}
+      <div style={{
+        flex: "0 0 52%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "40px",
+        background: "#fff",
+      }}>
+        <div style={{ width: "100%", maxWidth: "380px" }}>
+          <h2 style={{
+            fontSize: "1.5rem", fontWeight: 700, color: "#000",
+            letterSpacing: "-0.02em", marginBottom: "6px",
+          }}>
+            Sign in
+          </h2>
+          <p style={{ fontSize: "0.875rem", color: "#888", marginBottom: "28px" }}>
+            Enter your email and password to continue.
+          </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-[#E1E7F0] bg-white p-6 shadow-sm">
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div>
-              <label className="mb-1.5 block text-sm font-medium" style={{ color: "#28354D" }}>Email</label>
+              <label style={{
+                display: "block", fontSize: "0.75rem", fontWeight: 500,
+                color: "#555", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em",
+              }}>
+                Email
+              </label>
               <input
                 type="email"
+                name="email"
+                autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onFocus={() => setFocused("email")}
+                onBlur={() => setFocused(null)}
                 placeholder="you@example.com"
-                className="w-full rounded-lg border border-[#DCE3EE] px-4 py-3 text-sm outline-none focus:border-[#07142F] focus:ring-2 focus:ring-[#07142F]/10"
-                style={{ color: "#07142F" }}
+                style={inputStyle("email")}
               />
             </div>
             <div>
-              <div className="mb-1.5 flex items-center justify-between">
-                <label className="text-sm font-medium" style={{ color: "#28354D" }}>Password</label>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                <label style={{
+                  display: "block", fontSize: "0.75rem", fontWeight: 500,
+                  color: "#555", textTransform: "uppercase", letterSpacing: "0.04em",
+                }}>
+                  Password
+                </label>
                 <Link
                   href="/auth/forgot-password"
-                  className="text-xs hover:underline"
-                  style={{ color: "#5D6880" }}
+                  style={{ fontSize: "0.75rem", color: "#888", textDecoration: "none" }}
                 >
                   Forgot password?
                 </Link>
               </div>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full rounded-lg border border-[#DCE3EE] px-4 py-3 pr-11 text-sm outline-none focus:border-[#07142F] focus:ring-2 focus:ring-[#07142F]/10"
-                  style={{ color: "#07142F" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8896B0] hover:text-[#07142F]"
-                  tabIndex={-1}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
+              <input
+                type="password"
+                name="current-password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setFocused("password")}
+                onBlur={() => setFocused(null)}
+                placeholder="••••••••"
+                style={inputStyle("password")}
+              />
             </div>
             {error && (
-              <div className="rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#B91C1C]">
+              <div style={{
+                padding: "10px 14px", borderRadius: "6px",
+                background: "#FFF5F5", border: "1px solid #FED7D7",
+                fontSize: "0.8125rem", color: "#C53030",
+              }}>
                 {error}
               </div>
             )}
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg px-4 py-3 text-sm font-bold transition-opacity disabled:opacity-50"
-              style={{ background: "#07142F", color: "#FFFFFF" }}
+              style={{
+                width: "100%", height: "44px",
+                background: "#000", color: "#fff",
+                border: "none", borderRadius: "6px",
+                fontSize: "0.875rem", fontWeight: 600,
+                cursor: loading ? "not-allowed" : "pointer",
+                opacity: loading ? 0.6 : 1,
+                transition: "transform 0.1s, opacity 0.15s",
+                fontFamily: "inherit",
+              }}
+              onMouseEnter={(e) => { if (!loading) e.currentTarget.style.transform = "scale(1.01)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
             >
-              {loading ? "Loading..." : "Sign in"}
+              {loading ? "Signing in…" : "Sign in"}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm" style={{ color: "#5D6880" }}>
+          <p style={{ textAlign: "center", fontSize: "0.8125rem", color: "#888", marginTop: "20px" }}>
             Don&apos;t have an account?{" "}
-            <Link href="/auth/register" className="font-semibold hover:underline" style={{ color: "#07142F" }}>
+            <Link href="/auth/register" style={{ color: "#000", fontWeight: 600, textDecoration: "none" }}>
               Sign up
             </Link>
           </p>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

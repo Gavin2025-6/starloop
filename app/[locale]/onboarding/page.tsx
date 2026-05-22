@@ -1,28 +1,44 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useTranslations, useLocale } from "next-intl";
+import { useLocale } from "next-intl";
 import Logo from "@/components/ui/Logo";
 
 const CATEGORIES = [
-  "Cleaning", "Landscaping", "Restaurant", "Renovation",
-  "Nail Salon", "Auto Repair", "Plumbing", "Electrical", "Moving", "Other",
+  "Dentist", "HVAC", "Property Management", "Auto Dealer",
+  "Spa", "Law Firm", "Cleaning", "Landscaping", "Restaurant", "Other",
 ];
 
+const totalSteps = 4;
+
 export default function OnboardingPage() {
-  const t = useTranslations();
   const locale = useLocale();
   const { data: session, status } = useSession();
   const router = useRouter();
 
   const [step, setStep] = useState(1);
+  const [fading, setFading] = useState(false);
   const [businessName, setBusinessName] = useState("");
   const [category, setCategory] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showLater, setShowLater] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  const [focused, setFocused] = useState<string | null>(null);
 
-  // Redirect unauthenticated users
+  useEffect(() => {
+    if (step === 4 && !completed) {
+      setCompleted(true);
+      fetch("/api/user/onboarding-complete", { method: "PATCH" }).catch(() => {});
+    }
+  }, [step, completed]);
+
+  function goToStep(next: number) {
+    setFading(true);
+    setTimeout(() => { setStep(next); setFading(false); }, 150);
+  }
+
   if (status === "unauthenticated") {
     router.push(`/${locale}/auth/login`);
     return null;
@@ -30,19 +46,13 @@ export default function OnboardingPage() {
 
   if (status === "loading") {
     return (
-      <div style={{
-        background: "#0A0A0A",
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}>
-        <div style={{ color: "#4F4F4F", fontSize: "0.875rem" }}>Loading…</div>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff" }}>
+        <div style={{ color: "#AAA", fontSize: "0.875rem" }}>Loading…</div>
       </div>
     );
   }
 
-  const userName = session?.user?.name?.split(" ")[0] ?? "there";
+  const firstName = session?.user?.name?.split(" ")[0] ?? "there";
 
   async function handleSaveInfo() {
     if (!businessName) return;
@@ -53,281 +63,369 @@ export default function OnboardingPage() {
       body: JSON.stringify({ name: businessName, category }),
     });
     setSaving(false);
-    setStep(2);
+    goToStep(4);
   }
+
+  const inputStyle = (name: string): React.CSSProperties => ({
+    width: "100%",
+    boxSizing: "border-box",
+    height: "44px",
+    padding: "0 14px",
+    fontSize: "0.9375rem",
+    color: "#000",
+    background: "#fff",
+    border: `1px solid ${focused === name ? "#000" : "#E5E5E5"}`,
+    borderRadius: "6px",
+    outline: "none",
+    fontFamily: "inherit",
+    transition: "border-color 0.15s, box-shadow 0.15s",
+    boxShadow: focused === name ? "0 0 0 3px rgba(0,0,0,0.06)" : "none",
+  });
 
   return (
     <div style={{
-      background: "#0A0A0A",
       minHeight: "100vh",
-      fontFamily: "var(--font-geist), -apple-system, sans-serif",
-      color: "#FFFFFF",
+      background: "#fff",
+      fontFamily: "var(--font-geist), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      display: "flex",
+      flexDirection: "column",
     }}>
-      {/* Top nav */}
-      <div style={{ padding: "24px" }}>
-        <Logo variant="dark" height={28} />
+      {/* Top bar */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "20px 32px", borderBottom: "1px solid #F0F0F0",
+      }}>
+        <Logo height={24} />
+        <button
+          onClick={() => router.push(`/${locale}/dashboard`)}
+          style={{
+            background: "none", border: "none",
+            fontSize: "0.8125rem", color: "#999",
+            cursor: "pointer", fontFamily: "inherit",
+          }}
+        >
+          Skip for now
+        </button>
+      </div>
+
+      {/* Thin progress bar */}
+      <div style={{
+        height: "2px",
+        background: "#F0F0F0",
+        flexShrink: 0,
+        position: "relative",
+      }}>
+        <div style={{
+          height: "100%",
+          width: `${(step / totalSteps) * 100}%`,
+          background: "#000",
+          transition: "width 0.4s ease",
+        }}/>
       </div>
 
       {/* Content */}
-      <div style={{ maxWidth: "512px", margin: "0 auto", padding: "48px 24px 48px" }}>
-
-        {/* Progress indicator */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "48px" }}>
-          {[1, 2].map((s, i) => (
-            <React.Fragment key={s}>
-              {i > 0 && (
-                <div style={{
-                  flex: 1, height: "1px",
-                  background: step > i ? "#FFFFFF" : "#1F1F1F",
-                  transition: "background 0.3s",
-                }} />
-              )}
-              <div style={{
-                width: "24px", height: "24px", borderRadius: "50%",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "0.75rem", fontWeight: 700,
-                background: step >= s ? "#FFFFFF" : "transparent",
-                color: step >= s ? "#0A0A0A" : "#4F4F4F",
-                border: step >= s ? "none" : "1px solid #2F2F2F",
-                transition: "all 0.3s",
-                flexShrink: 0,
+      <div style={{
+        flex: 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "48px 24px 80px",
+      }}>
+        <div style={{
+          width: "100%",
+          maxWidth: "480px",
+          opacity: fading ? 0 : 1,
+          transform: fading ? "translateY(8px)" : "translateY(0)",
+          transition: "opacity 0.15s, transform 0.15s",
+        }}>
+          {/* Step 1: Welcome */}
+          {step === 1 && (
+            <div>
+              <p style={{
+                fontSize: "0.75rem", fontWeight: 500, color: "#999",
+                textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "16px",
               }}>
-                {s}
-              </div>
-            </React.Fragment>
-          ))}
-        </div>
+                Welcome
+              </p>
+              <h1 style={{
+                fontSize: "2.5rem", fontWeight: 700, color: "#000",
+                lineHeight: 1.12, letterSpacing: "-0.03em", marginBottom: "12px",
+              }}>
+                Welcome to StarLoop, {firstName}
+              </h1>
+              <p style={{ fontSize: "1rem", color: "#888", lineHeight: 1.6, marginBottom: "48px" }}>
+                You&apos;re 3 minutes away from your first review request.
+              </p>
 
-        {/* Step 1: Business Info */}
-        {step === 1 && (
-          <div>
-            <h1 style={{ fontSize: "2.5rem", fontWeight: 700, color: "#FFFFFF", lineHeight: 1.1, marginBottom: "16px" }}>
-              Welcome, {userName}.
-            </h1>
-            <p style={{ color: "#6B7280", marginBottom: "40px", lineHeight: 1.6 }}>
-              {t("onboarding.subtitle")}
-            </p>
-
-            {/* 3 feature previews */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "40px" }}>
-              {[
-                { icon: "1", title: "Recover unhappy customers", desc: "Capture issues early and give owners a clear next step" },
-                { icon: "2", title: "Reply with the right voice", desc: "Draft calm, specific replies for public reviews" },
-                { icon: "3", title: "Track reputation signals", desc: "See requests, replies, feedback, and rating movement together" },
-              ].map((item) => (
-                <div key={item.title} style={{
-                  display: "flex", alignItems: "flex-start", gap: "16px",
-                  background: "#111111", border: "1px solid #1F1F1F",
-                  borderRadius: "12px", padding: "20px",
-                }}>
-                  <div style={{
-                    width: "40px", height: "40px", border: "1px solid #1F1F1F",
-                    borderRadius: "8px", display: "flex", alignItems: "center",
-                    justifyContent: "center", fontSize: "1.125rem", flexShrink: 0,
-                    color: "#00C9A7",
-                  }}>
-                    {item.icon}
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "48px" }}>
+                {[
+                  "Catch unhappy customers before they post",
+                  "Ask happy customers for Google reviews automatically",
+                  "See what's hurting your rating every week",
+                ].map((text) => (
+                  <div key={text} style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span style={{ fontSize: "0.9375rem", color: "#444" }}>{text}</span>
                   </div>
-                  <div>
-                    <div style={{ fontSize: "0.875rem", fontWeight: 500, color: "#FFFFFF", marginBottom: "4px" }}>
-                      {item.title}
-                    </div>
-                    <div style={{ fontSize: "0.875rem", color: "#6B7280" }}>
-                      {item.desc}
-                    </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => goToStep(2)}
+                style={{
+                  width: "100%", height: "48px",
+                  background: "#000", color: "#fff",
+                  border: "none", borderRadius: "6px",
+                  fontSize: "0.9375rem", fontWeight: 600,
+                  cursor: "pointer", fontFamily: "inherit",
+                  transition: "transform 0.1s",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.01)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+              >
+                Let&apos;s get started →
+              </button>
+            </div>
+          )}
+
+          {/* Step 2: Connect Google */}
+          {step === 2 && (
+            <div>
+              <p style={{
+                fontSize: "0.75rem", fontWeight: 500, color: "#999",
+                textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "16px",
+              }}>
+                Connect
+              </p>
+              <h1 style={{
+                fontSize: "2rem", fontWeight: 700, color: "#000",
+                lineHeight: 1.15, letterSpacing: "-0.03em", marginBottom: "12px",
+              }}>
+                Connect your Google Business Profile
+              </h1>
+              <p style={{ fontSize: "0.9375rem", color: "#888", lineHeight: 1.6, marginBottom: "40px" }}>
+                This lets StarLoop watch for new reviews and sync your rating automatically.
+              </p>
+
+              <div style={{
+                border: "1px solid #E5E5E5",
+                borderRadius: "8px", padding: "24px",
+                marginBottom: "28px",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="200" height="64" viewBox="0 0 200 64" fill="none">
+                  <rect x="20" y="12" width="40" height="40" rx="20" stroke="#E5E5E5" strokeWidth="1.5"/>
+                  <text x="40" y="37" textAnchor="middle" fill="#333" fontSize="16" fontWeight="600">G</text>
+                  <line x1="64" y1="32" x2="126" y2="32" stroke="#CCC" strokeWidth="1.5" strokeDasharray="4,3">
+                    <animate attributeName="stroke-dashoffset" from="14" to="0" dur="1.5s" repeatCount="indefinite"/>
+                  </line>
+                  <rect x="140" y="12" width="40" height="40" rx="20" stroke="#E5E5E5" strokeWidth="1.5"/>
+                  <text x="160" y="38" textAnchor="middle" fill="#333" fontSize="18" fontWeight="700">∞</text>
+                </svg>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "28px" }}>
+                {[
+                  "See new reviews the moment they arrive",
+                  "Auto-sync your Google rating",
+                  "Enable one-click review requests",
+                ].map((text) => (
+                  <div key={text} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span style={{ fontSize: "0.875rem", color: "#555" }}>{text}</span>
                   </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Business info form */}
-            <div style={{
-              background: "#111111", border: "1px solid #1F1F1F",
-              borderRadius: "12px", padding: "24px",
-              display: "flex", flexDirection: "column", gap: "16px",
-              marginBottom: "24px",
-            }}>
-              <div>
-                <div style={{ fontSize: "0.875rem", fontWeight: 500, color: "#FFFFFF", marginBottom: "12px" }}>
-                  {t("onboarding.step1")}
-                </div>
+                ))}
               </div>
-              <div>
-                <label style={{ display: "block", fontSize: "0.75rem", color: "#6B7280", marginBottom: "6px" }}>
-                  {t("settings.businessName")}
-                </label>
-                <input
-                  type="text"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="e.g. Wang's Cleaning Services"
-                  style={{
-                    width: "100%", boxSizing: "border-box",
-                    padding: "10px 12px",
-                    background: "#0A0A0A", border: "1px solid #2F2F2F",
-                    borderRadius: "8px", color: "#FFFFFF",
-                    fontSize: "0.875rem", outline: "none",
-                    fontFamily: "inherit",
-                  }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = "#4F4F4F"; }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = "#2F2F2F"; }}
-                />
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: "0.75rem", color: "#6B7280", marginBottom: "6px" }}>
-                  {t("onboarding.businessCategory")}
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    background: "#0A0A0A", border: "1px solid #2F2F2F",
-                    borderRadius: "8px", color: category ? "#FFFFFF" : "#4F4F4F",
-                    fontSize: "0.875rem", outline: "none",
-                    fontFamily: "inherit", cursor: "pointer",
-                  }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = "#4F4F4F"; }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = "#2F2F2F"; }}
-                >
-                  <option value="" style={{ color: "#4F4F4F" }}>Select category</option>
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c} style={{ color: "#FFFFFF", background: "#111111" }}>{c}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
 
-            <button
-              onClick={handleSaveInfo}
-              disabled={!businessName || saving}
-              style={{
-                background: !businessName || saving ? "#1F1F1F" : "#FFFFFF",
-                color: !businessName || saving ? "#4F4F4F" : "#0A0A0A",
-                border: "none", borderRadius: "8px",
-                padding: "14px 32px", fontSize: "0.875rem",
-                fontWeight: 500, cursor: !businessName || saving ? "not-allowed" : "pointer",
-                transition: "background 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                if (businessName && !saving) (e.currentTarget as HTMLElement).style.background = "#F0F0F0";
-              }}
-              onMouseLeave={(e) => {
-                if (businessName && !saving) (e.currentTarget as HTMLElement).style.background = "#FFFFFF";
-              }}
-            >
-              {saving ? t("common.loading") : t("onboarding.continue") + " →"}
-            </button>
-          </div>
-        )}
-
-        {/* Step 2: Connect Google */}
-        {step === 2 && (
-          <div>
-            <h1 style={{ fontSize: "2.5rem", fontWeight: 700, color: "#FFFFFF", lineHeight: 1.1, marginBottom: "16px" }}>
-              Connect your Google Business.
-            </h1>
-            <p style={{ color: "#6B7280", marginBottom: "8px", lineHeight: 1.6 }}>
-              {t("onboarding.step2")}
-            </p>
-            <p style={{ fontSize: "0.875rem", color: "#4F4F4F", marginBottom: "40px" }}>
-              This is required to use most features.
-            </p>
-
-            {/* Two options */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "32px" }}>
-              {/* Option A: Has Google Business — connects via /api/google/connect */}
               <a
                 href="/api/google/connect"
                 style={{
-                  background: "#111111", border: "1px solid #1F1F1F",
-                  borderRadius: "12px", padding: "20px",
-                  display: "flex", alignItems: "center", gap: "16px",
-                  cursor: "pointer", textDecoration: "none", width: "100%",
-                  boxSizing: "border-box",
-                  transition: "border-color 0.2s",
-                }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#2F2F2F"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#1F1F1F"; }}
-              >
-                <div style={{
-                  width: "40px", height: "40px", borderRadius: "8px",
-                  background: "#1A1A1A", border: "1px solid #2F2F2F",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0,
-                }}>
-                  {/* Google G */}
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                  </svg>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "0.875rem", fontWeight: 500, color: "#FFFFFF", marginBottom: "2px" }}>
-                    {t("onboarding.connectGoogle")}
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "#6B7280" }}>
-                    Connect and start syncing reviews
-                  </div>
-                </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F4F4F" strokeWidth="2">
-                  <path d="M9 18l6-6-6-6"/>
-                </svg>
+                  width: "100%", height: "48px",
+                  background: "#000", color: "#fff",
+                  border: "none", borderRadius: "6px",
+                  fontSize: "0.9375rem", fontWeight: 600,
+                  cursor: "pointer", fontFamily: "inherit",
+                  textDecoration: "none",
+                  marginBottom: "20px",
+                  transition: "transform 0.1s",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.01)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+              >
+                Connect Google Business →
               </a>
 
-              {/* Option B: No Google Business */}
-              <a
-                href="https://business.google.com/create"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  background: "#111111", border: "1px solid #1F1F1F",
-                  borderRadius: "12px", padding: "20px",
-                  display: "flex", alignItems: "center", gap: "16px",
-                  textDecoration: "none", transition: "border-color 0.2s",
-                }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#2F2F2F"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#1F1F1F"; }}
-              >
+              {!showLater ? (
+                <button
+                  onClick={() => setShowLater(true)}
+                  style={{
+                    background: "none", border: "none",
+                    color: "#999", fontSize: "0.8125rem",
+                    cursor: "pointer", fontFamily: "inherit",
+                    display: "block", margin: "0 auto",
+                  }}
+                >
+                  I&apos;ll do this later
+                </button>
+              ) : (
                 <div style={{
-                  width: "40px", height: "40px", borderRadius: "8px",
-                  background: "#1A1A1A", border: "1px solid #2F2F2F",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "#00C9A7", fontSize: "1.25rem", flexShrink: 0,
+                  border: "1px solid #F0F0F0",
+                  borderRadius: "6px", padding: "16px 20px",
                 }}>
-                  +
+                  <p style={{ color: "#888", fontSize: "0.8125rem", marginBottom: "12px", lineHeight: 1.5 }}>
+                    No worries! You can connect anytime in Settings. Some features won&apos;t work until then.
+                  </p>
+                  <button
+                    onClick={() => goToStep(3)}
+                    style={{
+                      background: "#000", color: "#fff",
+                      border: "none", borderRadius: "6px",
+                      padding: "8px 18px", fontSize: "0.8125rem",
+                      fontWeight: 500, cursor: "pointer",
+                      fontFamily: "inherit",
+                      transition: "transform 0.1s",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.01)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+                  >
+                    Continue →
+                  </button>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "0.875rem", fontWeight: 500, color: "#FFFFFF", marginBottom: "2px" }}>
-                    I don&apos;t have one yet
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "#6B7280" }}>
-                    Create a free Google Business Profile
-                  </div>
-                </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F4F4F" strokeWidth="2">
-                  <path d="M9 18l6-6-6-6"/>
-                </svg>
-              </a>
+              )}
             </div>
+          )}
 
-            {/* Skip link */}
-            <button
-              onClick={() => router.push(`/${locale}/dashboard`)}
-              style={{
-                background: "none", border: "none",
-                color: "#4F4F4F", fontSize: "0.875rem",
-                cursor: "pointer", textDecoration: "underline",
-                fontFamily: "inherit",
-              }}
-            >
-              {t("onboarding.skipForNow")} →
-            </button>
-          </div>
-        )}
+          {/* Step 3: Business Setup */}
+          {step === 3 && (
+            <div>
+              <p style={{
+                fontSize: "0.75rem", fontWeight: 500, color: "#999",
+                textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "16px",
+              }}>
+                Business info
+              </p>
+              <h1 style={{
+                fontSize: "2rem", fontWeight: 700, color: "#000",
+                lineHeight: 1.15, letterSpacing: "-0.03em", marginBottom: "12px",
+              }}>
+                Tell us about your business
+              </h1>
+              <p style={{ fontSize: "0.9375rem", color: "#888", lineHeight: 1.6, marginBottom: "40px" }}>
+                This helps StarLoop tailor your experience.
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "20px", marginBottom: "32px" }}>
+                <div>
+                  <label style={{
+                    display: "block", fontSize: "0.75rem", fontWeight: 500,
+                    color: "#555", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em",
+                  }}>
+                    Business name
+                  </label>
+                  <input
+                    type="text"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    onFocus={() => setFocused("name")}
+                    onBlur={() => setFocused(null)}
+                    placeholder="Bright Dental Toronto"
+                    style={inputStyle("name")}
+                  />
+                </div>
+                <div>
+                  <label style={{
+                    display: "block", fontSize: "0.75rem", fontWeight: 500,
+                    color: "#555", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em",
+                  }}>
+                    Category
+                  </label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    onFocus={() => setFocused("category")}
+                    onBlur={() => setFocused(null)}
+                    style={{ ...inputStyle("category"), appearance: "none", cursor: "pointer", color: category ? "#000" : "#999", backgroundImage: "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 12 12\"><path d=\"M3 5l3 3 3-3\" stroke=\"%23999\" stroke-width=\"1.5\" fill=\"none\"/></svg>')", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center", paddingRight: "36px" }}
+                  >
+                    <option value="">Select category</option>
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <button
+                onClick={handleSaveInfo}
+                disabled={!businessName || saving}
+                style={{
+                  width: "100%", height: "48px",
+                  background: "#000", color: "#fff",
+                  border: "none", borderRadius: "6px",
+                  fontSize: "0.9375rem", fontWeight: 600,
+                  cursor: !businessName || saving ? "not-allowed" : "pointer",
+                  opacity: !businessName || saving ? 0.4 : 1,
+                  fontFamily: "inherit",
+                  transition: "transform 0.1s, opacity 0.15s",
+                }}
+                onMouseEnter={(e) => { if (businessName && !saving) e.currentTarget.style.transform = "scale(1.01)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+              >
+                {saving ? "Saving…" : "Continue →"}
+              </button>
+            </div>
+          )}
+
+          {/* Step 4: Complete */}
+          {step === 4 && (
+            <div style={{ textAlign: "center" }}>
+              <p style={{
+                fontSize: "0.75rem", fontWeight: 500, color: "#999",
+                textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "32px",
+              }}>
+                Ready
+              </p>
+              <div style={{
+                width: "56px", height: "56px", borderRadius: "50%",
+                background: "#F5F5F5",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 24px",
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <h1 style={{
+                fontSize: "2rem", fontWeight: 700, color: "#000",
+                lineHeight: 1.15, letterSpacing: "-0.03em", marginBottom: "12px",
+              }}>
+                You&apos;re all set
+              </h1>
+              <p style={{ color: "#888", marginBottom: "40px", lineHeight: 1.6, fontSize: "0.9375rem" }}>
+                Maya is ready to help you get started.
+              </p>
+              <button
+                onClick={() => router.push(`/${locale}/dashboard/requests`)}
+                style={{
+                  width: "100%", height: "48px",
+                  background: "#000", color: "#fff",
+                  border: "none", borderRadius: "6px",
+                  fontSize: "0.9375rem", fontWeight: 600,
+                  cursor: "pointer", fontFamily: "inherit",
+                  transition: "transform 0.1s",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.01)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+              >
+                Send first request →
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 const CATEGORIES = [
   "Cleaning", "Landscaping", "Restaurant", "Renovation", "Nail Salon",
@@ -143,9 +144,39 @@ export default function SettingsPage() {
 
   const [businessId, setBusinessId]   = useState("");
   const [widgetCopied, setWidgetCopied] = useState(false);
+  const [reviewPageCopied, setReviewPageCopied] = useState(false);
 
   const [loading, setLoading]         = useState(true);
   const [modal, setModal]             = useState<"profile" | "business" | null>(null);
+
+  // Delete account
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDeleteAccount() {
+    if (!deletePassword) return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const res = await fetch("/api/user/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: deletePassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setDeleteError(data.error || "Failed to delete account");
+        setDeleting(false);
+        return;
+      }
+      await signOut({ callbackUrl: "/" });
+    } catch {
+      setDeleteError("Network error. Please try again.");
+      setDeleting(false);
+    }
+  }
 
   const inputStyle = {
     border: "1px solid #E8ECEF",
@@ -475,30 +506,165 @@ export default function SettingsPage() {
           </button>
         </div>
 
-        {/* ── Website Widget ── */}
-        {businessId && (
+        {/* ── Public Review Page ── */}
+        {slug && (
           <div style={cardStyle}>
-            <SectionHeader title="Website Widget" subtitle="Embed your 5-star reviews on any website. Paste this code before </body>." />
-            <div className="relative">
-              <pre
-                className="rounded-xl p-4 text-xs overflow-x-auto whitespace-pre-wrap break-all"
-                style={{ background: "#F8F9FC", border: "1px solid #E8ECEF", color: "#374151" }}
-              >
-{`<div id="starloop-widget"></div>
-<script src="${typeof window !== "undefined" ? window.location.origin : "https://starloop.app"}/widget.js" data-business-id="${businessId}"></script>`}
-              </pre>
+            <SectionHeader title="Your Public Review Page" subtitle="Share this link anywhere — SMS, Google profile, business cards" />
+            <div style={{
+              background: "#F8F9FC", border: "1px solid #E8ECEF",
+              borderRadius: "10px", padding: "12px 16px",
+              display: "flex", alignItems: "center", gap: "12px",
+              marginBottom: "12px",
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}>
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+              <span style={{ flex: 1, fontSize: "0.875rem", color: "#374151", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                starloop.app/r/{slug}
+              </span>
               <button
                 onClick={() => {
-                  const code = `<div id="starloop-widget"></div>\n<script src="${window.location.origin}/widget.js" data-business-id="${businessId}"></script>`;
-                  navigator.clipboard.writeText(code);
-                  setWidgetCopied(true);
-                  setTimeout(() => setWidgetCopied(false), 2000);
+                  navigator.clipboard.writeText(`https://starloop.app/r/${slug}`);
+                  setReviewPageCopied(true);
+                  setTimeout(() => setReviewPageCopied(false), 2000);
                 }}
-                className="absolute top-2 right-2 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
-                style={{ background: "#fff", border: "1px solid #E8ECEF", color: "#6B7280", cursor: "pointer" }}
+                style={{
+                  background: "#fff", border: "1px solid #E8ECEF", borderRadius: "6px",
+                  padding: "4px 10px", fontSize: "0.75rem", color: "#374151", cursor: "pointer", whiteSpace: "nowrap",
+                }}
               >
-                {widgetCopied ? "Copied!" : "Copy"}
+                {reviewPageCopied ? "Copied!" : "Copy Link"}
               </button>
+              <a
+                href={`/r/${slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: "#fff", border: "1px solid #E8ECEF", borderRadius: "6px",
+                  padding: "4px 10px", fontSize: "0.75rem", color: "#4A6FFF", textDecoration: "none", whiteSpace: "nowrap",
+                }}
+              >
+                Preview →
+              </a>
+            </div>
+            <details style={{ fontSize: "0.8125rem" }}>
+              <summary style={{ color: "#6B7280", cursor: "pointer", userSelect: "none" }}>
+                For developers only
+              </summary>
+              <div style={{ marginTop: "12px", position: "relative" }}>
+                <pre style={{
+                  background: "#F8F9FC", border: "1px solid #E8ECEF",
+                  borderRadius: "10px", padding: "16px", overflowX: "auto",
+                  fontSize: "0.75rem", color: "#374151", whiteSpace: "pre-wrap", wordBreak: "break-all",
+                }}>
+{`<div id="starloop-widget"></div>
+<script src="${typeof window !== "undefined" ? window.location.origin : ""}/widget.js" data-business-id="${businessId}"></script>`}
+                </pre>
+                <button
+                  onClick={() => {
+                    const code = `<div id="starloop-widget"></div>\n<script src="${window.location.origin}/widget.js" data-business-id="${businessId}"></script>`;
+                    navigator.clipboard.writeText(code);
+                    setWidgetCopied(true);
+                    setTimeout(() => setWidgetCopied(false), 2000);
+                  }}
+                  style={{
+                    position: "absolute", top: "8px", right: "8px",
+                    background: "#fff", border: "1px solid #E8ECEF",
+                    borderRadius: "6px", padding: "4px 10px",
+                    fontSize: "0.75rem", color: "#374151", cursor: "pointer",
+                  }}
+                >
+                  {widgetCopied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+            </details>
+          </div>
+        )}
+
+        {/* ── Delete Account ── */}
+        <div style={cardStyle}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+            <div>
+              <h3 style={{ fontSize: "0.9375rem", fontWeight: 600, color: "#1A1D23" }}>Delete Account</h3>
+              <p style={{ fontSize: "0.8125rem", color: "#6B7280", marginTop: "2px" }}>
+                Permanently remove your account and all associated data
+              </p>
+            </div>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              style={{
+                background: "transparent", border: "1px solid #FCA5A5",
+                color: "#EF4444", borderRadius: "8px",
+                padding: "8px 16px", fontSize: "0.8125rem",
+                fontWeight: 500, cursor: "pointer",
+                transition: "background 0.15s", whiteSpace: "nowrap",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "#FEF2F2"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            >
+              Delete my account
+            </button>
+          </div>
+        </div>
+
+        {/* Delete confirmation modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}>
+            <div className="bg-white rounded-2xl p-6 w-full mx-4" style={{ maxWidth: "420px", boxShadow: "0 4px 24px rgba(239,68,68,0.15)" }}>
+              <h3 style={{ fontSize: "1.125rem", fontWeight: 600, color: "#1A1D23", marginBottom: "4px" }}>Delete your account?</h3>
+              <p style={{ fontSize: "0.8125rem", color: "#6B7280", marginBottom: "16px", lineHeight: 1.5 }}>
+                This will permanently delete all your data including businesses, reviews, customers, and settings. This action cannot be undone.
+              </p>
+              <input
+                type="password"
+                value={deletePassword}
+                onChange={(e) => { setDeletePassword(e.target.value); setDeleteError(""); }}
+                onKeyDown={(e) => { if (e.key === "Escape") { setShowDeleteModal(false); setDeletePassword(""); } }}
+                placeholder="Type your password to confirm"
+                style={{
+                  width: "100%", boxSizing: "border-box",
+                  padding: "10px 12px",
+                  border: "1px solid #E8ECEF",
+                  borderRadius: "8px", outline: "none",
+                  color: "#1A1D23", fontSize: "0.875rem",
+                  marginBottom: deleteError ? "8px" : "4px",
+                }}
+                onFocus={(e) => { e.target.style.borderColor = "#EF4444"; e.target.style.boxShadow = "0 0 0 3px rgba(239,68,68,0.1)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+              />
+              {deleteError && (
+                <p style={{ fontSize: "0.75rem", color: "#EF4444", marginBottom: "8px" }}>{deleteError}</p>
+              )}
+              <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+                <button
+                  onClick={() => { setShowDeleteModal(false); setDeletePassword(""); setDeleteError(""); }}
+                  style={{
+                    flex: 1, padding: "10px",
+                    border: "1px solid #E8ECEF",
+                    borderRadius: "10px", background: "#fff",
+                    color: "#6B7280", fontSize: "0.875rem",
+                    fontWeight: 500, cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={!deletePassword || deleting}
+                  style={{
+                    flex: 1, padding: "10px",
+                    border: "none", borderRadius: "10px",
+                    background: "#EF4444", color: "#FFFFFF",
+                    fontSize: "0.875rem", fontWeight: 600,
+                    cursor: deleting ? "not-allowed" : "pointer",
+                    opacity: !deletePassword || deleting ? 0.5 : 1,
+                    transition: "opacity 0.15s",
+                  }}
+                >
+                  {deleting ? "Deleting…" : "Delete my account"}
+                </button>
+              </div>
             </div>
           </div>
         )}

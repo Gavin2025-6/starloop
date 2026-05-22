@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ButtonHTMLAttributes } from "react";
 
@@ -19,7 +22,18 @@ const sizes = {
   lg: "px-6 py-3 text-base rounded-lg",
 };
 
-export default function Button({ variant = "primary", size = "md", className, children, ...props }: ButtonProps) {
+export default function Button({
+  variant = "primary",
+  size = "md",
+  className,
+  children,
+  onMouseEnter,
+  onMouseLeave,
+  ...props
+}: ButtonProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const disabled = props.disabled;
+
   return (
     <button
       className={cn(
@@ -28,6 +42,18 @@ export default function Button({ variant = "primary", size = "md", className, ch
         sizes[size],
         className
       )}
+      style={{
+        transform: isHovered && !disabled ? "scale(1.02)" : "scale(1)",
+        boxShadow: isHovered && !disabled ? "0 2px 8px rgba(0,0,0,0.1)" : undefined,
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled) setIsHovered(true);
+        onMouseEnter?.(e);
+      }}
+      onMouseLeave={(e) => {
+        setIsHovered(false);
+        onMouseLeave?.(e);
+      }}
       {...props}
     >
       {children}

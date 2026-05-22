@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 import AiAssistant from "@/components/dashboard/AiAssistant";
+import PageTransition from "@/components/layout/PageTransition";
 
 export default async function DashboardLayout({
   children,
@@ -23,7 +24,9 @@ export default async function DashboardLayout({
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header user={session.user} />
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <main className="flex-1 overflow-auto p-6">
+          <PageTransition>{children}</PageTransition>
+        </main>
       </div>
       <AiAssistant />
     </div>

@@ -7,6 +7,8 @@ import ReviewList from "@/components/dashboard/ReviewList";
 import RatingChart from "@/components/dashboard/RatingChart";
 import { Link } from "@/i18n/navigation";
 import { AlertTriangle, ArrowRight, Bot, CheckCircle2, Languages, Send, Sparkles, TrendingUp } from "lucide-react";
+import EmptyState from "@/components/ui/EmptyState";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
 
 export default async function DashboardPage({
   params,
@@ -138,12 +140,15 @@ export default async function DashboardPage({
             </p>
             <h2 className="mt-3 text-xl font-bold" style={{ color: "#0D1117" }}>{topIssue}</h2>
             <div className="mt-5 grid gap-3">
-              {actionPlan.map(({ title, detail, href, action, Icon, tone, bg }) => (
+              {actionPlan.map(({ title, detail, href, action, Icon, tone, bg }, index) => (
                 <Link
                   key={title}
                   href={href}
                   className="group grid grid-cols-[42px_1fr_auto] items-center gap-3 rounded-xl bg-white p-3 transition-transform hover:-translate-y-0.5"
-                  style={{ border: "1px solid #E6ECF4" }}
+                  style={{
+                    border: "1px solid #E6ECF4",
+                    animation: `pageFadeIn 200ms ease-out ${index * 50}ms both`,
+                  }}
                 >
                   <span className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ background: bg, color: tone }}>
                     <Icon size={18} />
@@ -241,8 +246,12 @@ export default async function DashboardPage({
               tone: "#5B3FD5",
               bg: "#F4F1FF",
             },
-          ].map(({ label, value, helper, Icon, tone, bg }) => (
-            <div key={label} className="rounded-xl p-4" style={{ border: "1px solid #E8ECF3", background: "#FFFFFF" }}>
+          ].map(({ label, value, helper, Icon, tone, bg }, index) => (
+            <div key={label} className="rounded-xl p-4" style={{
+              border: "1px solid #E8ECF3",
+              background: "#FFFFFF",
+              animation: `pageFadeIn 200ms ease-out ${index * 50}ms both`,
+            }}>
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg" style={{ background: bg, color: tone }}>
                 <Icon size={19} />
               </div>
@@ -265,28 +274,23 @@ export default async function DashboardPage({
         {business?.reviews.length ? (
           <ReviewList reviews={business.reviews} businessId={business.id} />
         ) : (
-          <div
-            className="bg-white rounded-xl p-12 text-center"
-            style={{ border: "1px solid #E5E7EB" }}
-          >
-            <div
-              className="w-12 h-12 bg-[#F3F4F6] rounded-xl flex items-center justify-center mx-auto mb-4"
-            >
-              <span className="text-2xl">⭐</span>
-            </div>
-            <p className="text-sm max-w-xs mx-auto" style={{ color: "#6B7280" }}>
-              {t("dashboard.noReviews")}
-            </p>
-            <Link
-              href="/onboarding"
-              className="inline-block mt-4 text-sm font-medium hover:underline"
-              style={{ color: "#0D1117" }}
-            >
-              {t("dashboard.connectGoogle")} →
-            </Link>
-          </div>
+          <EmptyState
+            type="reviews"
+            title={t("reviews.title")}
+            description={t("dashboard.noReviews")}
+            action={
+              <Link
+                href="/onboarding"
+                className="inline-block mt-4 text-sm font-medium hover:underline"
+                style={{ color: "#0D1117" }}
+              >
+                {t("dashboard.connectGoogle")} →
+              </Link>
+            }
+          />
         )}
       </div>
+      <OnboardingTour />
     </div>
   );
 }

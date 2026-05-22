@@ -63,9 +63,11 @@ model User {
   stripeCustomerId     String?   @unique
   stripeSubscriptionId String?   @unique
   currentPeriodEnd     DateTime?
-  preferredLanguage    String    @default("en")
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  preferredLanguage      String    @default("en")
+  onboardingCompleted    Boolean   @default(false)
+  onboardingTourCompleted Boolean  @default(false)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   businesses    Business[]
   notifications Notification[]

@@ -54,6 +54,7 @@ export default function Sidebar() {
             <Link
               key={key}
               href={href}
+              data-tour={key}
               style={{
                 display: "flex",
                 alignItems: "center",

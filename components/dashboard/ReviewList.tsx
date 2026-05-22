@@ -23,8 +23,15 @@ interface ReviewListProps {
 export default function ReviewList({ reviews, businessId }: ReviewListProps) {
   return (
     <div className="space-y-3">
-      {reviews.map((review) => (
-        <ReviewCard key={review.id} review={review} businessId={businessId} />
+      {reviews.map((review, index) => (
+        <div
+          key={review.id}
+          style={{
+            animation: `pageFadeIn 200ms ease-out ${index * 50}ms both`,
+          }}
+        >
+          <ReviewCard review={review} businessId={businessId} />
+        </div>
       ))}
     </div>
   );

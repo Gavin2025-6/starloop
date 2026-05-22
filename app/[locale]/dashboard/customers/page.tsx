@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getTranslations } from "next-intl/server";
 import { formatDate } from "@/lib/utils";
+import EmptyState from "@/components/ui/EmptyState";
 
 export default async function CustomersPage({
   params,
@@ -76,7 +77,10 @@ export default async function CustomersPage({
                 <tr
                   key={c.id}
                   className="group transition-colors hover:bg-gray-50"
-                  style={{ borderBottom: "1px solid #F8F9FC" }}
+                  style={{
+                    borderBottom: "1px solid #F8F9FC",
+                    animation: `pageFadeIn 200ms ease-out ${idx * 50}ms both`,
+                  }}
                 >
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
@@ -114,20 +118,11 @@ export default async function CustomersPage({
           </table>
         </div>
       ) : (
-        <div
-          className="bg-white rounded-2xl p-12 text-center"
-          style={{ border: "1px solid #E8ECEF", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}
-        >
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4"
-            style={{ background: "linear-gradient(135deg, rgba(74,111,255,0.1), rgba(74,111,255,0.1))" }}
-          >
-            👥
-          </div>
-          <p className="text-sm max-w-xs mx-auto" style={{ color: "#6B7280" }}>
-            {t("customers.noCustomers")}
-          </p>
-        </div>
+        <EmptyState
+          type="customers"
+          title={t("customers.title")}
+          description={t("customers.noCustomers")}
+        />
       )}
     </div>
   );
