@@ -5,10 +5,41 @@
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 const handleI18nRouting = createMiddleware(routing);
 
-export default function middleware(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Route guard: redirect authenticated users without Google connection
+  const token = await getToken({
+    req: request,
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+  });
+
+  // Paths that don't require Google connection
+  const whitelistPaths = [
+    "/auth/",
+    "/connect-google",
+    "/api/",
+    "/r/",
+    "/_next",
+    "/favicon",
+    "/widget",
+  ];
+  const isWhitelisted = whitelistPaths.some(
+    (p) =>
+      pathname.startsWith(`/en${p}`) ||
+      pathname.startsWith(`/${p}`) ||
+      pathname === "/" ||
+      pathname === "/en",
+  );
+
+  if (token && !isWhitelisted && token.isGoogleConnected === false) {
+    return NextResponse.redirect(new URL("/en/connect-google", request.url));
+  }
+
   const response = handleI18nRouting(request);
 
   // Railway reverse proxy: container runs on port 8080 internally but is

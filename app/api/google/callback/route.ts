@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
   if (error || !code) {
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/en/dashboard/settings?google=error`
+      `${process.env.NEXT_PUBLIC_APP_URL}/en/connect-google?error=true`
     );
   }
 
@@ -57,12 +57,12 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/en/dashboard?google=connected`
+      `${process.env.NEXT_PUBLIC_APP_URL}/en/dashboard?tour=true`
     );
   } catch (err) {
     console.error("[Google/Callback]", err);
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/en/dashboard/settings?google=error`
+      `${process.env.NEXT_PUBLIC_APP_URL}/en/connect-google?error=true`
     );
   }
 }

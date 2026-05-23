@@ -45,6 +45,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.plan = (user as Record<string, unknown>).plan;
         token.preferredLanguage = (user as Record<string, unknown>).preferredLanguage;
       }
+      // Always refresh isGoogleConnected from DB on every token check
+      if (token.id) {
+        const business = await prisma.business.findFirst({
+          where: { userId: token.id as string },
+          select: { isGoogleConnected: true },
+        });
+        token.isGoogleConnected = business?.isGoogleConnected ?? false;
+      }
       return token;
     },
     async session({ session, token }) {
@@ -54,6 +62,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         (session.user as any).plan = token.plan;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (session.user as any).preferredLanguage = token.preferredLanguage;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (session.user as any).isGoogleConnected = token.isGoogleConnected;
       }
       return session;
     },

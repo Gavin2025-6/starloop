@@ -469,7 +469,32 @@ export default function SettingsPage() {
                     </a>
                   )}
                   {isGoogleConnected && (
-                    <span className="ml-auto text-xs font-medium" style={{ color: "#00C9A7" }}>✓ Google Business</span>
+                    <div className="ml-auto flex items-center gap-2">
+                      <span className="text-xs font-medium" style={{ color: "#00C9A7" }}>✓ Google Business</span>
+                      <button
+                        onClick={async () => {
+                          const res = await fetch("/api/google/disconnect", { method: "DELETE" });
+                          if (res.ok) {
+                            setIsGoogleConnected(false);
+                          }
+                        }}
+                        style={{
+                          background: "transparent",
+                          border: "1px solid #FCA5A5",
+                          color: "#EF4444",
+                          borderRadius: "6px",
+                          padding: "6px 12px",
+                          fontSize: "0.75rem",
+                          fontWeight: 500,
+                          cursor: "pointer",
+                          whiteSpace: "nowrap",
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "#FEF2F2"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                      >
+                        Disconnect
+                      </button>
+                    </div>
                   )}
                 </div>
                 <div>

@@ -48,7 +48,7 @@ export default function RegisterPage() {
     if (!res.ok) {
       setError(data.error || "Could not create account. Please try again.");
     } else {
-      router.push("/onboarding");
+      router.push("/connect-google");
     }
     setLoading(false);
   }

@@ -6,32 +6,63 @@ import { useLocale } from "next-intl";
 import Shepherd from "shepherd.js";
 import "shepherd.js/dist/css/shepherd.css";
 
+interface Review {
+  id: string;
+  rating: number;
+  reviewerName: string;
+  content: string;
+}
+
+const MOCK_REVIEWS: Review[] = [
+  { id: "mock-1", rating: 2, reviewerName: "Sarah M.", content: "Wait time was too long, staff seemed overwhelmed." },
+  { id: "mock-2", rating: 5, reviewerName: "John D.", content: "Amazing service! Will definitely come back." },
+  { id: "mock-3", rating: 3, reviewerName: "Mike T.", content: "Good food but parking needs improvement." },
+];
+
 export default function OnboardingTour() {
   const router = useRouter();
   const locale = useLocale();
-  const [ready, setReady] = useState(false);
   const searchParams = useSearchParams();
+  const [ready, setReady] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   useEffect(() => {
-    // If tour=true query param is present, start the tour immediately
-    if (searchParams.get("tour") === "true") {
-      setReady(true);
-      return;
-    }
-
-    fetch("/api/user/state")
+    // Fetch real reviews, fall back to mock data if empty
+    fetch("/api/reviews?limit=10")
       .then((r) => r.json())
       .then((data) => {
-        // Only show tour for users who completed onboarding but haven't done the tour
-        if (data.isNewUser === true && data.onboardingTourCompleted === false) {
-          setReady(true);
-        }
+        const list = data?.reviews ?? data ?? [];
+        setReviews(list.length > 0 ? list : MOCK_REVIEWS);
       })
-      .catch(() => {});
+      .catch(() => setReviews(MOCK_REVIEWS));
+
+    // Start tour from query param or first-time user
+    if (searchParams.get("tour") === "true") {
+      setReady(true);
+    } else {
+      fetch("/api/user/state")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.onboardingTourCompleted === false) {
+            setReady(true);
+          }
+        })
+        .catch(() => {});
+    }
   }, [searchParams]);
 
   useEffect(() => {
     if (!ready) return;
+
+    // Build a preview snippet from reviews for the tour
+    const negativeReview = reviews.find((r) => r.rating <= 2);
+    const positiveReview = reviews.find((r) => r.rating >= 5);
+    const negativePreview = negativeReview
+      ? `"${negativeReview.content.slice(0, 60)}..." — ${negativeReview.reviewerName}`
+      : "Wait time was too long... — Sarah M.";
+    const positivePreview = positiveReview
+      ? `"${positiveReview.content.slice(0, 60)}..." — ${positiveReview.reviewerName}`
+      : "Amazing service! — John D.";
 
     const tour = new Shepherd.Tour({
       defaultStepOptions: {
@@ -43,20 +74,18 @@ export default function OnboardingTour() {
     });
 
     tour.addStep({
-      id: "dashboard",
-      title: "Your action center",
-      text: "This is your action center — I'll always show you exactly what needs attention today, no guesswork needed.",
-      attachTo: { element: "[data-tour='dashboard']", on: "bottom" },
-      buttons: [
-        { text: "Next →", action: tour.next, classes: "shepherd-button-primary" },
-      ],
+      id: "dashboard-overview",
+      title: "Your reputation at a glance",
+      text: "This is your daily command center. StarLoop shows you exactly what needs attention today.",
+      attachTo: { element: ".dashboard-overview", on: "bottom" },
+      buttons: [{ text: "Next →", action: tour.next, classes: "shepherd-button-primary" }],
     });
 
     tour.addStep({
-      id: "reviews",
-      title: "Customer signals",
-      text: "Every customer signal lives here. I flag recovery tasks automatically so nothing slips through.",
-      attachTo: { element: "[data-tour='reviews']", on: "right" },
+      id: "reviews-list",
+      title: "Catch problems before they go public",
+      text: `Every unhappy customer is flagged here. Maya has analyzed what went wrong and drafted a recovery message.\n\n${negativePreview}`,
+      attachTo: { element: ".reviews-list", on: "top" },
       buttons: [
         { text: "← Back", action: tour.back, classes: "shepherd-button-secondary" },
         { text: "Next →", action: tour.next, classes: "shepherd-button-primary" },
@@ -64,10 +93,10 @@ export default function OnboardingTour() {
     });
 
     tour.addStep({
-      id: "requests",
-      title: "Send requests",
-      text: "Send feedback requests via SMS or email after every visit. Takes about 10 seconds.",
-      attachTo: { element: "[data-tour='requests']", on: "right" },
+      id: "ai-reply",
+      title: "Reply in seconds, not minutes",
+      text: "Maya drafts the perfect response. You approve with one click — or edit before sending.",
+      attachTo: { element: ".ai-reply-section", on: "top" },
       buttons: [
         { text: "← Back", action: tour.back, classes: "shepherd-button-secondary" },
         { text: "Next →", action: tour.next, classes: "shepherd-button-primary" },
@@ -75,10 +104,10 @@ export default function OnboardingTour() {
     });
 
     tour.addStep({
-      id: "reports",
-      title: "Weekly patterns",
-      text: "I put together weekly patterns here so you can see what's hurting your rating and what to fix first.",
-      attachTo: { element: "[data-tour='reports']", on: "right" },
+      id: "positive-reviews",
+      title: "Turn 5-star reviews into new customers",
+      text: `One click publishes great reviews to your public page and social channels.\n\n${positivePreview}`,
+      attachTo: { element: ".positive-reviews-section", on: "top" },
       buttons: [
         { text: "← Back", action: tour.back, classes: "shepherd-button-secondary" },
         { text: "Next →", action: tour.next, classes: "shepherd-button-primary" },
@@ -86,10 +115,10 @@ export default function OnboardingTour() {
     });
 
     tour.addStep({
-      id: "billing",
-      title: "Free plan",
-      text: "You're on the free plan — upgrade only when StarLoop proves its value to you.",
-      attachTo: { element: "[data-tour='billing']", on: "right" },
+      id: "weekly-report",
+      title: "Know what to fix every Monday",
+      text: "StarLoop sends a weekly report showing what hurt your rating and what recovered it.",
+      attachTo: { element: ".weekly-report-section", on: "top" },
       buttons: [
         { text: "← Back", action: tour.back, classes: "shepherd-button-secondary" },
         { text: "Next →", action: tour.next, classes: "shepherd-button-primary" },
@@ -97,19 +126,11 @@ export default function OnboardingTour() {
     });
 
     tour.addStep({
-      id: "final",
-      title: "You're all set!",
-      text: "I'm here if you need anything — just click the button in the corner.",
-      buttons: [
-        {
-          text: "Send first request →",
-          action: () => {
-            tour.complete();
-            router.push(`/${locale}/dashboard/requests`);
-          },
-          classes: "shepherd-button-primary",
-        },
-      ],
+      id: "review-request",
+      title: "Ask at the perfect moment",
+      text: "Set it once. StarLoop automatically asks happy customers for a review right after their visit.",
+      attachTo: { element: ".review-request-section", on: "top" },
+      buttons: [{ text: "Done", action: tour.complete, classes: "shepherd-button-primary" }],
     });
 
     tour.on("complete", () => {
@@ -128,10 +149,8 @@ export default function OnboardingTour() {
 
     tour.start();
 
-    return () => {
-      tour.cancel();
-    };
-  }, [ready, router, locale]);
+    return () => { tour.cancel(); };
+  }, [ready, reviews, router, locale, searchParams]);
 
-  return null; // This component doesn't render anything — Shepherd manages its own UI
+  return null;
 }

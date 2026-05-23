@@ -101,7 +101,7 @@ export default async function DashboardPage({
   return (
     <div style={{ fontFamily: "var(--font-geist), -apple-system, sans-serif" }}>
       <div
-        className="mb-8 overflow-hidden rounded-2xl bg-white"
+        className="mb-8 overflow-hidden rounded-2xl bg-white dashboard-overview"
         style={{ border: "1px solid #E5E7EB", boxShadow: "0 16px 50px rgba(15,23,42,0.06)" }}
       >
         <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
@@ -187,10 +187,10 @@ export default async function DashboardPage({
       {stats && <StatsOverview stats={stats} />}
 
       <div
-        className="mt-8 rounded-xl bg-white p-6"
+        className="mt-8 rounded-xl bg-white p-6 ai-reply-section"
         style={{ border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(15,23,42,0.05)" }}
       >
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between review-request-section">
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "#EAFBF8", color: "#087C6D" }}>
               <Bot size={14} />
@@ -213,7 +213,7 @@ export default async function DashboardPage({
           </Link>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-4">
+        <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-4 weekly-report-section">
           {[
             {
               label: "Needs owner attention",
@@ -264,11 +264,11 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 positive-reviews-section">
         <RatingChart />
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 reviews-list">
         <h2 className="text-lg font-semibold mb-4" style={{ color: "#0D1117" }}>
           {t("reviews.title")}
         </h2>
