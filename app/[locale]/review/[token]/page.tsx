@@ -40,27 +40,27 @@ const copy: Record<GateLang, Record<string, string>> = {
     powered: "Powered by StarLoop",
   },
   zh: {
-    loading: "正在加载...",
-    linkNotFound: "链接未找到",
-    thankYou: "谢谢你！",
-    thankYouBody: "你的反馈已收到。感谢你花时间分享这次体验。",
-    experience: "你这次体验怎么样？",
-    tapStar: "点击星级评分",
-    shareGoogle: "继续去 Google 评价",
-    improve: "告诉我们哪里可以改进",
-    redirecting: "正在跳转...",
-    tellUs: "告诉我们哪里可以改进",
-    privateHelp: "你的留言会帮助商家及时跟进和改进服务。",
-    placeholder: "哪些地方可以做得更好？",
-    reachYou: "商家如何联系你？",
-    optional: "选填",
-    phone: "电话号码",
-    email: "邮箱",
-    privacy: "仅用于商家就本次体验与你跟进。",
-    submit: "提交反馈",
-    submitting: "提交中...",
-    change: "修改评分",
-    publicReview: "我更想留下公开 Google 评价",
+    loading: "Loading...",
+    linkNotFound: "Link not found",
+    thankYou: "Thank you!",
+    thankYouBody: "Your feedback has been received. We appreciate you taking the time to share your experience with us.",
+    experience: "How was your experience?",
+    tapStar: "Tap a star to rate",
+    shareGoogle: "Continue to Google review",
+    improve: "Tell us what we could improve",
+    redirecting: "Redirecting...",
+    tellUs: "Tell us what we could improve",
+    privateHelp: "Your message helps the business respond and make things right.",
+    placeholder: "What could have gone better?",
+    reachYou: "How can we reach you?",
+    optional: "optional",
+    phone: "Phone number",
+    email: "Email",
+    privacy: "Only used by this business to follow up about your experience.",
+    submit: "Submit feedback",
+    submitting: "Submitting...",
+    change: "Change rating",
+    publicReview: "I prefer to leave a public Google review",
     powered: "Powered by StarLoop",
   },
   es: {
@@ -116,7 +116,7 @@ const copy: Record<GateLang, Record<string, string>> = {
 function detectGateLang(): GateLang {
   if (typeof navigator === "undefined") return "en";
   const lang = navigator.language.toLowerCase();
-  if (lang.startsWith("zh")) return "zh";
+  if (lang.startsWith("zh")) return "en";
   if (lang.startsWith("es")) return "es";
   if (lang.startsWith("fr")) return "fr";
   return "en";

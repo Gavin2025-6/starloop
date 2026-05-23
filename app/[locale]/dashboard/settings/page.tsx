@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
 
@@ -120,7 +119,6 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
-  const t = useTranslations();
   const searchParams = useSearchParams();
   const googleParam = searchParams.get("google");
 
@@ -141,6 +139,8 @@ export default function SettingsPage() {
   const [googleReviewUrl, setGoogleReviewUrl] = useState("");
   const [quickSaved, setQuickSaved]   = useState(false);
   const [isGoogleConnected, setIsGoogleConnected] = useState(false);
+  const [googleDisconnecting, setGoogleDisconnecting] = useState(false);
+  const [googleError, setGoogleError] = useState("");
 
   const [businessId, setBusinessId]   = useState("");
   const [widgetCopied, setWidgetCopied] = useState(false);
@@ -259,6 +259,23 @@ export default function SettingsPage() {
     if (res.ok) { setQuickSaved(true); setTimeout(() => setQuickSaved(false), 2500); }
   }
 
+  async function handleGoogleDisconnect() {
+    setGoogleDisconnecting(true);
+    setGoogleError("");
+    try {
+      const res = await fetch("/api/google/disconnect", { method: "DELETE" });
+      if (!res.ok) {
+        setGoogleError("Could not disconnect Google Business. Please try again.");
+        return;
+      }
+      setIsGoogleConnected(false);
+    } catch {
+      setGoogleError("Network error. Please try again.");
+    } finally {
+      setGoogleDisconnecting(false);
+    }
+  }
+
   const cardStyle = {
     background: "#fff",
     borderRadius: "16px",
@@ -280,19 +297,19 @@ export default function SettingsPage() {
       />
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-1" style={{ color: "#1A1D23" }}>{t("settings.title")}</h1>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: "#1A1D23" }}>Settings</h1>
         <p className="text-sm" style={{ color: "#6B7280" }}>Manage your business profile, Google review flow, and how StarLoop handles customer actions.</p>
       </div>
 
       {/* Banners */}
       {googleParam === "error" && (
         <div className="mb-4 px-4 py-3 rounded-xl text-sm" style={{ background: "#FFF5F5", border: "1px solid #FFD0D0", color: "#FF4757" }}>
-          Google授权失败，请重试。
+          Google authorization failed. Please try again.
         </div>
       )}
       {googleParam === "connected" && (
         <div className="mb-4 px-4 py-3 rounded-xl text-sm" style={{ background: "rgba(0,201,167,0.08)", border: "1px solid rgba(0,201,167,0.2)", color: "#00C9A7" }}>
-          Google Business 已成功连接！
+          Google Business connected successfully.
         </div>
       )}
       <div className="space-y-6">
@@ -356,7 +373,7 @@ export default function SettingsPage() {
           <SectionHeader title="Business Profile" subtitle="Password required to save changes" />
           <div className="space-y-4">
             <div>
-              <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>{t("settings.businessName")}</label>
+              <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>Business Name</label>
               <input
                 type="text"
                 value={businessName}
@@ -398,7 +415,7 @@ export default function SettingsPage() {
               )}
             </div>
             <div>
-              <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>{t("settings.businessCategory")}</label>
+              <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>Business Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -449,54 +466,51 @@ export default function SettingsPage() {
           </div>
 
           <div className="pt-4" style={{ borderTop: "1px solid #F0F0F5" }}>
-            <h3 className="font-medium text-sm mb-3" style={{ color: "#1A1D23" }}>{t("settings.googleConnection")}</h3>
+            <h3 className="font-medium text-sm mb-3" style={{ color: "#1A1D23" }}>Google Business</h3>
             {loading ? (
               <div className="text-sm" style={{ color: "#6B7280" }}>Loading...</div>
             ) : (
               <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full" style={{ background: isGoogleConnected ? "#00C9A7" : "#D1D5DB" }} />
-                  <span className="text-sm" style={{ color: "#374151" }}>
-                    {isGoogleConnected ? t("settings.connected") : t("settings.notConnected")}
-                  </span>
-                  {!isGoogleConnected && (
+                <div className="flex flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between" style={{ background: "#F8F9FC", border: "1px solid #E8ECEF" }}>
+                  <div className="flex items-center gap-3">
+                    <div className="h-2.5 w-2.5 rounded-full" style={{ background: isGoogleConnected ? "#00C9A7" : "#EF4444", boxShadow: isGoogleConnected ? "0 0 0 3px rgba(0,201,167,0.12)" : "0 0 0 3px rgba(239,68,68,0.12)" }} />
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: "#1A1D23" }}>
+                        {isGoogleConnected ? (businessName || "Google Business") : "Google Business"}
+                      </p>
+                      <p className="text-xs" style={{ color: isGoogleConnected ? "#087C6D" : "#EF4444" }}>
+                        {isGoogleConnected ? "Connected" : "Not connected"}
+                      </p>
+                    </div>
+                  </div>
+                  {isGoogleConnected ? (
+                    <button
+                      onClick={handleGoogleDisconnect}
+                      disabled={googleDisconnecting}
+                      className="rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                      style={{
+                        background: "#FFFFFF",
+                        border: "1px solid #FCA5A5",
+                        color: "#EF4444",
+                        cursor: googleDisconnecting ? "not-allowed" : "pointer",
+                        whiteSpace: "nowrap",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "#FEF2F2"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "#FFFFFF"; }}
+                    >
+                      {googleDisconnecting ? "Disconnecting..." : "Disconnect"}
+                    </button>
+                  ) : (
                     <a
                       href="/api/google/connect"
-                      className="ml-auto text-sm px-3 py-1.5 rounded-lg transition-colors hover:bg-gray-100"
-                      style={{ border: "1px solid #E8ECEF", color: "#6B7280", background: "#fff" }}
+                      className="rounded-lg px-3 py-2 text-center text-sm font-medium transition-colors hover:bg-gray-100"
+                      style={{ border: "1px solid #E8ECEF", color: "#374151", background: "#FFFFFF", whiteSpace: "nowrap" }}
                     >
-                      {t("settings.connect")}
+                      Connect
                     </a>
                   )}
-                  {isGoogleConnected && (
-                    <div className="ml-auto flex items-center gap-2">
-                      <span className="text-xs font-medium" style={{ color: "#00C9A7" }}>✓ Google Business</span>
-                      <button
-                        onClick={async () => {
-                          const res = await fetch("/api/google/disconnect", { method: "DELETE" });
-                          if (res.ok) {
-                            setIsGoogleConnected(false);
-                          }
-                        }}
-                        style={{
-                          background: "transparent",
-                          border: "1px solid #FCA5A5",
-                          color: "#EF4444",
-                          borderRadius: "6px",
-                          padding: "6px 12px",
-                          fontSize: "0.75rem",
-                          fontWeight: 500,
-                          cursor: "pointer",
-                          whiteSpace: "nowrap",
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "#FEF2F2"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                      >
-                        Disconnect
-                      </button>
-                    </div>
-                  )}
                 </div>
+                {googleError && <p className="text-xs" style={{ color: "#EF4444" }}>{googleError}</p>}
                 <div>
                   <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>
                     Google Review Link
@@ -527,7 +541,7 @@ export default function SettingsPage() {
             className="mt-5 px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
             style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)", borderRadius: "10px", border: "none", cursor: "pointer" }}
           >
-            {quickSaved ? "✓ Saved" : t("settings.save")}
+            {quickSaved ? "✓ Saved" : "Save"}
           </button>
         </div>
 

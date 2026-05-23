@@ -56,9 +56,17 @@ export async function GET(request: Request) {
       });
     }
 
-    return NextResponse.redirect(
+    const response = NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/en/dashboard?tour=true`
     );
+    response.cookies.set("starloop_google_connected", "1", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    });
+    return response;
   } catch (err) {
     console.error("[Google/Callback]", err);
     return NextResponse.redirect(

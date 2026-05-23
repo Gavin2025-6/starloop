@@ -42,8 +42,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.plan = (user as Record<string, unknown>).plan;
-        token.preferredLanguage = (user as Record<string, unknown>).preferredLanguage;
+        token.plan = user.plan;
+        token.preferredLanguage = user.preferredLanguage;
       }
       // Always refresh isGoogleConnected from DB on every token check
       if (token.id) {
@@ -58,12 +58,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (session.user as any).plan = token.plan;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (session.user as any).preferredLanguage = token.preferredLanguage;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (session.user as any).isGoogleConnected = token.isGoogleConnected;
+        session.user.plan = token.plan;
+        session.user.preferredLanguage = token.preferredLanguage;
+        session.user.isGoogleConnected = token.isGoogleConnected;
       }
       return session;
     },

@@ -10,7 +10,7 @@ export async function PATCH() {
     }
     await prisma.user.update({
       where: { id: session.user.id },
-      data: { onboardingCompleted: true },
+      data: { onboardingTourCompleted: true },
     });
     return NextResponse.json({ success: true });
   } catch (err) {

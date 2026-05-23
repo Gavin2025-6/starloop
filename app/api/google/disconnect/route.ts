@@ -27,7 +27,9 @@ export async function DELETE() {
       },
     });
 
-    return NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true });
+    response.cookies.delete("starloop_google_connected");
+    return response;
   } catch (err) {
     console.error("[Google/Disconnect]", err);
     return NextResponse.json({ error: "Failed to disconnect" }, { status: 500 });

@@ -25,10 +25,10 @@ interface Review {
 type Tab = "tasks" | "positive" | "private" | "all";
 
 const STATUS_LABEL: Record<string, { label: string; color: string; bg: string }> = {
-  new:         { label: "新任务",  color: "#DC2626", bg: "#FEF2F2" },
-  in_progress: { label: "处理中",  color: "#D97706", bg: "#FFFBEB" },
-  resolved:    { label: "已解决",  color: "#059669", bg: "#F0FDF4" },
-  archived:    { label: "已归档",  color: "#6B7280", bg: "#F9FAFB" },
+  new:         { label: "New",  color: "#DC2626", bg: "#FEF2F2" },
+  in_progress: { label: "In progress",  color: "#D97706", bg: "#FFFBEB" },
+  resolved:    { label: "Resolved",  color: "#059669", bg: "#F0FDF4" },
+  archived:    { label: "Archived",  color: "#6B7280", bg: "#F9FAFB" },
 };
 
 function StarRow({ rating }: { rating: number }) {
@@ -102,10 +102,10 @@ function ReviewTaskCard({
           body: JSON.stringify({ taskStatus: "in_progress" }),
         });
         onStatusChange(review.id, "in_progress");
-        showToast("✅ 已处理。坚持处理差评，平均30天评分提升0.1星。");
+        showToast("Handled. Consistent recovery work can improve ratings over time.");
       }
     } catch {
-      showToast("发送失败，请重试");
+      showToast("Send failed. Please try again.");
     }
     setLoading(null);
     setEditing(false);
@@ -126,10 +126,10 @@ function ReviewTaskCard({
           body: JSON.stringify({ taskStatus: "resolved" }),
         });
         onStatusChange(review.id, "resolved");
-        showToast("✅ 已处理。坚持处理差评，平均30天评分提升0.1星。");
+        showToast("Handled. Consistent recovery work can improve ratings over time.");
       }
     } catch {
-      showToast("发布失败，请重试");
+      showToast("Publish failed. Please try again.");
     }
     setLoading(null);
     setEditing(false);
@@ -143,7 +143,7 @@ function ReviewTaskCard({
       body: JSON.stringify({ taskStatus: "resolved" }),
     });
     onStatusChange(review.id, "resolved");
-    showToast("✅ 已处理。坚持处理差评，平均30天评分提升0.1星。");
+    showToast("Handled. Consistent recovery work can improve ratings over time.");
     setLoading(null);
   }
 
@@ -193,7 +193,7 @@ function ReviewTaskCard({
               <span style={{ fontSize: "0.75rem", padding: "3px 10px", borderRadius: "9999px", background: "#EEF2FF", color: "#6366F1", fontWeight: 500 }}>Private</span>
             )}
             {isNeg && !isPrivate && (
-              <span style={{ fontSize: "0.75rem", padding: "3px 10px", borderRadius: "9999px", background: "#FEF2F2", color: "#EF4444", fontWeight: 500 }}>差评</span>
+              <span style={{ fontSize: "0.75rem", padding: "3px 10px", borderRadius: "9999px", background: "#FEF2F2", color: "#EF4444", fontWeight: 500 }}>Negative</span>
             )}
             {!isNeg && !isPrivate && (
               <span style={{ fontSize: "0.75rem", padding: "3px 10px", borderRadius: "9999px", background: "#EFF6FF", color: "#3B82F6", fontWeight: 500 }}>Google</span>
@@ -253,7 +253,7 @@ function ReviewTaskCard({
             {(draft || editing) ? (
               <div style={{ marginBottom: "12px" }}>
                 <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
-                  AI 方案
+                  AI plan
                 </label>
                 {editing ? (
                   <textarea
@@ -291,7 +291,7 @@ function ReviewTaskCard({
                         opacity: generating ? 0.6 : 1,
                       }}
                     >
-                      {generating ? "生成中…" : "✨ 一键生成AI方案"}
+                      {generating ? "Generating..." : "Generate AI plan"}
                     </button>
                   ) : (
                     <>
@@ -304,7 +304,7 @@ function ReviewTaskCard({
                           opacity: (loading === "send" || !draft) ? 0.5 : 1,
                         }}
                       >
-                        {loading === "send" ? "发送中…" : "⚡ 一键发送AI方案"}
+                        {loading === "send" ? "Sending..." : "Send AI plan"}
                       </button>
                       <button
                         onClick={() => { setEditing(true); }}
@@ -314,7 +314,7 @@ function ReviewTaskCard({
                           background: "transparent", color: "#0D1117", border: "1px solid #E5E7EB", cursor: "pointer",
                         }}
                       >
-                        ✏️ 修改后发送
+                        Edit before sending
                       </button>
                       {editing && (
                         <button
@@ -325,7 +325,7 @@ function ReviewTaskCard({
                             background: "#059669", color: "#FFFFFF", border: "none", cursor: "pointer",
                           }}
                         >
-                          确认发送
+                          Confirm send
                         </button>
                       )}
                     </>
@@ -339,7 +339,7 @@ function ReviewTaskCard({
                       opacity: loading === "resolve" ? 0.5 : 1,
                     }}
                   >
-                    {loading === "resolve" ? "处理中…" : "✓ 标记已处理"}
+                    {loading === "resolve" ? "Updating..." : "Mark handled"}
                   </button>
                 </>
               )}
@@ -357,7 +357,7 @@ function ReviewTaskCard({
                         opacity: generating ? 0.6 : 1,
                       }}
                     >
-                      {generating ? "生成中…" : "✨ 生成AI回复"}
+                      {generating ? "Generating..." : "Generate AI reply"}
                     </button>
                   ) : (
                     <>
@@ -370,7 +370,7 @@ function ReviewTaskCard({
                           opacity: (loading === "publish" || !draft) ? 0.5 : 1,
                         }}
                       >
-                        {loading === "publish" ? "发布中…" : "🚀 一键发布"}
+                        {loading === "publish" ? "Publishing..." : "Publish reply"}
                       </button>
                       <button
                         onClick={() => setEditing(!editing)}
@@ -379,7 +379,7 @@ function ReviewTaskCard({
                           background: "transparent", color: "#0D1117", border: "1px solid #E5E7EB", cursor: "pointer",
                         }}
                       >
-                        ✏️ {editing ? "取消修改" : "修改"}
+                        {editing ? "Cancel edit" : "Edit"}
                       </button>
                       {editing && (
                         <button
@@ -390,7 +390,7 @@ function ReviewTaskCard({
                             background: "#059669", color: "#FFFFFF", border: "none", cursor: "pointer",
                           }}
                         >
-                          确认发布
+                          Confirm publish
                         </button>
                       )}
                     </>
@@ -405,7 +405,7 @@ function ReviewTaskCard({
                   disabled={generating}
                   style={{ color: "#9CA3AF", background: "none", border: "none", cursor: "pointer", fontSize: "0.8125rem", padding: "8px 4px" }}
                 >
-                  {generating ? "…" : "↻ 重新生成"}
+                  {generating ? "..." : "Regenerate"}
                 </button>
               )}
             </div>
@@ -540,7 +540,7 @@ export default function ReviewsPage() {
       {/* Content */}
       {loading ? (
         <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: "12px", padding: "48px", textAlign: "center" }}>
-          <p style={{ color: "#6B7280", fontSize: "0.875rem" }}>加载中…</p>
+          <p style={{ color: "#6B7280", fontSize: "0.875rem" }}>Loading...</p>
         </div>
       ) : displayed.length === 0 ? (
         <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: "12px", padding: "48px", textAlign: "center" }}>
@@ -548,7 +548,7 @@ export default function ReviewsPage() {
             {activeTab === "tasks" ? "🎉" : "⭐"}
           </div>
           <p style={{ color: "#6B7280", fontSize: "0.875rem", margin: 0 }}>
-            {activeTab === "tasks" ? "没有待处理的差评，干得漂亮！" : "暂无评价"}
+            {activeTab === "tasks" ? "No recovery tasks are open. Nice work." : "No reviews yet."}
           </p>
         </div>
       ) : (

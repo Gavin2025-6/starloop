@@ -203,7 +203,7 @@ export async function sendNegativeReviewAlert({
     </div>` : "";
 
   const body = emailShell(`
-    ${emailHeader("⚠️", "您有一条新的差评需要处理", "Action needed — respond within 24 hours", "135deg,#dc2626,#b91c1c")}
+    ${emailHeader("Alert", "New negative review needs attention", "Action needed: respond within 24 hours", "135deg,#dc2626,#b91c1c")}
     <tr><td style="padding:36px 40px 8px;">
       <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;margin-bottom:20px;">
         <p style="margin:0;font-size:13px;font-weight:700;color:#dc2626;">⚠️ NEEDS IMMEDIATE ATTENTION</p>
@@ -211,7 +211,7 @@ export async function sendNegativeReviewAlert({
       </div>
 
       <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin-bottom:20px;">
-        <p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#111827;">${reviewerName} 说：</p>
+        <p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#111827;">${reviewerName} said:</p>
         <p style="margin:0 0 12px;font-size:18px;color:#dc2626;letter-spacing:1px;">${stars} (${rating}/5)</p>
         ${content ? `<p style="margin:0;font-size:14px;color:#374151;line-height:1.6;font-style:italic;">"${content}"</p>` : '<p style="margin:0;font-size:13px;color:#9ca3af;">No written feedback.</p>'}
       </div>
@@ -234,7 +234,7 @@ export async function sendNegativeReviewAlert({
   return resend.emails.send({
     from: "StarLoop <onboarding@resend.dev>",
     to,
-    subject: `⚠️ 您有一条新的差评需要处理 — ${businessName}`,
+    subject: `New negative review needs attention: ${businessName}`,
     html: body,
   });
 }
@@ -334,7 +334,7 @@ export async function sendReviewRequestEmail({
   const isZh = language === "zh-CN";
 
   const subject = isZh
-    ? `${customerName}，感谢您光顾${businessName}`
+    ? `${customerName}, thank you for choosing ${businessName}`
     : `${customerName}, thank you for choosing ${businessName}`;
 
   const html = isZh
@@ -513,43 +513,5 @@ export async function sendReputationReportEmail({
 function buildZhTemplate({ customerName, businessName, reviewUrl }: {
   customerName: string; businessName: string; reviewUrl: string;
 }) {
-  return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
-    <tr><td align="center">
-      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-        <tr><td style="background:linear-gradient(135deg,#2563eb,#1d4ed8);padding:40px 40px 32px;text-align:center;">
-          <div style="font-size:40px;margin-bottom:12px;">⭐</div>
-          <h1 style="color:#ffffff;margin:0;font-size:24px;font-weight:700;">${businessName}</h1>
-        </td></tr>
-        <tr><td style="padding:40px;">
-          <p style="color:#374151;font-size:16px;line-height:1.8;margin:0 0 16px;">您好，${customerName}！</p>
-          <p style="color:#374151;font-size:16px;line-height:1.8;margin:0 0 24px;">
-            感谢您光顾<strong>${businessName}</strong>！希望您这次的体验令您满意。
-            您的反馈对我们非常重要，不仅帮助我们持续改进，也让更多顾客能找到我们。
-          </p>
-          <p style="color:#374151;font-size:16px;line-height:1.8;margin:0 0 32px;">
-            能花30秒分享一下您的体验吗？
-          </p>
-          <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:32px;">
-            <a href="${reviewUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">
-              ⭐ 分享我的体验
-            </a>
-          </td></tr></table>
-          <p style="color:#6b7280;font-size:13px;line-height:1.5;margin:0;">
-            只需30秒 · 感谢您的宝贵意见
-          </p>
-        </td></tr>
-        <tr><td style="background:#f9fafb;padding:24px 40px;border-top:1px solid #f3f4f6;text-align:center;">
-          <p style="color:#9ca3af;font-size:12px;margin:0;">
-            ${businessName} · 由 <strong style="color:#6b7280;">StarLoop</strong> 提供技术支持
-          </p>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+  return buildEnTemplate({ customerName, businessName, reviewUrl });
 }

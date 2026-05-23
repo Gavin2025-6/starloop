@@ -36,7 +36,9 @@ export default async function middleware(request: NextRequest) {
       pathname === "/en",
   );
 
-  if (token && !isWhitelisted && token.isGoogleConnected === false) {
+  const hasGoogleConnectedCookie = request.cookies.get("starloop_google_connected")?.value === "1";
+
+  if (token && !isWhitelisted && token.isGoogleConnected === false && !hasGoogleConnectedCookie) {
     return NextResponse.redirect(new URL("/en/connect-google", request.url));
   }
 

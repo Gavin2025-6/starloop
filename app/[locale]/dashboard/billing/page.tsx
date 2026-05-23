@@ -37,18 +37,24 @@ export default function BillingPage() {
   const searchParams = useSearchParams();
   const paymentParam = searchParams.get("payment");
   const [currentPlan, setCurrentPlan] = useState("FREE");
+  const [selectedPlan, setSelectedPlan] = useState("FREE");
   const [loadingPlan, setLoadingPlan] = useState(true);
   const [upgrading, setUpgrading] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/user/plan")
       .then((r) => r.json())
-      .then((d) => setCurrentPlan(d.plan ?? "FREE"))
+      .then((d) => {
+        const plan = d.plan ?? "FREE";
+        setCurrentPlan(plan);
+        setSelectedPlan(plan);
+      })
       .catch(() => {})
       .finally(() => setLoadingPlan(false));
   }, []);
 
   async function handleUpgrade(planKey: string) {
+    setSelectedPlan(planKey);
     setUpgrading(planKey);
     try {
       if (currentPlan !== "FREE") {
@@ -102,16 +108,28 @@ export default function BillingPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         {PLANS.map((plan) => {
           const isCurrent = currentPlan === plan.key;
+          const isSelected = selectedPlan === plan.key;
           const isPaid = plan.key !== "FREE";
           const isFeatured = !!plan.featured;
 
           return (
             <div
               key={plan.key}
-              className="relative rounded-2xl bg-white p-6"
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedPlan(plan.key)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setSelectedPlan(plan.key);
+                }
+              }}
+              className="relative rounded-2xl bg-white p-6 transition-all"
               style={{
-                border: isFeatured ? "2px solid #0D1117" : "1px solid #E5E7EB",
-                boxShadow: isFeatured ? "0 20px 60px rgba(15,23,42,0.14)" : "0 8px 28px rgba(15,23,42,0.05)",
+                border: isSelected ? "2px solid #3157D5" : isFeatured ? "2px solid #0D1117" : "1px solid #E5E7EB",
+                boxShadow: isSelected ? "0 18px 48px rgba(49,87,213,0.18)" : isFeatured ? "0 20px 60px rgba(15,23,42,0.14)" : "0 8px 28px rgba(15,23,42,0.05)",
+                background: isSelected ? "#F7F9FF" : "#FFFFFF",
+                cursor: "pointer",
               }}
             >
               {plan.badge && (
@@ -129,6 +147,18 @@ export default function BillingPage() {
                     Current
                   </span>
                 )}
+                <span
+                  aria-label={isSelected ? "Selected plan" : "Select plan"}
+                  className="flex h-6 w-6 items-center justify-center rounded-md"
+                  style={{
+                    border: isSelected ? "1px solid #3157D5" : "1px solid #D1D5DB",
+                    background: isSelected ? "#3157D5" : "#FFFFFF",
+                    color: "#FFFFFF",
+                    flexShrink: 0,
+                  }}
+                >
+                  {isSelected && <Check size={15} />}
+                </span>
               </div>
 
               <div className="mt-6 flex items-end gap-1">
@@ -148,7 +178,10 @@ export default function BillingPage() {
               <button
                 type="button"
                 disabled={isCurrent || upgrading === plan.key}
-                onClick={() => isPaid && handleUpgrade(plan.key)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isPaid) handleUpgrade(plan.key);
+                }}
                 className="mt-7 w-full rounded-lg px-4 py-3 text-sm font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
                 style={{
                   background: isFeatured ? "#0D1117" : isPaid ? "linear-gradient(135deg, #00C9A7, #4A6FFF)" : "#F3F4F6",

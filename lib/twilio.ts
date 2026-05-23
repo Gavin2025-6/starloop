@@ -27,10 +27,6 @@ export function buildReviewRequestMessage(params: {
 }): string {
   const { businessName, customerName, reviewUrl, language } = params;
 
-  if (language === "zh-CN") {
-    return `嗨 ${customerName}！感谢您光顾${businessName}。您的体验感觉如何？非常期待您的反馈，谢谢！🙏`;
-  }
-
   return `Hi ${customerName}, thanks for visiting ${businessName}! How was your experience? We'd love your feedback.`;
 }
 
@@ -42,9 +38,5 @@ export function buildFollowUpMessage(params: {
 }): string {
   const { businessName, customerName, language } = params;
 
-  if (language === "zh-CN") {
-    return `${customerName} 您好，${businessName} 再次感谢您的光临！如果方便，希望您能分享一下这次体验 😊`;
-  }
-
-  return `Hi ${customerName}, ${businessName} here again! We hope you had a great experience and would really appreciate a quick review when you get a chance. 😊`;
+  return `Hi ${customerName}, ${businessName} here again! We hope you had a great experience and would really appreciate a quick review when you get a chance.`;
 }

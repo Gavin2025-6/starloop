@@ -1,11 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import Logo from "@/components/ui/Logo";
 
 export default function ConnectGooglePage() {
-  const router = useRouter();
-
   return (
     <div style={{
       minHeight: "100vh",
