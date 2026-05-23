@@ -161,9 +161,9 @@ export default async function LandingPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {[
-                ["Find", "Spot the customer who is likely to complain, churn, or praise publicly."],
-                ["Act", "Create the recovery task, review request, follow-up, or owner approval item."],
-                ["Learn", "Remember the pattern so repeated service issues become visible."],
+                ["Catch risk early", "Spot unhappy customers before they post publicly and damage your rating."],
+                ["Recover automatically", "Send the right message at the right time. No manual follow-up needed."],
+                ["Grow with proof", "Turn every resolved issue and 5-star review into visible business growth."],
               ].map(([title, body]) => (
                 <div
                   key={title}
@@ -191,7 +191,7 @@ export default async function LandingPage() {
                 More than a reply box.
               </h2>
               <p className="mt-5 text-base leading-8" style={{ color: "#A7B0C4" }}>
-                ChatGPT can write a sentence. StarLoop runs the daily loop around that sentence: customer requests, risk triage, recovery follow-up, approval, and owner-ready reporting.
+                StarLoop runs the daily loop owners can&apos;t do manually: customer requests, risk triage, recovery follow-up, approval, and owner-ready reporting.
               </p>
             </div>
             <div className="grid gap-3">

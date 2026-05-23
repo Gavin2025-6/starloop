@@ -156,7 +156,7 @@ export default function CapabilityExplorer() {
             })}
           </div>
 
-          <div className="grid gap-0 lg:grid-cols-[0.86fr_1.14fr]">
+          <div className="grid gap-0 lg:grid-cols-[0.86fr_1.14fr] items-start min-h-[400px]">
             <div className="border-b border-[#E6ECF4] p-6 sm:p-8 lg:border-b-0 lg:border-r">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EAFBF8] text-[#087C6D]">
                 <ActiveIcon size={23} />
@@ -173,7 +173,7 @@ export default function CapabilityExplorer() {
               </div>
             </div>
 
-            <div className="p-6 sm:p-8">
+            <div className="p-6 sm:p-8 items-start">
               <div className="grid gap-4">
                 <div className="rounded-2xl border border-[#DDE5EF] p-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#7F8AA3]">

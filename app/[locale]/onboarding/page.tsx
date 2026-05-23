@@ -411,7 +411,7 @@ export default function OnboardingPage() {
                 Maya is ready to help you get started.
               </p>
               <button
-                onClick={() => router.push(`/${locale}/dashboard/requests`)}
+                onClick={() => router.push(`/${locale}/dashboard?tour=true`)}
                 style={btnBase}
                 onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}

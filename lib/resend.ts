@@ -9,6 +9,8 @@ function getResend(): Resend {
 }
 const resend = { emails: { send: (...args: Parameters<Resend["emails"]["send"]>) => getResend().emails.send(...args) } };
 
+export { resend };
+
 // ─── Shared layout helpers ────────────────────────────────────────────────────
 
 function emailShell(body: string) {

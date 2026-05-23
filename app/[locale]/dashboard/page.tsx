@@ -8,6 +8,7 @@ import RatingChart from "@/components/dashboard/RatingChart";
 import { Link } from "@/i18n/navigation";
 import { AlertTriangle, ArrowRight, Bot, CheckCircle2, Languages, Send, Sparkles, TrendingUp } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
+import { Suspense } from "react";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 
 export default async function DashboardPage({
@@ -290,7 +291,9 @@ export default async function DashboardPage({
           />
         )}
       </div>
-      <OnboardingTour />
+      <Suspense fallback={null}>
+        <OnboardingTour />
+      </Suspense>
     </div>
   );
 }

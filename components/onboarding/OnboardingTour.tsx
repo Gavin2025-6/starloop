@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import Shepherd from "shepherd.js";
 import "shepherd.js/dist/css/shepherd.css";
@@ -10,8 +10,15 @@ export default function OnboardingTour() {
   const router = useRouter();
   const locale = useLocale();
   const [ready, setReady] = useState(false);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
+    // If tour=true query param is present, start the tour immediately
+    if (searchParams.get("tour") === "true") {
+      setReady(true);
+      return;
+    }
+
     fetch("/api/user/state")
       .then((r) => r.json())
       .then((data) => {
@@ -21,7 +28,7 @@ export default function OnboardingTour() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!ready) return;
@@ -107,10 +114,16 @@ export default function OnboardingTour() {
 
     tour.on("complete", () => {
       fetch("/api/user/tour-complete", { method: "PATCH" }).catch(() => {});
+      if (searchParams.get("tour") === "true") {
+        router.replace(`/${locale}/dashboard`);
+      }
     });
 
     tour.on("cancel", () => {
       fetch("/api/user/tour-complete", { method: "PATCH" }).catch(() => {});
+      if (searchParams.get("tour") === "true") {
+        router.replace(`/${locale}/dashboard`);
+      }
     });
 
     tour.start();
