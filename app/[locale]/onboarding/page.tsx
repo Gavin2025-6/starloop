@@ -53,7 +53,7 @@ function Step1({ onNext }: { onNext: () => void }) {
       <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "32px" }}>
         {[
           { icon: "📱", title: "一键发短信邀评", desc: "自动向客户发送邀评短信，省去手动操作" },
-          { icon: "🛡️", title: "服务补救协议", desc: "不满意的客户反馈直达您，不在 Google 上公开" },
+          { icon: "🛡️", title: "服务补救协议", desc: "不满意的客户反馈直达您，方便主动跟进改善服务" },
           { icon: "📊", title: "评分趋势分析", desc: "AI 每月生成报告，找出可改进的问题模式" },
         ].map(({ icon, title, desc }) => (
           <div key={title} style={{
@@ -115,7 +115,7 @@ function Step2() {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
-        {["自动同步新评论，无需手动刷新", "负面反馈私下捕获，不影响公开评分", "每月自动生成声誉报告"].map(b => (
+        {["自动同步新评论，无需手动刷新", "客户反馈直达您，方便主动跟进服务", "每月自动生成声誉报告"].map(b => (
           <div key={b} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
             <span style={{ color: "#10B981", flexShrink: 0 }}>✓</span>
             <span style={{ fontSize: "14px", color: "#374151" }}>{b}</span>
@@ -247,7 +247,7 @@ function Step4({ onNext }: { onNext: () => void }) {
           设置服务补救协议
         </h2>
         <p style={{ fontSize: "14px", color: "#6B7280", lineHeight: 1.6 }}>
-          当客户给出 1-3 星评价时，StarLoop 会私下捕获反馈并通知您，让您有机会在差评公开之前主动补救。
+          当客户给出较低评分时，StarLoop 会及时通知您，方便主动联系客户改善服务体验。
         </p>
       </div>
 
@@ -258,10 +258,10 @@ function Step4({ onNext }: { onNext: () => void }) {
         <p style={{ fontSize: "13px", fontWeight: 600, color: "#065F46", marginBottom: "8px" }}>✅ 默认补救流程（已启用）</p>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           {[
-            "1-3★ → 反馈私下发给您，不公开",
-            "AI 生成建议回复",
+            "客户反馈直接发给您，方便跟进",
+            "AI 生成服务改进建议",
             "24小时跟进提醒",
-            "4-5★ → 引导到 Google 留公开评价",
+            "满意客户可自愿分享 Google 评价",
           ].map(t => (
             <div key={t} style={{ display: "flex", gap: "8px", fontSize: "13px", color: "#374151" }}>
               <span style={{ color: "#10B981" }}>→</span> {t}

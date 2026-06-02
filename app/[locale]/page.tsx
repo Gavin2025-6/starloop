@@ -5,7 +5,7 @@ import Logo from "@/components/ui/Logo";
 
 const workflow = [
   "Ask the right customers for feedback at the right moment",
-  "Separate praise, complaints, silence, and public-review risk",
+  "Categorize praise, complaints, and silence into clear action items",
   "Create the next best action for the owner",
   "Follow up until the issue is closed or escalated",
   "Turn repeated issues into a weekly improvement plan",
@@ -66,7 +66,7 @@ export default async function LandingPage() {
                 We turn unhappy customers into retained revenue.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-7 sm:text-lg sm:leading-8" style={{ color: "#A7B0C4" }}>
-                StarLoop finds why customers leave, recovers them before they post, and tracks every dollar saved.
+                StarLoop finds why customers leave, helps you recover them with direct follow-up, and tracks every service improvement.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <Link
@@ -118,7 +118,7 @@ export default async function LandingPage() {
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#7F8AA3]">Next best actions</p>
                     <div className="mt-3 grid gap-2">
                       {[
-                        "Send recovery message before the customer posts publicly",
+                        "Send a direct recovery message to address the customer's concern",
                         "Ask happy customer for a review while the visit is fresh",
                         "Show wait-time complaints in this week's action report",
                       ].map((action) => (
@@ -161,7 +161,7 @@ export default async function LandingPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {[
-                ["Catch risk early", "Spot unhappy customers before they post publicly and damage your rating."],
+                ["Catch risk early", "Identify unhappy customers early and reach out before the experience spreads."],
                 ["Recover automatically", "Send the right message at the right time. No manual follow-up needed."],
                 ["Grow with proof", "Turn every resolved issue and 5-star review into visible business growth."],
               ].map(([title, body]) => (

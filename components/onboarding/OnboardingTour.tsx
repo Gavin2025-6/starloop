@@ -150,7 +150,7 @@ export default function OnboardingTour() {
 
     tour.addStep({
       id: "reviews-list",
-      title: "Catch problems before they go public",
+      title: "Spot and resolve service issues",
       text: `Every unhappy customer is flagged here. Maya has analyzed what went wrong and drafted a recovery message.\n\nExample: "${negativeReview.content}" - ${negativeReview.reviewerName}`,
       attachTo: { element: ".reviews-list", on: "top" },
       buttons: [backButton, nextButton],
@@ -183,7 +183,7 @@ export default function OnboardingTour() {
     tour.addStep({
       id: "review-request-section",
       title: "Ask at the perfect moment",
-      text: "Set it once. StarLoop automatically asks happy customers for a review right after their visit.",
+      text: "Set it once. StarLoop automatically invites customers to share feedback right after their visit.",
       attachTo: { element: ".review-request-section", on: "top" },
       buttons: [
         {

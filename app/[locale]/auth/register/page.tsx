@@ -122,7 +122,7 @@ export default function RegisterPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
             {[
               { title: "Review requests", desc: "Auto-sent via SMS or email at the perfect moment." },
-              { title: "Recovery actions", desc: "Win back unhappy customers before they post publicly." },
+              { title: "Recovery actions", desc: "Reach out to unhappy customers and turn experiences around." },
               { title: "Weekly trust report", desc: "Know exactly what to improve every Monday morning." },
             ].map(({ title, desc }) => (
               <div key={title} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>

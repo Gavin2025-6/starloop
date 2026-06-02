@@ -98,7 +98,7 @@ export async function sendWelcomeEmail({
           </td>
           <td>
             <p style="margin:0;font-size:14px;font-weight:600;color:#111827;">Send your first review request</p>
-            <p style="margin:4px 0 0;font-size:13px;color:#6b7280;">Send via SMS or email — happy customers go to Google, unhappy ones come to you privately.</p>
+            <p style="margin:4px 0 0;font-size:13px;color:#6b7280;">Send via SMS or email — customers share their experience, and you can follow up with anyone directly.</p>
           </td>
         </tr>
       </table>

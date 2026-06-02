@@ -80,7 +80,7 @@ export default async function RequestsPage({
           Feedback requests
         </h1>
         <p className="text-sm mt-1" style={{ color: "#6B7280" }}>
-          Ask recent customers for feedback, route happy customers to reviews, and catch unhappy customers before they disappear.
+          Ask recent customers for feedback, follow up with unhappy customers quickly, and let happy customers share their experience.
         </p>
       </div>
 

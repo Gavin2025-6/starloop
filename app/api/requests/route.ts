@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Customer not found" }, { status: 404 });
   }
 
-  // Always use review gate — it routes 4-5★ to Google, captures 1-3★ privately
+  // Service recovery protocol — collects feedback and notifies the owner for follow-up
   const token = generateToken();
   const reviewUrl = `${process.env.NEXT_PUBLIC_APP_URL}/en/review/${token}`;
 

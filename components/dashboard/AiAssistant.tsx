@@ -32,7 +32,7 @@ const KNOWLEDGE: KnowledgeEntry[] = [
   // Service Recovery Protocol setup
   {
     keywords: ["service recovery", "recovery protocol", "服务补救", "补救流程", "setup", "configure", "设置", "how does it work", "怎么用"],
-    reply: "服务补救协议的工作原理：\n1. 您发短信邀请客户评分\n2. 客户点链接后选择 1-5 星\n3. 4-5★ → 引导到 Google 留公开评价\n4. 1-3★ → 私下捕获反馈，直接通知您\n5. 您可以主动联系客户，防止差评上 Google\n\n在 Review Requests 页面发送邀评请求即可启动。",
+    reply: "服务补救协议的工作原理：\n1. 您发短信邀请客户分享体验\n2. 客户点链接后留下评分和反馈\n3. 满意的客户可以自愿前往 Google 分享评价\n4. 不满意的客户反馈直接发给您，方便主动跟进\n5. 联系客户，改善服务体验，提升满意度\n\n在 Review Requests 页面发送邀评请求即可启动。",
     action: { label: "发送邀评请求 →", href: "/dashboard/requests" }
   },
   // SMS not going through
