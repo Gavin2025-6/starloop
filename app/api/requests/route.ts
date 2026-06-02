@@ -7,7 +7,11 @@ import { phoneToE164 } from "@/lib/utils";
 import { sendRequestConfirmation, sendReviewRequestEmail } from "@/lib/resend";
 
 function generateToken(): string {
-  return randomBytes(16).toString("hex"); // 32-char hex, URL-safe
+  return randomBytes(16).toString("hex");
+}
+
+function isScheduledCheck(scheduledAt: string | undefined | null): boolean {
+  return !!(scheduledAt && new Date(scheduledAt) > new Date());
 }
 
 export async function POST(request: Request) {
@@ -24,16 +28,17 @@ export async function POST(request: Request) {
     select: { plan: true, preferredLanguage: true },
   });
 
-  // Free plan SMS limit: 10/month
-  if (user?.plan === "FREE" && channel === "SMS") {
-    const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0, 0, 0, 0);
-    const smsSentThisMonth = await prisma.reviewRequest.count({
-      where: { businessId, channel: "SMS", sentAt: { gte: startOfMonth } },
+  // SMS credit check — must have balance to send SMS
+  if (channel === "SMS" && !isScheduledCheck(scheduledAt)) {
+    const userWithCredits = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { smsCredits: true },
     });
-    if (smsSentThisMonth >= 10) {
+    if ((userWithCredits?.smsCredits ?? 0) < 1) {
       return NextResponse.json({
-        error: "Free plan limit reached (10 SMS/month). Upgrade to continue sending SMS requests.",
+        error: "短信余额不足，请先充值。",
         upgradeRequired: true,
+        creditsRequired: true,
       }, { status: 403 });
     }
   }
@@ -76,8 +81,6 @@ export async function POST(request: Request) {
   console.log(`[Requests] channel=${channel} isScheduled=${isScheduled} customer.email=${customer.email ?? "none"} customer.phone=${customer.phone ?? "none"}`);
 
   if (!isScheduled && channel === "SMS") {
-    // TODO: upgrade Twilio account before go-live — Trial accounts block links (Error 30044)
-    // and can only send to verified numbers. Use plain-text body until upgraded.
     if (!customer.phone) {
       console.error("[Requests/SMS] Customer has no phone number — marking FAILED");
       status = "FAILED";
@@ -92,6 +95,22 @@ export async function POST(request: Request) {
           body: messageBody,
         });
         console.log(`[Requests/SMS] Sent OK — sid=${sentSid}`);
+
+        // Deduct 1 credit and record transaction
+        await prisma.$transaction([
+          prisma.user.update({
+            where: { id: session.user.id },
+            data: { smsCredits: { decrement: 1 } },
+          }),
+          prisma.creditTransaction.create({
+            data: {
+              userId: session.user.id,
+              amount: -1,
+              type: "SMS_SENT",
+              note: `发送邀评短信给 ${customer.name}`,
+            },
+          }),
+        ]);
       } catch (err) {
         console.error("[Requests/SMS] Send failed:", err);
         status = "FAILED";

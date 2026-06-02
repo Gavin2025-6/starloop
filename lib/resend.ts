@@ -515,3 +515,188 @@ function buildZhTemplate({ customerName, businessName, reviewUrl }: {
 }) {
   return buildEnTemplate({ customerName, businessName, reviewUrl });
 }
+
+// ─── 7. Support Ticket Confirmation ──────────────────────────────────────────
+
+export async function sendSupportTicketConfirmation({
+  to,
+  name,
+  question,
+  ticketId,
+}: {
+  to: string;
+  name: string;
+  question: string;
+  ticketId: string;
+}) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://starloop.app";
+
+  const body = emailShell(`
+    ${emailHeader("🎫", `Support Request #${ticketId}`, "We received your question", "135deg,#7C3AED,#4F46E5")}
+    <tr><td style="padding:32px 40px 8px;">
+      <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">
+        Hi ${name}, we've received your question and will respond within a few hours.
+      </p>
+
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:24px;">
+        <p style="margin:0 0 6px;font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Your question</p>
+        <p style="margin:0;font-size:14px;color:#374151;line-height:1.6;font-style:italic;">"${question}"</p>
+      </div>
+
+      <p style="font-size:14px;font-weight:600;color:#0D1117;margin:0 0 12px;">While you wait, try these:</p>
+      <ol style="margin:0 0 24px;padding-left:20px;color:#374151;font-size:14px;line-height:2;">
+        <li>Check the Billing page for SMS balance and credit history</li>
+        <li>Go to Settings to reconnect Google Business if disconnected</li>
+        <li>Visit the Reviews page to see your Service Recovery inbox</li>
+      </ol>
+
+      ${emailBtn(`${appUrl}/en/dashboard`, "Go to Dashboard →", "#7C3AED")}
+
+      <p style="color:#9ca3af;font-size:12px;text-align:center;margin:0 0 8px;">
+        Ticket ID: <strong>${ticketId}</strong> · Reply to this email if you have more details.
+      </p>
+    </td></tr>
+  `);
+
+  return resend.emails.send({
+    from: "StarLoop Support <onboarding@resend.dev>",
+    to,
+    subject: `[#${ticketId}] We received your question — StarLoop Support`,
+    html: body,
+  });
+}
+
+// ─── 8. Low Credit Alert ──────────────────────────────────────────────────────
+
+export async function sendLowCreditAlert({
+  to,
+  name,
+  remainingCredits,
+}: {
+  to: string;
+  name: string;
+  remainingCredits: number;
+}) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://starloop.app";
+
+  const body = emailShell(`
+    ${emailHeader("⚠️", "短信余额不足", `当前余额仅剩 ${remainingCredits} 条`, "135deg,#F59E0B,#D97706")}
+    <tr><td style="padding:32px 40px 8px;">
+      <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">
+        Hi ${name}，您的 StarLoop 短信余额只剩 <strong>${remainingCredits} 条</strong>了。余额耗尽后将无法继续发送邀评短信。
+      </p>
+
+      <div style="background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:16px;margin-bottom:24px;">
+        <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#92400e;">建议充值套餐：</p>
+        <ul style="margin:0;padding-left:20px;color:#374151;font-size:14px;line-height:2;">
+          <li>标准包：$25 = 280 条（最划算）</li>
+          <li>专业包：$50 = 600 条（最低单价）</li>
+        </ul>
+      </div>
+
+      ${emailBtn(`${appUrl}/en/dashboard/billing`, "立即充值 →", "#F59E0B")}
+    </td></tr>
+  `);
+
+  return resend.emails.send({
+    from: "StarLoop <onboarding@resend.dev>",
+    to,
+    subject: `⚠️ 短信余额不足 ${remainingCredits} 条 — 请及时充值`,
+    html: body,
+  });
+}
+
+// ─── 9. Google Disconnected Alert ────────────────────────────────────────────
+
+export async function sendGoogleDisconnectedAlert({
+  to,
+  name,
+  businessName,
+}: {
+  to: string;
+  name: string;
+  businessName: string;
+}) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://starloop.app";
+
+  const body = emailShell(`
+    ${emailHeader("🔗", "Google 连接已断开", `${businessName} 需要重新授权`, "135deg,#EF4444,#DC2626")}
+    <tr><td style="padding:32px 40px 8px;">
+      <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">
+        Hi ${name}，您的 Google Business 连接已断开。在重新连接之前，StarLoop 将无法自动同步新评论。
+      </p>
+
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;margin-bottom:24px;">
+        <p style="margin:0;font-size:14px;color:#b91c1c;">
+          ❌ 影响：新 Google 评论不会自动同步，可能错过负面评论提醒。
+        </p>
+      </div>
+
+      ${emailBtn(`${appUrl}/en/dashboard/settings`, "重新连接 Google →", "#EF4444")}
+    </td></tr>
+  `);
+
+  return resend.emails.send({
+    from: "StarLoop <onboarding@resend.dev>",
+    to,
+    subject: `🔗 ${businessName} — Google 连接已断开，请重新授权`,
+    html: body,
+  });
+}
+
+// ─── 10. 30-day Inactive Summary ─────────────────────────────────────────────
+
+export async function sendInactiveSummaryEmail({
+  to,
+  name,
+  businessName,
+  reviewCount,
+  avgRating,
+  pendingRequests,
+}: {
+  to: string;
+  name: string;
+  businessName: string;
+  reviewCount: number;
+  avgRating: number;
+  pendingRequests: number;
+}) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://starloop.app";
+
+  const body = emailShell(`
+    ${emailHeader("📊", "您的评价数据更新", `${businessName} · 30天汇总`, "135deg,#2563eb,#7c3aed")}
+    <tr><td style="padding:32px 40px 8px;">
+      <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
+        Hi ${name}，您已有一段时间未登录 StarLoop，以下是最新数据摘要：
+      </p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+        <tr>
+          <td width="30%" style="text-align:center;background:#f0fdf4;border-radius:12px;padding:16px 8px;">
+            <div style="font-size:28px;font-weight:700;color:#15803d;">${reviewCount}</div>
+            <div style="font-size:12px;color:#16a34a;margin-top:4px;">新评论</div>
+          </td>
+          <td width="4%"></td>
+          <td width="30%" style="text-align:center;background:#eff6ff;border-radius:12px;padding:16px 8px;">
+            <div style="font-size:28px;font-weight:700;color:#1d4ed8;">${avgRating.toFixed(1)}</div>
+            <div style="font-size:12px;color:#2563eb;margin-top:4px;">平均评分</div>
+          </td>
+          <td width="4%"></td>
+          <td width="30%" style="text-align:center;background:#fefce8;border-radius:12px;padding:16px 8px;">
+            <div style="font-size:28px;font-weight:700;color:#a16207;">${pendingRequests}</div>
+            <div style="font-size:12px;color:#ca8a04;margin-top:4px;">待发请求</div>
+          </td>
+        </tr>
+      </table>
+
+      ${emailBtn(`${appUrl}/en/dashboard`, "查看完整数据 →")}
+    </td></tr>
+  `);
+
+  return resend.emails.send({
+    from: "StarLoop <onboarding@resend.dev>",
+    to,
+    subject: `📊 ${businessName} — 30天数据摘要，欢迎回来`,
+    html: body,
+  });
+}

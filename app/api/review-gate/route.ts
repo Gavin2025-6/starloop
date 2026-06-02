@@ -106,6 +106,16 @@ export async function POST(request: Request) {
         );
       }
 
+      // Create dashboard notification for owner
+      await prisma.notification.create({
+        data: {
+          userId: reviewRequest.business.userId,
+          type: "NEGATIVE_REVIEW",
+          title: `⚠️ 低分反馈：${reviewRequest.customer.name} (${rating}★)`,
+          body: feedback ? `"${feedback.slice(0, 120)}${feedback.length > 120 ? "…" : ""}"` : `${reviewRequest.business.name} 收到 ${rating} 星评价，客户未留文字。`,
+        },
+      }).catch((err) => console.error("[review-gate/notification]", err));
+
       // Generate AI suggestion and send urgent alert (fire-and-forget)
       if (owner?.email) {
         (async () => {

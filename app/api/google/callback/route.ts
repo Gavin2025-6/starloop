@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { exchangeCodeForTokens } from "@/lib/google";
+import { getToken } from "next-auth/jwt";
 
 export async function GET(request: Request) {
   const session = await auth();
@@ -10,6 +11,13 @@ export async function GET(request: Request) {
       `${process.env.NEXT_PUBLIC_APP_URL}/en/auth/login`
     );
   }
+
+  // Check if user has completed onboarding to decide where to redirect
+  const jwtToken = await getToken({
+    req: request as Parameters<typeof getToken>[0]["req"],
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+  });
+  const onboardingCompleted = jwtToken?.onboardingCompleted ?? false;
 
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
@@ -56,9 +64,12 @@ export async function GET(request: Request) {
       });
     }
 
-    const response = NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/en/dashboard?tour=true`
-    );
+    // During onboarding, go back to step 3; otherwise go to dashboard
+    const redirectTo = onboardingCompleted
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/en/dashboard?tour=true`
+      : `${process.env.NEXT_PUBLIC_APP_URL}/en/onboarding?step=3`;
+
+    const response = NextResponse.redirect(redirectTo);
     response.cookies.set("starloop_google_connected", "1", {
       httpOnly: true,
       sameSite: "lax",

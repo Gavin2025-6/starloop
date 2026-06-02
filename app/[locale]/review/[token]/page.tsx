@@ -11,104 +11,104 @@ interface GateInfo {
   requestId: string;
 }
 
-type Step = "rating" | "feedback" | "done" | "error";
+type Step = "rating" | "google-confirm" | "feedback" | "done" | "error";
 type GateLang = "en" | "zh" | "es" | "fr";
 
 const copy: Record<GateLang, Record<string, string>> = {
   en: {
     loading: "Loading...",
     linkNotFound: "Link not found",
-    thankYou: "Thank you!",
-    thankYouBody: "Your feedback has been received. We appreciate you taking the time to share your experience with us.",
-    experience: "How was your experience?",
-    tapStar: "Tap a star to rate",
-    shareGoogle: "Continue to Google review",
-    improve: "Tell us what we could improve",
-    redirecting: "Redirecting...",
-    tellUs: "Tell us what we could improve",
-    privateHelp: "Your message helps the business respond and make things right.",
-    placeholder: "What could have gone better?",
+    caresAbout: "cares deeply about your experience",
+    pleaseRate: "Please rate your experience",
+    thankYouPositive: "Thank you for the kind words!",
+    googlePrompt: "Would you mind sharing your experience on Google? It really helps other customers find us.",
+    goGoogle: "Leave a Google Review",
+    sorryMessage: "We're sorry to hear things didn't go as expected. Could you tell us what happened?",
+    privateHelp: "Your feedback goes directly to the owner — not posted publicly.",
+    placeholder: "What could have been better?",
     reachYou: "How can we reach you?",
     optional: "optional",
     phone: "Phone number",
     email: "Email",
-    privacy: "Only used by this business to follow up about your experience.",
-    submit: "Submit feedback",
+    privacy: "Only used by this business to follow up with you directly.",
+    googleLink: "If you'd prefer to leave a public Google review instead, click here",
+    submit: "Submit Feedback",
     submitting: "Submitting...",
+    thankYouTitle: "Thank you for your feedback",
+    thankYouBody: "We'll get back to you within 24 hours.",
     change: "Change rating",
-    publicReview: "I prefer to leave a public Google review",
     powered: "Powered by StarLoop",
   },
   zh: {
-    loading: "Loading...",
-    linkNotFound: "Link not found",
-    thankYou: "Thank you!",
-    thankYouBody: "Your feedback has been received. We appreciate you taking the time to share your experience with us.",
-    experience: "How was your experience?",
-    tapStar: "Tap a star to rate",
-    shareGoogle: "Continue to Google review",
-    improve: "Tell us what we could improve",
-    redirecting: "Redirecting...",
-    tellUs: "Tell us what we could improve",
-    privateHelp: "Your message helps the business respond and make things right.",
-    placeholder: "What could have gone better?",
-    reachYou: "How can we reach you?",
-    optional: "optional",
-    phone: "Phone number",
-    email: "Email",
-    privacy: "Only used by this business to follow up about your experience.",
-    submit: "Submit feedback",
-    submitting: "Submitting...",
-    change: "Change rating",
-    publicReview: "I prefer to leave a public Google review",
+    loading: "加载中...",
+    linkNotFound: "链接无效",
+    caresAbout: "非常重视您的体验",
+    pleaseRate: "请给我们评个分",
+    thankYouPositive: "感谢您的认可！",
+    googlePrompt: "能去 Google 上留下您的评价吗？这对其他顾客很有帮助。",
+    goGoogle: "去 Google 评价",
+    sorryMessage: "很抱歉我们的服务没达到您的预期，请告诉我们发生了什么",
+    privateHelp: "您的反馈将直接发送给店主，不会公开发布。",
+    placeholder: "哪里可以做得更好？",
+    reachYou: "我们怎么联系您？",
+    optional: "选填",
+    phone: "手机号",
+    email: "邮箱",
+    privacy: "仅由商家用于跟进您的体验，不会用于其他用途。",
+    googleLink: "如果您希望直接在 Google 上发布评论，请点击这里",
+    submit: "提交反馈",
+    submitting: "提交中...",
+    thankYouTitle: "感谢您的反馈",
+    thankYouBody: "我们会在 24 小时内联系您。",
+    change: "重新评分",
     powered: "Powered by StarLoop",
   },
   es: {
     loading: "Cargando...",
     linkNotFound: "Enlace no encontrado",
-    thankYou: "Gracias!",
-    thankYouBody: "Recibimos tus comentarios. Gracias por compartir tu experiencia.",
-    experience: "Como fue tu experiencia?",
-    tapStar: "Toca una estrella para calificar",
-    shareGoogle: "Continuar a Google review",
-    improve: "Cuéntanos que podemos mejorar",
-    redirecting: "Redirigiendo...",
-    tellUs: "Cuéntanos que podemos mejorar",
-    privateHelp: "Tu mensaje ayuda al negocio a responder y mejorar.",
-    placeholder: "Que podria haber sido mejor?",
-    reachYou: "Como podemos contactarte?",
+    caresAbout: "se preocupa profundamente por tu experiencia",
+    pleaseRate: "¿Cómo fue tu experiencia?",
+    thankYouPositive: "¡Gracias por tus palabras!",
+    googlePrompt: "¿Podrías compartir tu experiencia en Google? Ayuda mucho a otros clientes.",
+    goGoogle: "Dejar reseña en Google",
+    sorryMessage: "Lamentamos que tu experiencia no haya sido la esperada. ¿Puedes contarnos qué pasó?",
+    privateHelp: "Tu mensaje va directamente al propietario, no se publica.",
+    placeholder: "¿Qué podría haber sido mejor?",
+    reachYou: "¿Cómo podemos contactarte?",
     optional: "opcional",
-    phone: "Telefono",
+    phone: "Teléfono",
     email: "Email",
-    privacy: "Solo se usara para dar seguimiento a tu experiencia.",
+    privacy: "Solo se usará para hacerte un seguimiento directo.",
+    googleLink: "Si prefieres dejar una reseña pública en Google, haz clic aquí",
     submit: "Enviar comentarios",
     submitting: "Enviando...",
-    change: "Cambiar calificacion",
-    publicReview: "Prefiero dejar una reseña publica en Google",
+    thankYouTitle: "Gracias por tu opinión",
+    thankYouBody: "Te responderemos en 24 horas.",
+    change: "Cambiar calificación",
     powered: "Powered by StarLoop",
   },
   fr: {
     loading: "Chargement...",
     linkNotFound: "Lien introuvable",
-    thankYou: "Merci!",
-    thankYouBody: "Votre commentaire a ete recu. Merci d'avoir partage votre experience.",
-    experience: "Comment etait votre experience?",
-    tapStar: "Touchez une etoile pour noter",
-    shareGoogle: "Continuer vers Google review",
-    improve: "Dites-nous ce que nous pouvons ameliorer",
-    redirecting: "Redirection...",
-    tellUs: "Dites-nous ce que nous pouvons ameliorer",
-    privateHelp: "Votre message aide l'entreprise a repondre et a ameliorer le service.",
-    placeholder: "Qu'est-ce qui aurait pu etre mieux?",
-    reachYou: "Comment pouvons-nous vous joindre?",
+    caresAbout: "accorde beaucoup d'importance à votre expérience",
+    pleaseRate: "Comment s'est passée votre visite ?",
+    thankYouPositive: "Merci pour vos bons mots !",
+    googlePrompt: "Pourriez-vous partager votre avis sur Google ? Cela aide vraiment les autres clients.",
+    goGoogle: "Laisser un avis Google",
+    sorryMessage: "Nous sommes désolés que votre expérience n'ait pas été à la hauteur. Pouvez-vous nous dire ce qui s'est passé ?",
+    privateHelp: "Votre message va directement au propriétaire — il n'est pas publié.",
+    placeholder: "Qu'est-ce qui aurait pu être mieux ?",
+    reachYou: "Comment pouvons-nous vous joindre ?",
     optional: "facultatif",
-    phone: "Telephone",
+    phone: "Téléphone",
     email: "Email",
-    privacy: "Utilise seulement pour faire un suivi sur votre experience.",
+    privacy: "Utilisé uniquement pour vous recontacter directement.",
+    googleLink: "Si vous préférez laisser un avis public sur Google, cliquez ici",
     submit: "Envoyer",
     submitting: "Envoi...",
+    thankYouTitle: "Merci pour vos commentaires",
+    thankYouBody: "Nous vous répondrons dans les 24 heures.",
     change: "Changer la note",
-    publicReview: "Je prefere laisser un avis public sur Google",
     powered: "Powered by StarLoop",
   },
 };
@@ -116,13 +116,33 @@ const copy: Record<GateLang, Record<string, string>> = {
 function detectGateLang(): GateLang {
   if (typeof navigator === "undefined") return "en";
   const lang = navigator.language.toLowerCase();
-  if (lang.startsWith("zh")) return "en";
+  if (lang.startsWith("zh")) return "zh";
   if (lang.startsWith("es")) return "es";
   if (lang.startsWith("fr")) return "fr";
   return "en";
 }
 
-export default function ReviewGatePage() {
+const bgStyle = {
+  minHeight: "100vh",
+  background: "linear-gradient(135deg, #F0F4FF 0%, #E8F5E9 100%)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "24px",
+  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+};
+
+const cardStyle = {
+  background: "#fff",
+  borderRadius: "24px",
+  boxShadow: "0 8px 32px rgba(74,111,255,0.12), 0 2px 8px rgba(0,0,0,0.06)",
+  padding: "32px 28px",
+  width: "100%",
+  maxWidth: "380px",
+  textAlign: "center" as const,
+};
+
+export default function ServiceRecoveryPage() {
   const params = useParams();
   const token = params.token as string;
 
@@ -137,6 +157,7 @@ export default function ReviewGatePage() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [lang, setLang] = useState<GateLang>("en");
+  const [googleUrl, setGoogleUrl] = useState<string | null>(null);
 
   const t = copy[lang];
 
@@ -164,11 +185,8 @@ export default function ReviewGatePage() {
           body: JSON.stringify({ token, rating: star }),
         });
         const data = await res.json();
-        if (data.googleUrl) {
-          window.location.href = data.googleUrl;
-        } else {
-          setStep("done");
-        }
+        setGoogleUrl(data.googleUrl ?? info?.googleUrl ?? null);
+        setStep("google-confirm");
       } catch {
         setStep("error");
         setErrorMsg("Something went wrong. Please try again.");
@@ -202,37 +220,25 @@ export default function ReviewGatePage() {
     }
   }
 
-  const bgStyle = {
-    minHeight: "100vh",
-    background: "linear-gradient(135deg, #F0F4FF 0%, #E8F5E9 100%)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "24px",
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-  };
-
-  const cardStyle = {
-    background: "#fff",
-    borderRadius: "24px",
-    boxShadow: "0 8px 32px rgba(74,111,255,0.12), 0 2px 8px rgba(0,0,0,0.06)",
-    padding: "32px 28px",
+  const inputStyle = {
     width: "100%",
-    maxWidth: "380px",
-    textAlign: "center" as const,
+    padding: "10px 14px",
+    fontSize: "14px",
+    border: "1px solid #E8ECEF",
+    borderRadius: "10px",
+    outline: "none",
+    color: "#1A1D23",
+    boxSizing: "border-box" as const,
   };
 
   if (loading) {
     return (
       <div style={bgStyle}>
         <div style={cardStyle}>
-          <div className="flex justify-center mb-4">
-            <div
-              className="w-8 h-8 rounded-full animate-pulse"
-              style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)" }}
-            />
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
+            <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg, #00C9A7, #4A6FFF)", animation: "pulse 1.5s infinite" }} />
           </div>
-          <p className="text-sm" style={{ color: "#6B7280" }}>{t.loading}</p>
+          <p style={{ fontSize: "14px", color: "#6B7280" }}>{t.loading}</p>
         </div>
       </div>
     );
@@ -242,35 +248,81 @@ export default function ReviewGatePage() {
     return (
       <div style={bgStyle}>
         <div style={cardStyle}>
-          <h2 className="text-lg font-semibold mb-2" style={{ color: "#1A1D23" }}>{t.linkNotFound}</h2>
-          <p className="text-sm" style={{ color: "#6B7280" }}>{errorMsg}</p>
-          <div className="mt-8 text-xs" style={{ color: "#9CA3AF" }}>{t.powered}</div>
+          <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#1A1D23", marginBottom: "8px" }}>{t.linkNotFound}</h2>
+          <p style={{ fontSize: "14px", color: "#6B7280" }}>{errorMsg}</p>
+          <div style={{ marginTop: "32px", fontSize: "12px", color: "#9CA3AF" }}>{t.powered}</div>
         </div>
       </div>
     );
   }
 
+  /* ── 4-5★: Google confirm screen ── */
+  if (step === "google-confirm") {
+    return (
+      <div style={bgStyle}>
+        <div style={cardStyle}>
+          <div style={{
+            width: "72px", height: "72px", borderRadius: "50%",
+            background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "32px", margin: "0 auto 20px",
+          }}>
+            ⭐
+          </div>
+          <h2 style={{ fontSize: "22px", fontWeight: 700, color: "#1A1D23", marginBottom: "10px" }}>
+            {t.thankYouPositive}
+          </h2>
+          <p style={{ fontSize: "15px", color: "#6B7280", lineHeight: 1.6, marginBottom: "28px" }}>
+            {t.googlePrompt}
+          </p>
+
+          {googleUrl ? (
+            <a
+              href={googleUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "block", width: "100%", padding: "15px",
+                background: "linear-gradient(135deg, #4A6FFF, #00C9A7)",
+                color: "#fff", borderRadius: "14px",
+                fontSize: "16px", fontWeight: 700,
+                textDecoration: "none", boxSizing: "border-box",
+              }}
+            >
+              {t.goGoogle} →
+            </a>
+          ) : (
+            <div style={{ fontSize: "14px", color: "#6B7280" }}>
+              {t.thankYouBody}
+            </div>
+          )}
+
+          <div style={{ marginTop: "32px", fontSize: "12px", color: "#9CA3AF" }}>{t.powered}</div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Thank you (after negative feedback submit) ── */
   if (step === "done") {
     return (
       <div style={bgStyle}>
         <div style={cardStyle}>
-          <div className="w-16 h-16 rounded-2xl mx-auto mb-5" style={{ background: "linear-gradient(135deg, rgba(0,201,167,0.18), rgba(74,111,255,0.18))" }} />
-          <h2 className="text-2xl font-bold mb-2" style={{ color: "#1A1D23" }}>{t.thankYou}</h2>
-          <p className="text-sm leading-relaxed" style={{ color: "#6B7280" }}>
+          <div style={{
+            width: "64px", height: "64px", borderRadius: "16px",
+            background: "linear-gradient(135deg, rgba(0,201,167,0.18), rgba(74,111,255,0.18))",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "28px", margin: "0 auto 20px",
+          }}>
+            ✅
+          </div>
+          <h2 style={{ fontSize: "22px", fontWeight: 700, color: "#1A1D23", marginBottom: "10px" }}>
+            {t.thankYouTitle}
+          </h2>
+          <p style={{ fontSize: "15px", color: "#6B7280", lineHeight: 1.6 }}>
             {t.thankYouBody}
           </p>
-          {info?.googleUrl && (
-            <a
-              href={info.googleUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 block w-full py-3 text-sm font-semibold text-white"
-              style={{ borderRadius: "12px", background: "#1A1D23" }}
-            >
-              {t.shareGoogle}
-            </a>
-          )}
-          <div className="mt-8 text-xs" style={{ color: "#9CA3AF" }}>{t.powered}</div>
+          <div style={{ marginTop: "32px", fontSize: "12px", color: "#9CA3AF" }}>{t.powered}</div>
         </div>
       </div>
     );
@@ -282,28 +334,32 @@ export default function ReviewGatePage() {
     <div style={bgStyle}>
       <div style={cardStyle}>
         {/* Business header */}
-        <div className="mb-7">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4"
-            style={{ background: "linear-gradient(135deg, #00C9A7, #4A6FFF)" }}
-          >
+        <div style={{ marginBottom: "28px" }}>
+          <div style={{
+            width: "64px", height: "64px", borderRadius: "18px",
+            background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "#fff", fontSize: "26px", fontWeight: 700,
+            margin: "0 auto 16px",
+          }}>
             {info?.businessName?.charAt(0).toUpperCase() ?? "S"}
           </div>
-          <h1 className="text-xl font-bold" style={{ color: "#1A1D23" }}>{info?.businessName}</h1>
-          {info?.businessCategory && (
-            <p className="text-sm mt-1" style={{ color: "#6B7280" }}>{info.businessCategory}</p>
-          )}
+          <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#1A1D23", marginBottom: "4px" }}>
+            {info?.businessName}
+          </h1>
+          <p style={{ fontSize: "14px", color: "#6B7280" }}>
+            {t.caresAbout}
+          </p>
         </div>
 
-        {/* Step: Rating */}
+        {/* ── Step: Rating ── */}
         {step === "rating" && (
           <>
-            <h2 className="text-lg font-semibold mb-2" style={{ color: "#1A1D23" }}>
-              {t.experience}
+            <h2 style={{ fontSize: "17px", fontWeight: 600, color: "#1A1D23", marginBottom: "20px" }}>
+              {t.pleaseRate}
             </h2>
-            <p className="text-sm mb-6" style={{ color: "#6B7280" }}>{t.tapStar}</p>
 
-            <div className="flex justify-center gap-2 mb-5">
+            <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "20px" }}>
               {[1, 2, 3, 4, 5].map((star) => {
                 const isActive = star <= activeRating;
                 return (
@@ -313,14 +369,11 @@ export default function ReviewGatePage() {
                     onMouseEnter={() => setHovered(star)}
                     onMouseLeave={() => setHovered(0)}
                     onClick={() => handleRatingSelect(star)}
-                    className="disabled:opacity-50 focus:outline-none transition-transform"
                     style={{
-                      background: "none",
-                      border: "none",
+                      background: "none", border: "none",
                       cursor: submitting ? "not-allowed" : "pointer",
-                      fontSize: "44px",
-                      lineHeight: 1,
-                      transform: isActive ? "scale(1.15)" : "scale(1)",
+                      fontSize: "46px", lineHeight: 1, padding: "0 2px",
+                      transform: isActive ? "scale(1.18)" : "scale(1)",
                       transition: "transform 0.15s ease, color 0.1s ease",
                       color: isActive ? "#F59E0B" : "#D1D5DB",
                     }}
@@ -332,46 +385,26 @@ export default function ReviewGatePage() {
               })}
             </div>
 
-            {/* Dynamic CTA hint */}
-            {activeRating > 0 && (
-              <div
-                className="py-2 px-4 rounded-xl text-sm font-medium"
-                style={{
-                  background: activeRating >= 4
-                    ? "rgba(0,201,167,0.1)"
-                    : "rgba(255,71,87,0.08)",
-                  color: activeRating >= 4 ? "#00C9A7" : "#FF4757",
-                  border: `1px solid ${activeRating >= 4 ? "rgba(0,201,167,0.2)" : "rgba(255,71,87,0.15)"}`,
-                }}
-              >
-                {activeRating >= 4 ? t.shareGoogle : t.improve}
-              </div>
-            )}
-
             {submitting && (
-              <p className="text-xs mt-3" style={{ color: "#6B7280" }}>{t.redirecting}</p>
+              <p style={{ fontSize: "13px", color: "#6B7280", marginTop: "8px" }}>...</p>
             )}
           </>
         )}
 
-        {/* Step: Negative feedback form */}
+        {/* ── Step: Negative feedback ── */}
         {step === "feedback" && (
           <>
-            <div className="flex justify-center gap-1.5 mb-4">
+            {/* Stars display */}
+            <div style={{ display: "flex", justifyContent: "center", gap: "6px", marginBottom: "16px" }}>
               {[1, 2, 3, 4, 5].map((star) => (
-                <span
-                  key={star}
-                  style={{ fontSize: "24px", color: star <= rating ? "#F59E0B" : "#D1D5DB" }}
-                >
-                  ★
-                </span>
+                <span key={star} style={{ fontSize: "24px", color: star <= rating ? "#F59E0B" : "#D1D5DB" }}>★</span>
               ))}
             </div>
 
-            <h2 className="text-lg font-semibold mb-1" style={{ color: "#1A1D23" }}>
-              {t.tellUs}
+            <h2 style={{ fontSize: "17px", fontWeight: 600, color: "#1A1D23", marginBottom: "6px" }}>
+              {t.sorryMessage}
             </h2>
-            <p className="text-xs mb-5" style={{ color: "#6B7280" }}>
+            <p style={{ fontSize: "13px", color: "#6B7280", marginBottom: "18px", lineHeight: 1.5 }}>
               {t.privateHelp}
             </p>
 
@@ -380,95 +413,92 @@ export default function ReviewGatePage() {
               onChange={(e) => setFeedback(e.target.value)}
               rows={4}
               placeholder={t.placeholder}
-              className="w-full px-4 py-3 text-sm resize-none mb-4 text-left"
               style={{
-                border: "1px solid #E8ECEF",
-                borderRadius: "12px",
-                outline: "none",
-                color: "#1A1D23",
+                ...inputStyle,
+                resize: "none",
+                marginBottom: "16px",
+                textAlign: "left",
+                display: "block",
               }}
               onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
               onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
             />
 
-            <div className="mb-5 text-left space-y-3">
-              <p className="text-sm font-medium" style={{ color: "#1A1D23" }}>
+            {/* Optional contact */}
+            <div style={{ marginBottom: "20px", textAlign: "left" }}>
+              <p style={{ fontSize: "14px", fontWeight: 500, color: "#1A1D23", marginBottom: "10px" }}>
                 {t.reachYou}{" "}
-                <span style={{ color: "#6B7280", fontWeight: 400 }}>({t.optional})</span>
+                <span style={{ color: "#6B7280", fontWeight: 400, fontSize: "13px" }}>({t.optional})</span>
               </p>
-              <div>
-                <label className="block text-xs mb-1" style={{ color: "#6B7280" }}>{t.phone}</label>
+              <div style={{ marginBottom: "10px" }}>
+                <label style={{ display: "block", fontSize: "12px", color: "#6B7280", marginBottom: "4px" }}>{t.phone}</label>
                 <input
                   type="tel"
                   value={contactPhone}
                   onChange={(e) => setContactPhone(e.target.value)}
                   placeholder="e.g. 416-555-0123"
-                  className="w-full px-4 py-2.5 text-sm"
-                  style={{ border: "1px solid #E8ECEF", borderRadius: "10px", outline: "none", color: "#1A1D23" }}
+                  style={inputStyle}
                   onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
                   onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
                 />
               </div>
               <div>
-                <label className="block text-xs mb-1" style={{ color: "#6B7280" }}>{t.email}</label>
+                <label style={{ display: "block", fontSize: "12px", color: "#6B7280", marginBottom: "4px" }}>{t.email}</label>
                 <input
                   type="email"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
                   placeholder="e.g. you@example.com"
-                  className="w-full px-4 py-2.5 text-sm"
-                  style={{ border: "1px solid #E8ECEF", borderRadius: "10px", outline: "none", color: "#1A1D23" }}
+                  style={inputStyle}
                   onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
                   onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
                 />
               </div>
-              <p className="text-xs" style={{ color: "#9CA3AF" }}>
-                {t.privacy}
-              </p>
+              <p style={{ fontSize: "12px", color: "#9CA3AF", marginTop: "6px" }}>{t.privacy}</p>
             </div>
 
             {errorMsg && (
-              <p className="text-xs mb-3" style={{ color: "#FF4757" }}>{errorMsg}</p>
+              <p style={{ fontSize: "12px", color: "#FF4757", marginBottom: "10px" }}>{errorMsg}</p>
             )}
 
             <button
               onClick={handleFeedbackSubmit}
               disabled={submitting}
-              className="w-full py-3 text-sm font-semibold text-white transition-opacity disabled:opacity-50"
               style={{
+                width: "100%", padding: "14px",
                 background: "linear-gradient(135deg, #00C9A7, #4A6FFF)",
-                borderRadius: "12px",
-                border: "none",
-                cursor: submitting ? "not-allowed" : "pointer",
+                color: "#fff", borderRadius: "12px",
+                border: "none", cursor: submitting ? "not-allowed" : "pointer",
+                fontSize: "15px", fontWeight: 600,
+                opacity: submitting ? 0.6 : 1,
+                marginBottom: "14px",
               }}
             >
               {submitting ? t.submitting : t.submit}
             </button>
 
+            {/* Small gray Google link — compliance requirement */}
             {info?.googleUrl && (
               <a
                 href={info.googleUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 block text-xs"
-                style={{ color: "#4A6FFF" }}
+                style={{ fontSize: "11px", color: "#9CA3AF", display: "block", marginBottom: "6px" }}
               >
-                {t.publicReview}
+                {t.googleLink}
               </a>
             )}
 
             <button
               onClick={() => { setStep("rating"); setRating(0); }}
-              className="mt-3 text-xs"
-              style={{ color: "#9CA3AF", background: "none", border: "none", cursor: "pointer" }}
+              style={{ fontSize: "12px", color: "#9CA3AF", background: "none", border: "none", cursor: "pointer" }}
             >
               {t.change}
             </button>
           </>
         )}
 
-        {/* Footer */}
-        <div className="mt-8 text-xs" style={{ color: "#9CA3AF" }}>{t.powered}</div>
+        <div style={{ marginTop: "32px", fontSize: "12px", color: "#9CA3AF" }}>{t.powered}</div>
       </div>
     </div>
   );

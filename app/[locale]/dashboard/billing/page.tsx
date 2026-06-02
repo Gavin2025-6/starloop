@@ -2,213 +2,250 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Check, CreditCard, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { CreditCard, Zap, MessageSquare, TrendingUp } from "lucide-react";
 
-const PLANS = [
+const PACKAGES = [
   {
-    key: "FREE",
-    name: "Free",
-    price: "$0",
-    description: "Validate one business loop",
-    features: ["Public feedback page", "10 SMS requests/month", "Basic recovery trial"],
-    action: "Current plan",
+    key: "BASIC",
+    name: "基础包",
+    credits: 100,
+    price: "$10",
+    unitPrice: "$0.10/条",
+    description: "适合刚开始收集评价的小型商家",
+    badge: null,
+    featured: false,
   },
   {
-    key: "STARTER",
-    name: "Starter",
-    price: "$49/mo",
-    description: "For owners sending requests every week",
-    features: ["More feedback requests", "Owner action queue", "Auto-language customer pages", "Basic alerts"],
-    action: "Upgrade to Starter",
-    badge: "Launch plan",
+    key: "STANDARD",
+    name: "标准包",
+    credits: 280,
+    price: "$25",
+    unitPrice: "$0.089/条",
+    description: "最受欢迎，发送量和单价最优平衡",
+    badge: "最划算",
+    featured: true,
   },
   {
     key: "PRO",
-    name: "Growth",
-    price: "$149/mo",
-    description: "For reputation work that runs daily",
-    features: ["Automated follow-ups", "Recovery inbox", "Weekly trust report", "Category playbooks"],
-    action: "Upgrade to Growth",
-    featured: true,
+    name: "专业包",
+    credits: 600,
+    price: "$50",
+    unitPrice: "$0.083/条",
+    description: "高频发送，单价最低",
+    badge: null,
+    featured: false,
   },
 ];
+
+interface Transaction {
+  id: string;
+  amount: number;
+  type: string;
+  note: string | null;
+  createdAt: string;
+}
 
 export default function BillingPage() {
   const searchParams = useSearchParams();
   const paymentParam = searchParams.get("payment");
-  const [currentPlan, setCurrentPlan] = useState("FREE");
-  const [selectedPlan, setSelectedPlan] = useState("FREE");
-  const [loadingPlan, setLoadingPlan] = useState(true);
-  const [upgrading, setUpgrading] = useState<string | null>(null);
+  const [smsCredits, setSmsCredits] = useState<number | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [purchasing, setPurchasing] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/user/plan")
-      .then((r) => r.json())
-      .then((d) => {
-        const plan = d.plan ?? "FREE";
-        setCurrentPlan(plan);
-        setSelectedPlan(plan);
+    Promise.all([
+      fetch("/api/user/credits").then(r => r.json()),
+      fetch("/api/user/credit-history").then(r => r.json()),
+    ])
+      .then(([credits, history]) => {
+        setSmsCredits(credits.smsCredits ?? 0);
+        setTransactions(history.transactions ?? []);
       })
       .catch(() => {})
-      .finally(() => setLoadingPlan(false));
+      .finally(() => setLoading(false));
   }, []);
 
-  async function handleUpgrade(planKey: string) {
-    setSelectedPlan(planKey);
-    setUpgrading(planKey);
+  async function handlePurchase(packageKey: string) {
+    setPurchasing(packageKey);
     try {
-      if (currentPlan !== "FREE") {
-        const res = await fetch("/api/stripe/portal", { method: "POST" });
-        const data = await res.json();
-        if (data.url) window.location.href = data.url;
-        return;
-      }
-
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planKey }),
+        body: JSON.stringify({ packageKey }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
     } finally {
-      setUpgrading(null);
+      setPurchasing(null);
     }
   }
 
+  const cardBase: React.CSSProperties = {
+    background: "#fff",
+    border: "1px solid #E5E7EB",
+    borderRadius: "16px",
+    padding: "24px",
+    transition: "box-shadow 0.2s",
+  };
+
   return (
-    <div className="max-w-6xl" style={{ fontFamily: "var(--font-geist), -apple-system, sans-serif" }}>
-      <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "#EAFBF8", color: "#087C6D" }}>
-            <CreditCard size={14} />
-            Billing
-          </div>
-          <h1 className="text-3xl font-bold" style={{ color: "#0D1117" }}>Upgrade when StarLoop saves real work.</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6" style={{ color: "#6B7280" }}>
-            Start free, then upgrade when request volume, recovery work, and reporting become part of daily operations.
-          </p>
+    <div style={{ maxWidth: "900px", fontFamily: "var(--font-geist), -apple-system, sans-serif" }}>
+      {/* Page header */}
+      <div style={{ marginBottom: "28px" }}>
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: "6px",
+          padding: "4px 12px", borderRadius: "99px",
+          background: "#EAFBF8", color: "#087C6D",
+          fontSize: "12px", fontWeight: 600, marginBottom: "12px",
+        }}>
+          <CreditCard size={13} />
+          短信充值
         </div>
-        <div className="rounded-xl bg-white px-4 py-3 text-sm" style={{ border: "1px solid #E5E7EB", color: "#4B5563" }}>
-          Current plan: <span className="font-semibold" style={{ color: "#0D1117" }}>{loadingPlan ? "Loading..." : currentPlan}</span>
-        </div>
+        <h1 style={{ fontSize: "28px", fontWeight: 700, color: "#0D1117", marginBottom: "6px" }}>
+          为您的门店充值短信额度
+        </h1>
+        <p style={{ fontSize: "14px", color: "#6B7280" }}>
+          按需购买，无月费。短信额度永不过期。
+        </p>
       </div>
 
+      {/* Payment result banners */}
       {paymentParam === "success" && (
-        <div className="mb-4 rounded-xl px-4 py-3 text-sm" style={{ background: "#EAFBF8", border: "1px solid #BDEFE8", color: "#087C6D" }}>
-          Payment successful. Your plan has been updated.
+        <div style={{ marginBottom: "16px", padding: "12px 16px", borderRadius: "10px", background: "#EAFBF8", border: "1px solid #BDEFE8", color: "#087C6D", fontSize: "14px" }}>
+          ✅ 充值成功！短信额度已到账。
         </div>
       )}
       {paymentParam === "cancelled" && (
-        <div className="mb-4 rounded-xl px-4 py-3 text-sm" style={{ background: "#FFF7ED", border: "1px solid #FED7AA", color: "#B76200" }}>
-          Payment cancelled. Your plan was not changed.
+        <div style={{ marginBottom: "16px", padding: "12px 16px", borderRadius: "10px", background: "#FFF7ED", border: "1px solid #FED7AA", color: "#B76200", fontSize: "14px" }}>
+          支付已取消，额度未变动。
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        {PLANS.map((plan) => {
-          const isCurrent = currentPlan === plan.key;
-          const isSelected = selectedPlan === plan.key;
-          const isPaid = plan.key !== "FREE";
-          const isFeatured = !!plan.featured;
-
-          return (
-            <div
-              key={plan.key}
-              role="button"
-              tabIndex={0}
-              onClick={() => setSelectedPlan(plan.key)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setSelectedPlan(plan.key);
-                }
-              }}
-              className="relative rounded-2xl bg-white p-6 transition-all"
-              style={{
-                border: isSelected ? "2px solid #3157D5" : isFeatured ? "2px solid #0D1117" : "1px solid #E5E7EB",
-                boxShadow: isSelected ? "0 18px 48px rgba(49,87,213,0.18)" : isFeatured ? "0 20px 60px rgba(15,23,42,0.14)" : "0 8px 28px rgba(15,23,42,0.05)",
-                background: isSelected ? "#F7F9FF" : "#FFFFFF",
-                cursor: "pointer",
-              }}
-            >
-              {plan.badge && (
-                <div className="absolute -top-3 left-6 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "#0D1117", color: "#FFFFFF" }}>
-                  {plan.badge}
-                </div>
-              )}
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-xl font-bold" style={{ color: "#0D1117" }}>{plan.name}</h2>
-                  <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>{plan.description}</p>
-                </div>
-                {isCurrent && (
-                  <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: "#EEF3FF", color: "#3157D5" }}>
-                    Current
-                  </span>
-                )}
-                <span
-                  aria-label={isSelected ? "Selected plan" : "Select plan"}
-                  className="flex h-6 w-6 items-center justify-center rounded-md"
-                  style={{
-                    border: isSelected ? "1px solid #3157D5" : "1px solid #D1D5DB",
-                    background: isSelected ? "#3157D5" : "#FFFFFF",
-                    color: "#FFFFFF",
-                    flexShrink: 0,
-                  }}
-                >
-                  {isSelected && <Check size={15} />}
-                </span>
-              </div>
-
-              <div className="mt-6 flex items-end gap-1">
-                <span className="text-4xl font-bold" style={{ color: "#0D1117" }}>{plan.price.replace("/mo", "")}</span>
-                {plan.price.includes("/mo") && <span className="pb-1 text-sm" style={{ color: "#6B7280" }}>/mo</span>}
-              </div>
-
-              <ul className="mt-6 space-y-3">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex gap-2 text-sm" style={{ color: "#4B5563" }}>
-                    <Check size={16} style={{ color: "#10B981", marginTop: 2, flexShrink: 0 }} />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                type="button"
-                disabled={isCurrent || upgrading === plan.key}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (isPaid) handleUpgrade(plan.key);
-                }}
-                className="mt-7 w-full rounded-lg px-4 py-3 text-sm font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
-                style={{
-                  background: isFeatured ? "#0D1117" : isPaid ? "linear-gradient(135deg, #00C9A7, #4A6FFF)" : "#F3F4F6",
-                  color: isPaid ? "#FFFFFF" : "#6B7280",
-                  border: "none",
-                }}
-              >
-                {upgrading === plan.key ? "Opening checkout..." : isCurrent ? "Current plan" : plan.action}
-              </button>
-            </div>
-          );
-        })}
+      {/* Credit balance card */}
+      <div style={{ ...cardBase, marginBottom: "28px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{
+            width: "48px", height: "48px", borderRadius: "12px",
+            background: "linear-gradient(135deg, #4A6FFF, #00C9A7)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <MessageSquare size={22} color="#fff" />
+          </div>
+          <div>
+            <p style={{ fontSize: "13px", color: "#6B7280", marginBottom: "2px" }}>当前短信余额</p>
+            <p style={{ fontSize: "32px", fontWeight: 700, color: "#0D1117", lineHeight: 1 }}>
+              {loading ? "—" : (smsCredits ?? 0).toLocaleString()}
+              <span style={{ fontSize: "16px", fontWeight: 400, color: "#6B7280", marginLeft: "6px" }}>条</span>
+            </p>
+          </div>
+        </div>
+        {(smsCredits !== null && smsCredits < 20) && (
+          <div style={{ padding: "8px 14px", borderRadius: "8px", background: "#FFF7ED", border: "1px solid #FED7AA", fontSize: "13px", color: "#B76200" }}>
+            ⚠️ 余额不足 20 条，请及时充值
+          </div>
+        )}
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        {[
-          { Icon: Zap, title: "Upgrade only when usage proves value", text: "Free users can explore the loop before seeing paid plans in the product." },
-          { Icon: ShieldCheck, title: "Stripe handles payment securely", text: "Subscriptions, cards, and receipts stay inside Stripe checkout and billing portal." },
-          { Icon: Sparkles, title: "Limits create natural upgrade moments", text: "When a business needs more requests or automation, StarLoop prompts the owner at the right time." },
-        ].map(({ Icon, title, text }) => (
-          <div key={title} className="rounded-xl bg-white p-4" style={{ border: "1px solid #E5E7EB" }}>
-            <Icon size={18} style={{ color: "#087C6D" }} />
-            <p className="mt-3 text-sm font-semibold" style={{ color: "#0D1117" }}>{title}</p>
-            <p className="mt-1 text-xs leading-5" style={{ color: "#6B7280" }}>{text}</p>
+      {/* Package cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px", marginBottom: "36px" }}>
+        {PACKAGES.map(pkg => (
+          <div
+            key={pkg.key}
+            style={{
+              ...cardBase,
+              border: pkg.featured ? "2px solid #4A6FFF" : "1px solid #E5E7EB",
+              boxShadow: pkg.featured ? "0 8px 32px rgba(74,111,255,0.15)" : "none",
+              position: "relative",
+            }}
+          >
+            {pkg.badge && (
+              <div style={{
+                position: "absolute", top: "-12px", left: "20px",
+                padding: "3px 12px", borderRadius: "99px",
+                background: "#4A6FFF", color: "#fff",
+                fontSize: "11px", fontWeight: 700,
+              }}>
+                {pkg.badge}
+              </div>
+            )}
+
+            <div style={{ marginBottom: "16px" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#0D1117", marginBottom: "4px" }}>{pkg.name}</h3>
+              <p style={{ fontSize: "12px", color: "#6B7280" }}>{pkg.description}</p>
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <div style={{ fontSize: "36px", fontWeight: 800, color: "#0D1117", lineHeight: 1 }}>
+                {pkg.price}
+              </div>
+              <div style={{ fontSize: "13px", color: "#6B7280", marginTop: "4px" }}>
+                {pkg.credits.toLocaleString()} 条短信 · {pkg.unitPrice}
+              </div>
+            </div>
+
+            <button
+              onClick={() => handlePurchase(pkg.key)}
+              disabled={purchasing === pkg.key}
+              style={{
+                width: "100%", padding: "12px",
+                background: pkg.featured ? "#4A6FFF" : "#0D1117",
+                color: "#fff", border: "none",
+                borderRadius: "10px", fontSize: "14px", fontWeight: 600,
+                cursor: purchasing === pkg.key ? "not-allowed" : "pointer",
+                opacity: purchasing === pkg.key ? 0.7 : 1,
+              }}
+            >
+              {purchasing === pkg.key ? "跳转支付..." : `充值 ${pkg.credits} 条 →`}
+            </button>
           </div>
         ))}
       </div>
+
+      {/* Trust badges */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px", marginBottom: "36px" }}>
+        {[
+          { Icon: Zap, title: "按需充值", text: "没有月费，额度永不过期，用完再买。" },
+          { Icon: CreditCard, title: "Stripe 安全支付", text: "银行级加密，不存储您的支付信息。" },
+          { Icon: TrendingUp, title: "量大更省", text: "购买越多，每条短信单价越低。" },
+        ].map(({ Icon, title, text }) => (
+          <div key={title} style={{ padding: "16px", borderRadius: "12px", background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+            <Icon size={16} style={{ color: "#087C6D" }} />
+            <p style={{ fontSize: "13px", fontWeight: 600, color: "#0D1117", marginTop: "10px", marginBottom: "4px" }}>{title}</p>
+            <p style={{ fontSize: "12px", color: "#6B7280" }}>{text}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Transaction history */}
+      {transactions.length > 0 && (
+        <div>
+          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#0D1117", marginBottom: "14px" }}>充值记录</h2>
+          <div style={{ ...cardBase, padding: "0", overflow: "hidden" }}>
+            {transactions.map((tx, i) => (
+              <div
+                key={tx.id}
+                style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "14px 20px",
+                  borderBottom: i < transactions.length - 1 ? "1px solid #F3F4F6" : "none",
+                }}
+              >
+                <div>
+                  <p style={{ fontSize: "14px", color: "#0D1117", marginBottom: "2px" }}>{tx.note ?? tx.type}</p>
+                  <p style={{ fontSize: "12px", color: "#9CA3AF" }}>{new Date(tx.createdAt).toLocaleDateString("zh-CN")}</p>
+                </div>
+                <span style={{
+                  fontSize: "15px", fontWeight: 600,
+                  color: tx.amount > 0 ? "#10B981" : "#EF4444",
+                }}>
+                  {tx.amount > 0 ? `+${tx.amount}` : tx.amount} 条
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

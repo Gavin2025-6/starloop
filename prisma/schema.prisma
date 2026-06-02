@@ -63,14 +63,29 @@ model User {
   stripeCustomerId     String?   @unique
   stripeSubscriptionId String?   @unique
   currentPeriodEnd     DateTime?
+  smsCredits           Int       @default(0)
+  lastLoginAt          DateTime?
   preferredLanguage      String    @default("en")
   onboardingCompleted    Boolean   @default(false)
   onboardingTourCompleted Boolean  @default(false)
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  businesses    Business[]
-  notifications Notification[]
+  businesses          Business[]
+  notifications       Notification[]
+  creditTransactions  CreditTransaction[]
+}
+
+model CreditTransaction {
+  id              String   @id @default(cuid())
+  userId          String
+  amount          Int
+  type            String   // PURCHASE | SMS_SENT | REFUND | BONUS
+  note            String?
+  stripeSessionId String?
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Business {

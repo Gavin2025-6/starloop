@@ -4,58 +4,75 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-04-22.dahlia",
 });
 
-export const PLANS = {
-  STARTER: {
-    priceId: process.env.STRIPE_STARTER_PRICE_ID!,
-    name: "Starter",
-    price: 39,
-    features: [
-      "1 business location",
-      "Unlimited review requests",
-      "AI reply generation",
-      "Google Business sync",
-      "SMS notifications",
-    ],
+export const CREDIT_PACKAGES = [
+  {
+    key: "BASIC",
+    name: "基础包",
+    credits: 100,
+    price: 10,
+    unitAmount: 1000, // cents
+    description: "适合小型商家，刚开始收集评价",
+    badge: null,
   },
-  PRO: {
-    priceId: process.env.STRIPE_PRO_PRICE_ID!,
-    name: "Pro",
-    price: 79,
-    features: [
-      "Up to 5 business locations",
-      "Unlimited review requests",
-      "AI reply generation (priority)",
-      "Google Business sync",
-      "SMS + Email notifications",
-      "Analytics & reporting",
-    ],
+  {
+    key: "STANDARD",
+    name: "标准包",
+    credits: 280,
+    price: 25,
+    unitAmount: 2500,
+    description: "最受欢迎，每条短信 $0.089",
+    badge: "最划算",
   },
-};
+  {
+    key: "PRO",
+    name: "专业包",
+    credits: 600,
+    price: 50,
+    unitAmount: 5000,
+    description: "高频发送，每条短信 $0.083",
+    badge: null,
+  },
+] as const;
 
-export async function createCheckoutSession(params: {
-  customerId: string;
-  priceId: string;
+export type CreditPackageKey = typeof CREDIT_PACKAGES[number]["key"];
+
+export function getPackageByKey(key: string) {
+  return CREDIT_PACKAGES.find(p => p.key === key) ?? null;
+}
+
+export async function createCreditCheckoutSession(params: {
+  packageKey: CreditPackageKey;
+  userId: string;
+  userEmail: string;
   successUrl: string;
   cancelUrl: string;
 }): Promise<string> {
+  const pkg = getPackageByKey(params.packageKey);
+  if (!pkg) throw new Error(`Unknown package: ${params.packageKey}`);
+
   const session = await stripe.checkout.sessions.create({
-    customer: params.customerId,
     payment_method_types: ["card"],
-    line_items: [{ price: params.priceId, quantity: 1 }],
-    mode: "subscription",
+    mode: "payment",
+    customer_email: params.userEmail,
+    line_items: [{
+      price_data: {
+        currency: "usd",
+        unit_amount: pkg.unitAmount,
+        product_data: {
+          name: `StarLoop ${pkg.name} — ${pkg.credits} SMS`,
+          description: pkg.description,
+        },
+      },
+      quantity: 1,
+    }],
+    metadata: {
+      userId: params.userId,
+      packageKey: params.packageKey,
+      credits: String(pkg.credits),
+    },
     success_url: params.successUrl,
     cancel_url: params.cancelUrl,
   });
-  return session.url!;
-}
 
-export async function createCustomerPortalSession(params: {
-  customerId: string;
-  returnUrl: string;
-}): Promise<string> {
-  const session = await stripe.billingPortal.sessions.create({
-    customer: params.customerId,
-    return_url: params.returnUrl,
-  });
-  return session.url;
+  return session.url!;
 }

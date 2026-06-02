@@ -18,12 +18,14 @@ export default async function middleware(request: NextRequest) {
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   });
 
-  // Paths that don't require Google connection
+  // Paths that bypass all guards
   const whitelistPaths = [
     "/auth/",
     "/connect-google",
+    "/onboarding",
     "/api/",
     "/r/",
+    "/review/",
     "/_next",
     "/favicon",
     "/widget",
@@ -35,6 +37,11 @@ export default async function middleware(request: NextRequest) {
       pathname === "/" ||
       pathname === "/en",
   );
+
+  // Enforce 5-step onboarding before allowing dashboard access
+  if (token && !isWhitelisted && token.onboardingCompleted === false) {
+    return NextResponse.redirect(new URL("/en/onboarding", request.url));
+  }
 
   const hasGoogleConnectedCookie = request.cookies.get("starloop_google_connected")?.value === "1";
 

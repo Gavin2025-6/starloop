@@ -17,58 +17,67 @@ interface KnowledgeEntry {
 }
 
 const KNOWLEDGE: KnowledgeEntry[] = [
+  // How to connect Google
   {
-    keywords: ["send", "review request", "first request", "sms", "text", "add customer"],
-    reply: "Easy! Go to Review Requests in the left menu, click 'Add Customer', enter their name and phone number, then hit Send. They'll get an SMS right away.",
-    action: { label: "Go to Review Requests →", href: "/dashboard/requests" }
+    keywords: ["connect", "google", "google business", "sync", "gmb", "连接", "谷歌", "断开"],
+    reply: "连接 Google Business：进入 Settings（设置），找到 Google Connection 区域，点击 Connect 按钮，使用您的 Google 账号授权即可。连接后 StarLoop 会自动同步新评论。\n\n如果 Google 连接断开了，同样去 Settings 重新连接。",
+    action: { label: "前往设置 →", href: "/dashboard/settings" }
   },
+  // How to top up SMS credits
   {
-    keywords: ["connect", "google", "google business", "sync", "gmb"],
-    reply: "Head to Settings, scroll to Google Connection, and click Connect. This lets StarLoop watch for new reviews automatically.",
-    action: { label: "Go to Settings →", href: "/dashboard/settings" }
+    keywords: ["credit", "recharge", "top up", "buy sms", "充值", "余额", "购买短信", "billing", "pay", "payment"],
+    reply: "充值短信额度：进入 Billing（充值）页面，选择适合您的套餐：\n• 基础包：$10 = 100 条\n• 标准包：$25 = 280 条（最划算）\n• 专业包：$50 = 600 条\n\n支付成功后额度立即到账，永不过期。",
+    action: { label: "前往充值 →", href: "/dashboard/billing" }
   },
+  // Service Recovery Protocol setup
   {
-    keywords: ["negative", "bad review", "recovery", "unhappy", "complaint", "bad rating"],
-    reply: "I'm sorry to hear that — it happens to everyone. Head to your Reviews page and look for the Recovery Tasks tab. I've already flagged it with suggested next steps.",
-    action: { label: "Open Recovery Inbox →", href: "/dashboard/reviews" }
+    keywords: ["service recovery", "recovery protocol", "服务补救", "补救流程", "setup", "configure", "设置", "how does it work", "怎么用"],
+    reply: "服务补救协议的工作原理：\n1. 您发短信邀请客户评分\n2. 客户点链接后选择 1-5 星\n3. 4-5★ → 引导到 Google 留公开评价\n4. 1-3★ → 私下捕获反馈，直接通知您\n5. 您可以主动联系客户，防止差评上 Google\n\n在 Review Requests 页面发送邀评请求即可启动。",
+    action: { label: "发送邀评请求 →", href: "/dashboard/requests" }
   },
+  // SMS not going through
   {
-    keywords: ["report", "weekly", "rating trend", "pattern", "analytics", "improve"],
-    reply: "Your weekly report spotlights rating trends, top complaint themes, and one concrete action to improve. Check Reports in the sidebar every Monday.",
-    action: { label: "Go to Reports →", href: "/dashboard/reports" }
+    keywords: ["sms not", "not sending", "failed", "short message", "发不出", "发送失败", "短信失败", "why sms", "twilio", "error"],
+    reply: "短信发送失败可能的原因：\n1. 短信余额不足 → 前往 Billing 充值\n2. 手机号格式错误 → 确保包含国家区号，如 +1416-555-0123\n3. 客户未填写手机号 → 在 Customers 页面检查\n\n如果余额充足且格式正确，可能是 Twilio 账号限制，联系 support@starloop.app。",
+    action: { label: "检查余额 →", href: "/dashboard/billing" }
   },
+  // How to check balance and history
   {
-    keywords: ["recovery inbox", "recovery", "flag", "follow up", "recovery task"],
-    reply: "The Recovery inbox automatically flags unhappy customers so you can reach out before they post a negative review. Find it under Reviews in the sidebar.",
-    action: { label: "Go to Reviews →", href: "/dashboard/reviews" }
+    keywords: ["balance", "history", "transaction", "余额", "记录", "how many sms", "剩余", "多少条"],
+    reply: "查看余额和充值记录：进入 Billing 页面，顶部显示当前短信余额，页面底部是详细的充值和消耗记录。\n\n余额低于 20 条时会收到邮件提醒。",
+    action: { label: "查看余额 →", href: "/dashboard/billing" }
   },
+  // Refund policy
   {
-    keywords: ["price", "plan", "upgrade", "cost", "billing", "free", "starter", "pro"],
-    reply: "You're on the free plan right now! You can send review requests and track reviews at no cost. When you're ready for AI-powered replies and advanced reports, check out Billing to upgrade.",
-    action: { label: "View Plans →", href: "/dashboard/billing" }
+    keywords: ["refund", "退款", "return", "cancel", "chargeback", "money back"],
+    reply: "关于退款：\n• 未使用的整包退款可在购买后 7 天内申请\n• 已部分使用的套餐按剩余比例退款\n• 联系 support@starloop.app，说明订单情况和原因\n• 我们通常在 2 个工作日内处理\n\n如需帮助，发邮件给我们，附上购买时的邮箱地址。"
   },
+  // Send review request
   {
-    keywords: ["hi", "hello", "hey", "help", "what can you do", "who are you"],
-    reply: "Hi! I'm Maya, your StarLoop guide. I can help you send review requests, connect Google, handle negative reviews, understand your reports, and more. What would you like to know?"
+    keywords: ["send", "review request", "first request", "text", "add customer", "发短信", "邀评", "发送"],
+    reply: "发送邀评短信：去 Review Requests，点 Add Customer 添加客户姓名和手机号，然后点 Send 即可。客户会立即收到短信，点链接后进入服务补救页面。",
+    action: { label: "发送邀评请求 →", href: "/dashboard/requests" }
   },
+  // Negative reviews
   {
-    keywords: ["customer", "add", "import", "upload", "contact"],
-    reply: "Go to Customers in the sidebar to see all your contacts. To add a new one, click 'Add Customer' on the Review Requests page — they'll be saved automatically.",
-    action: { label: "Go to Customers →", href: "/dashboard/customers" }
+    keywords: ["negative", "bad review", "unhappy", "complaint", "差评", "低分", "客户不满"],
+    reply: "收到低分反馈时：Dashboard 会立即显示通知，您也会收到邮件提醒（含客户联系方式和 AI 建议回复）。\n\n建议 24 小时内联系客户，主动道歉并提供解决方案，大多数客户会因此更新评价。",
+    action: { label: "查看反馈收件箱 →", href: "/dashboard/reviews" }
   },
+  // Greeting
   {
-    keywords: ["setting", "profile", "business name", "password", "language"],
-    reply: "All your account and business settings are in Settings. You can update your profile, change your business name, connect Google, and manage your plan there.",
-    action: { label: "Go to Settings →", href: "/dashboard/settings" }
+    keywords: ["hi", "hello", "hey", "help", "你好", "帮助", "who are you"],
+    reply: "你好！我是 Maya，StarLoop 的 AI 助手。我可以帮您：\n• 连接 Google Business\n• 充值短信额度\n• 设置服务补救协议\n• 排查短信发送问题\n• 查看余额和记录\n• 退款申请指引\n\n有什么可以帮您的？"
   },
+  // Settings
   {
-    keywords: ["star", "rating", "review count", "how many"],
-    reply: "Your latest rating and review counts are always visible on the Dashboard. For detailed trends, check the Reports page for weekly breakdowns.",
-    action: { label: "Go to Dashboard →", href: "/dashboard" }
-  }
+    keywords: ["setting", "profile", "password", "language", "设置", "密码"],
+    reply: "所有账户和门店设置都在 Settings 页面：修改门店名称、连接 Google、更改语言偏好等。",
+    action: { label: "前往设置 →", href: "/dashboard/settings" }
+  },
 ];
 
-const FALLBACK = "That's a great question — let me connect you with our team. Reach us at support@starloop.app and we'll get back to you within a few hours.";
+const FALLBACK = "这个问题我需要进一步确认。请发邮件到 support@starloop.app，我们会在几小时内回复。\n\nFeel free to email support@starloop.app — we reply within a few hours.";
 
 function findAnswer(question: string): { reply: string; action?: { label: string; href: string } } {
   const q = question.toLowerCase().trim();
@@ -156,8 +165,18 @@ export default function AiAssistant() {
 
     setTimeout(() => {
       const answer = findAnswer(content);
+      const isFallback = answer.reply === FALLBACK;
       setMessages([...newMessages, { role: "assistant", content: answer.reply, action: answer.action }]);
       setLoading(false);
+
+      // When falling back to human support, send email confirmation
+      if (isFallback && userState) {
+        fetch("/api/ai/support-ticket", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: content }),
+        }).catch(() => {});
+      }
     }, 600);
   }
 

@@ -45,13 +45,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.plan = user.plan;
         token.preferredLanguage = user.preferredLanguage;
       }
-      // Always refresh isGoogleConnected from DB on every token check
+      // Always refresh isGoogleConnected + onboardingCompleted from DB
       if (token.id) {
-        const business = await prisma.business.findFirst({
-          where: { userId: token.id as string },
-          select: { isGoogleConnected: true },
-        });
+        const [business, user] = await Promise.all([
+          prisma.business.findFirst({
+            where: { userId: token.id as string },
+            select: { isGoogleConnected: true },
+          }),
+          prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { onboardingCompleted: true },
+          }),
+        ]);
         token.isGoogleConnected = business?.isGoogleConnected ?? false;
+        token.onboardingCompleted = user?.onboardingCompleted ?? false;
       }
       return token;
     },
@@ -61,6 +68,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.plan = token.plan;
         session.user.preferredLanguage = token.preferredLanguage;
         session.user.isGoogleConnected = token.isGoogleConnected;
+        session.user.onboardingCompleted = token.onboardingCompleted;
       }
       return session;
     },
