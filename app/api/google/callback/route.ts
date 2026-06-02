@@ -4,12 +4,19 @@ import { prisma } from "@/lib/prisma";
 import { exchangeCodeForTokens } from "@/lib/google";
 import { getToken } from "next-auth/jwt";
 
+function detectLocale(req: Request): string {
+  const acceptLang = req.headers.get("accept-language") ?? "";
+  if (/\bzh[-_]/i.test(acceptLang) || /\bzh\b/i.test(acceptLang)) return "zh-CN";
+  return "en";
+}
+
 export async function GET(request: Request) {
+  const locale = detectLocale(request);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL!;
+
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/en/auth/login`
-    );
+    return NextResponse.redirect(`${appUrl}/${locale}/auth/login`);
   }
 
   // Check if user has completed onboarding to decide where to redirect
@@ -24,9 +31,7 @@ export async function GET(request: Request) {
   const error = searchParams.get("error");
 
   if (error || !code) {
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/en/connect-google?error=true`
-    );
+    return NextResponse.redirect(`${appUrl}/${locale}/connect-google?error=true`);
   }
 
   try {
@@ -66,8 +71,8 @@ export async function GET(request: Request) {
 
     // During onboarding, go back to step 3; otherwise go to dashboard
     const redirectTo = onboardingCompleted
-      ? `${process.env.NEXT_PUBLIC_APP_URL}/en/dashboard?tour=true`
-      : `${process.env.NEXT_PUBLIC_APP_URL}/en/onboarding?step=3`;
+      ? `${appUrl}/${locale}/dashboard?tour=true`
+      : `${appUrl}/${locale}/onboarding?step=3`;
 
     const response = NextResponse.redirect(redirectTo);
     response.cookies.set("starloop_google_connected", "1", {
@@ -80,8 +85,6 @@ export async function GET(request: Request) {
     return response;
   } catch (err) {
     console.error("[Google/Callback]", err);
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/en/connect-google?error=true`
-    );
+    return NextResponse.redirect(`${appUrl}/${locale}/connect-google?error=true`);
   }
 }

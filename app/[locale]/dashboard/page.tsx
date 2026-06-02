@@ -38,7 +38,10 @@ export default async function DashboardPage({
     },
   });
 
-  const stats = business
+  // Only show data when Google is connected — avoid displaying stale test data
+  const isGoogleConnected = business?.isGoogleConnected ?? false;
+
+  const stats = (business && isGoogleConnected)
     ? {
         totalReviews: business._count.reviews,
         pendingRequests: business._count.reviewRequests,
@@ -53,10 +56,10 @@ export default async function DashboardPage({
       }
     : null;
 
-  const privateIssues = business?.reviews.filter((r) => r.source === "PRIVATE" && r.taskStatus !== "archived").length ?? 0;
-  const urgentIssues = business?.reviews.filter((r) => r.rating <= 3 && r.taskStatus !== "resolved" && r.taskStatus !== "archived").length ?? 0;
+  const privateIssues = isGoogleConnected ? (business?.reviews.filter((r) => r.source === "PRIVATE" && r.taskStatus !== "archived").length ?? 0) : 0;
+  const urgentIssues = isGoogleConnected ? (business?.reviews.filter((r) => r.rating <= 3 && r.taskStatus !== "resolved" && r.taskStatus !== "archived").length ?? 0) : 0;
   const replyGaps = stats?.needsReply ?? 0;
-  const promoters = business?.reviews.filter((r) => r.rating >= 4 && r.source !== "PRIVATE").length ?? 0;
+  const promoters = isGoogleConnected ? (business?.reviews.filter((r) => r.rating >= 4 && r.source !== "PRIVATE").length ?? 0) : 0;
   const openActions = urgentIssues + privateIssues + replyGaps;
   const topIssue = urgentIssues > 0
     ? "Recover unhappy customers first"
@@ -166,20 +169,21 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      {!business?.isGoogleConnected && (
-        <div className="mb-8 flex flex-col gap-3 rounded-xl bg-white p-4 sm:flex-row sm:items-center sm:justify-between" style={{ border: "1px solid #E5E7EB" }}>
-          <div>
-            <p className="text-sm font-semibold" style={{ color: "#0D1117" }}>Connect Google Business Profile</p>
-            <p className="mt-1 text-xs" style={{ color: "#6B7280" }}>
-              Keep your existing Google review sync connected so StarLoop can watch new public feedback.
-            </p>
-          </div>
+      {!isGoogleConnected && (
+        <div className="mb-8 rounded-2xl bg-white p-10 text-center" style={{ border: "1px solid #E5E7EB" }}>
+          <div style={{ fontSize: "48px", marginBottom: "16px" }}>🔗</div>
+          <h2 className="text-xl font-bold mb-2" style={{ color: "#0D1117" }}>
+            连接您的 Google Business 账号后，数据将在这里显示
+          </h2>
+          <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: "#6B7280", lineHeight: 1.6 }}>
+            StarLoop 需要连接 Google Business 才能自动同步评论、追踪评分趋势，并在客户留下差评时即时提醒您。
+          </p>
           <Link
-            href="/onboarding"
-            className="inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold"
+            href="/onboarding?step=2"
+            className="inline-flex items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold"
             style={{ background: "#0D1117", color: "#FFFFFF" }}
           >
-            {t("dashboard.connectGoogle")} →
+            立即连接 Google Business →
           </Link>
         </div>
       )}
@@ -264,33 +268,37 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      <div className="mt-8 positive-reviews-section">
-        <RatingChart />
-      </div>
+      {isGoogleConnected && (
+        <div className="mt-8 positive-reviews-section">
+          <RatingChart />
+        </div>
+      )}
 
-      <div className="mt-8 reviews-list">
-        <h2 className="text-lg font-semibold mb-4" style={{ color: "#0D1117" }}>
-          {t("reviews.title")}
-        </h2>
-        {business?.reviews.length ? (
-          <ReviewList reviews={business.reviews} businessId={business.id} />
-        ) : (
-          <EmptyState
-            type="reviews"
-            title={t("reviews.title")}
-            description={t("dashboard.noReviews")}
-            action={
-              <Link
-                href="/onboarding"
-                className="inline-block mt-4 text-sm font-medium hover:underline"
-                style={{ color: "#0D1117" }}
-              >
-                {t("dashboard.connectGoogle")} →
-              </Link>
-            }
-          />
-        )}
-      </div>
+      {isGoogleConnected && (
+        <div className="mt-8 reviews-list">
+          <h2 className="text-lg font-semibold mb-4" style={{ color: "#0D1117" }}>
+            {t("reviews.title")}
+          </h2>
+          {business?.reviews.length ? (
+            <ReviewList reviews={business.reviews} businessId={business.id} />
+          ) : (
+            <EmptyState
+              type="reviews"
+              title={t("reviews.title")}
+              description={t("dashboard.noReviews")}
+              action={
+                <Link
+                  href="/dashboard/requests"
+                  className="inline-block mt-4 text-sm font-medium hover:underline"
+                  style={{ color: "#0D1117" }}
+                >
+                  发送首条邀评请求 →
+                </Link>
+              }
+            />
+          )}
+        </div>
+      )}
       <Suspense fallback={null}>
         <OnboardingTour />
       </Suspense>

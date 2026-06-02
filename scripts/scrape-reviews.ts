@@ -58,9 +58,27 @@ const db = new Pool({ connectionString: DATABASE_URL, max: 3 });
 function loadProgress(): ProgressState {
   if (fs.existsSync(PROGRESS_FILE)) {
     const saved = JSON.parse(fs.readFileSync(PROGRESS_FILE, 'utf-8'));
-    // migrate old field name
     if ('totalReviewsAnalyzed' in saved && !('totalReviewsQueued' in saved)) {
       saved.totalReviewsQueued = saved.totalReviewsAnalyzed;
+    }
+    // Migrate old "name|industry" keys → "name|state|country|industry"
+    const needsMigration = saved.completedCombinations.some((k: string) => k.split('|').length === 2);
+    if (needsMigration) {
+      const cityByName = new Map<string, City[]>();
+      for (const city of cities) {
+        if (!cityByName.has(city.name)) cityByName.set(city.name, []);
+        cityByName.get(city.name)!.push(city);
+      }
+      saved.completedCombinations = saved.completedCombinations.flatMap((k: string) => {
+        if (k.split('|').length !== 2) return [k];
+        const [cityName, industry] = k.split('|');
+        const matches = cityByName.get(cityName) || [];
+        if (matches.length === 1) {
+          return [`${matches[0].name}|${matches[0].stateProvince}|${matches[0].country}|${industry}`];
+        }
+        return []; // same name in multiple regions — force re-scrape both
+      });
+      fs.writeFileSync(PROGRESS_FILE, JSON.stringify(saved, null, 2));
     }
     return saved;
   }
@@ -186,7 +204,7 @@ async function main() {
 
   for (const city of allCities) {
     for (const industry of industries) {
-      const comboKey = `${city.name}|${industry.keyword}`;
+      const comboKey = `${city.name}|${city.stateProvince}|${city.country}|${industry.keyword}`;
       if (progress.completedCombinations.includes(comboKey)) continue;
 
       process.stderr.write(`\n[Tier${city.tier}] ${city.name}, ${city.stateProvince} × ${industry.keyword} ... `);

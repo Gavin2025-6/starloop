@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { Link } from "@/i18n/navigation";
-import { AlertTriangle } from "lucide-react";
 
 interface Customer {
   id: string;
@@ -54,6 +54,7 @@ const baseInputStyle: React.CSSProperties = {
 
 export default function RequestForm({ businessId, customers }: RequestFormProps) {
   const t = useTranslations();
+  const router = useRouter();
   const [mode, setMode] = useState<"existing" | "new">("new");
   const [customerId, setCustomerId] = useState("");
   const [newName, setNewName] = useState("");
@@ -64,7 +65,6 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
   const [loading, setLoading] = useState(false);
   const [successName, setSuccessName] = useState("");
   const [error, setError] = useState("");
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -101,12 +101,12 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
       const data = await res.json();
 
       if (!res.ok) {
-        if (data.upgradeRequired) {
-          setUpgradeOpen(true);
-        } else {
-          throw new Error(data.error ?? "Failed to send request");
+        if (data.creditsRequired || data.upgradeRequired) {
+          // Redirect to billing to top up SMS credits
+          router.push("/en/dashboard/billing");
+          return;
         }
-        return;
+        throw new Error(data.error ?? "Failed to send request");
       }
 
       setSuccessName(displayName);
@@ -119,39 +119,6 @@ export default function RequestForm({ businessId, customers }: RequestFormProps)
 
   return (
     <div className="bg-white border border-[#E5E7EB] rounded-xl p-6">
-      {upgradeOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: "rgba(7,10,18,0.48)", backdropFilter: "blur(6px)" }}>
-          <div className="w-full max-w-[440px] rounded-2xl bg-white p-6 shadow-2xl" style={{ border: "1px solid #E5E7EB" }}>
-            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl" style={{ background: "#EAFBF8", color: "#087C6D" }}>
-              <AlertTriangle size={22} />
-            </div>
-            <h3 className="text-xl font-bold" style={{ color: "#0D1117" }}>You reached the free SMS limit.</h3>
-            <p className="mt-2 text-sm leading-6" style={{ color: "#6B7280" }}>
-              Free includes 10 SMS requests each month. Upgrade to keep sending requests and unlock the owner action queue.
-            </p>
-            <div className="mt-5 rounded-xl p-4 text-sm" style={{ background: "#F8FAFC", border: "1px solid #E5E7EB", color: "#4B5563" }}>
-              Recommended next step: upgrade to Starter for weekly feedback requests and basic alerts.
-            </div>
-            <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-              <Link
-                href="/dashboard/billing"
-                className="inline-flex flex-1 items-center justify-center rounded-lg px-4 py-3 text-sm font-semibold"
-                style={{ background: "#0D1117", color: "#FFFFFF", textDecoration: "none" }}
-              >
-                View upgrade plans
-              </Link>
-              <button
-                type="button"
-                onClick={() => setUpgradeOpen(false)}
-                className="flex-1 rounded-lg px-4 py-3 text-sm font-semibold"
-                style={{ background: "#FFFFFF", color: "#4B5563", border: "1px solid #DDE5EF" }}
-              >
-                Not now
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       <h2 className="font-semibold mb-1" style={{ color: "#0D1117" }}>{t("requests.sendRequest")}</h2>
       <p className="text-xs mb-5" style={{ color: "#6B7280" }}>Send a review request to a customer</p>
 

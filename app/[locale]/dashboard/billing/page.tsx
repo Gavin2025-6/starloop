@@ -13,7 +13,6 @@ const PACKAGES = [
     unitPrice: "$0.10/条",
     description: "适合刚开始收集评价的小型商家",
     badge: null,
-    featured: false,
   },
   {
     key: "STANDARD",
@@ -23,7 +22,6 @@ const PACKAGES = [
     unitPrice: "$0.089/条",
     description: "最受欢迎，发送量和单价最优平衡",
     badge: "最划算",
-    featured: true,
   },
   {
     key: "PRO",
@@ -33,7 +31,6 @@ const PACKAGES = [
     unitPrice: "$0.083/条",
     description: "高频发送，单价最低",
     badge: null,
-    featured: false,
   },
 ];
 
@@ -66,7 +63,9 @@ export default function BillingPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Click = select + immediately go to Stripe checkout
   async function handlePurchase(packageKey: string) {
+    if (purchasing) return;
     setPurchasing(packageKey);
     try {
       const res = await fetch("/api/stripe/checkout", {
@@ -83,10 +82,11 @@ export default function BillingPage() {
 
   const cardBase: React.CSSProperties = {
     background: "#fff",
-    border: "1px solid #E5E7EB",
     borderRadius: "16px",
     padding: "24px",
-    transition: "box-shadow 0.2s",
+    cursor: "pointer",
+    transition: "box-shadow 0.15s, border-color 0.15s",
+    position: "relative",
   };
 
   return (
@@ -106,11 +106,10 @@ export default function BillingPage() {
           为您的门店充值短信额度
         </h1>
         <p style={{ fontSize: "14px", color: "#6B7280" }}>
-          按需购买，无月费。短信额度永不过期。
+          按需购买，无月费。短信额度永不过期。点击套餐直接跳转支付。
         </p>
       </div>
 
-      {/* Payment result banners */}
       {paymentParam === "success" && (
         <div style={{ marginBottom: "16px", padding: "12px 16px", borderRadius: "10px", background: "#EAFBF8", border: "1px solid #BDEFE8", color: "#087C6D", fontSize: "14px" }}>
           ✅ 充值成功！短信额度已到账。
@@ -122,14 +121,10 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* Credit balance card */}
-      <div style={{ ...cardBase, marginBottom: "28px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
+      {/* Credit balance */}
+      <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: "16px", padding: "20px 24px", marginBottom: "28px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <div style={{
-            width: "48px", height: "48px", borderRadius: "12px",
-            background: "linear-gradient(135deg, #4A6FFF, #00C9A7)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "linear-gradient(135deg, #4A6FFF, #00C9A7)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <MessageSquare size={22} color="#fff" />
           </div>
           <div>
@@ -140,66 +135,79 @@ export default function BillingPage() {
             </p>
           </div>
         </div>
-        {(smsCredits !== null && smsCredits < 20) && (
+        {smsCredits !== null && smsCredits < 20 && (
           <div style={{ padding: "8px 14px", borderRadius: "8px", background: "#FFF7ED", border: "1px solid #FED7AA", fontSize: "13px", color: "#B76200" }}>
             ⚠️ 余额不足 20 条，请及时充值
           </div>
         )}
       </div>
 
-      {/* Package cards */}
+      {/* Package cards — click to select & purchase immediately */}
+      <p style={{ fontSize: "13px", color: "#6B7280", marginBottom: "14px" }}>
+        点击套餐 → 直接跳转 Stripe 支付
+      </p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px", marginBottom: "36px" }}>
-        {PACKAGES.map(pkg => (
-          <div
-            key={pkg.key}
-            style={{
-              ...cardBase,
-              border: pkg.featured ? "2px solid #4A6FFF" : "1px solid #E5E7EB",
-              boxShadow: pkg.featured ? "0 8px 32px rgba(74,111,255,0.15)" : "none",
-              position: "relative",
-            }}
-          >
-            {pkg.badge && (
-              <div style={{
-                position: "absolute", top: "-12px", left: "20px",
-                padding: "3px 12px", borderRadius: "99px",
-                background: "#4A6FFF", color: "#fff",
-                fontSize: "11px", fontWeight: 700,
-              }}>
-                {pkg.badge}
-              </div>
-            )}
-
-            <div style={{ marginBottom: "16px" }}>
-              <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#0D1117", marginBottom: "4px" }}>{pkg.name}</h3>
-              <p style={{ fontSize: "12px", color: "#6B7280" }}>{pkg.description}</p>
-            </div>
-
-            <div style={{ marginBottom: "16px" }}>
-              <div style={{ fontSize: "36px", fontWeight: 800, color: "#0D1117", lineHeight: 1 }}>
-                {pkg.price}
-              </div>
-              <div style={{ fontSize: "13px", color: "#6B7280", marginTop: "4px" }}>
-                {pkg.credits.toLocaleString()} 条短信 · {pkg.unitPrice}
-              </div>
-            </div>
-
-            <button
+        {PACKAGES.map(pkg => {
+          const isSelected = purchasing === pkg.key;
+          return (
+            <div
+              key={pkg.key}
               onClick={() => handlePurchase(pkg.key)}
-              disabled={purchasing === pkg.key}
               style={{
-                width: "100%", padding: "12px",
-                background: pkg.featured ? "#4A6FFF" : "#0D1117",
-                color: "#fff", border: "none",
-                borderRadius: "10px", fontSize: "14px", fontWeight: 600,
-                cursor: purchasing === pkg.key ? "not-allowed" : "pointer",
-                opacity: purchasing === pkg.key ? 0.7 : 1,
+                ...cardBase,
+                border: isSelected ? "2px solid #00C9A7" : "1px solid #E5E7EB",
+                boxShadow: isSelected ? "0 8px 32px rgba(0,201,167,0.18)" : "0 1px 4px rgba(0,0,0,0.04)",
+                opacity: purchasing && !isSelected ? 0.5 : 1,
+              }}
+              onMouseEnter={e => {
+                if (!purchasing) {
+                  (e.currentTarget as HTMLDivElement).style.borderColor = "#00C9A7";
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,201,167,0.14)";
+                }
+              }}
+              onMouseLeave={e => {
+                if (!isSelected) {
+                  (e.currentTarget as HTMLDivElement).style.borderColor = "#E5E7EB";
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
+                }
               }}
             >
-              {purchasing === pkg.key ? "跳转支付..." : `充值 ${pkg.credits} 条 →`}
-            </button>
-          </div>
-        ))}
+              {pkg.badge && (
+                <div style={{
+                  position: "absolute", top: "-12px", left: "20px",
+                  padding: "3px 12px", borderRadius: "99px",
+                  background: "#00C9A7", color: "#fff",
+                  fontSize: "11px", fontWeight: 700,
+                }}>
+                  {pkg.badge}
+                </div>
+              )}
+
+              <div style={{ marginBottom: "16px" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#0D1117", marginBottom: "4px" }}>{pkg.name}</h3>
+                <p style={{ fontSize: "12px", color: "#6B7280" }}>{pkg.description}</p>
+              </div>
+
+              <div style={{ marginBottom: "20px" }}>
+                <div style={{ fontSize: "36px", fontWeight: 800, color: "#0D1117", lineHeight: 1 }}>{pkg.price}</div>
+                <div style={{ fontSize: "13px", color: "#6B7280", marginTop: "4px" }}>
+                  {pkg.credits.toLocaleString()} 条短信 · {pkg.unitPrice}
+                </div>
+              </div>
+
+              <div style={{
+                width: "100%", padding: "11px",
+                background: isSelected ? "#00C9A7" : "#0D1117",
+                color: "#fff", border: "none",
+                borderRadius: "10px", fontSize: "14px", fontWeight: 600,
+                textAlign: "center",
+                transition: "background 0.15s",
+              }}>
+                {isSelected ? "跳转支付中..." : `充值 ${pkg.credits} 条 →`}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Trust badges */}
@@ -221,24 +229,14 @@ export default function BillingPage() {
       {transactions.length > 0 && (
         <div>
           <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#0D1117", marginBottom: "14px" }}>充值记录</h2>
-          <div style={{ ...cardBase, padding: "0", overflow: "hidden" }}>
+          <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: "16px", overflow: "hidden" }}>
             {transactions.map((tx, i) => (
-              <div
-                key={tx.id}
-                style={{
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "14px 20px",
-                  borderBottom: i < transactions.length - 1 ? "1px solid #F3F4F6" : "none",
-                }}
-              >
+              <div key={tx.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 20px", borderBottom: i < transactions.length - 1 ? "1px solid #F3F4F6" : "none" }}>
                 <div>
                   <p style={{ fontSize: "14px", color: "#0D1117", marginBottom: "2px" }}>{tx.note ?? tx.type}</p>
                   <p style={{ fontSize: "12px", color: "#9CA3AF" }}>{new Date(tx.createdAt).toLocaleDateString("zh-CN")}</p>
                 </div>
-                <span style={{
-                  fontSize: "15px", fontWeight: 600,
-                  color: tx.amount > 0 ? "#10B981" : "#EF4444",
-                }}>
+                <span style={{ fontSize: "15px", fontWeight: 600, color: tx.amount > 0 ? "#10B981" : "#EF4444" }}>
                   {tx.amount > 0 ? `+${tx.amount}` : tx.amount} 条
                 </span>
               </div>

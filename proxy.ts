@@ -9,6 +9,13 @@ import { getToken } from "next-auth/jwt";
 
 const handleI18nRouting = createMiddleware(routing);
 
+/** Detect locale from Accept-Language header (used in custom redirects). */
+function detectLocale(request: NextRequest): string {
+  const acceptLang = request.headers.get("accept-language") ?? "";
+  if (/\bzh[-_]/i.test(acceptLang) || /\bzh\b/i.test(acceptLang)) return "zh-CN";
+  return "en";
+}
+
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -38,15 +45,17 @@ export default async function middleware(request: NextRequest) {
       pathname === "/en",
   );
 
+  const locale = detectLocale(request);
+
   // Enforce 5-step onboarding before allowing dashboard access
   if (token && !isWhitelisted && token.onboardingCompleted === false) {
-    return NextResponse.redirect(new URL("/en/onboarding", request.url));
+    return NextResponse.redirect(new URL(`/${locale}/onboarding`, request.url));
   }
 
   const hasGoogleConnectedCookie = request.cookies.get("starloop_google_connected")?.value === "1";
 
   if (token && !isWhitelisted && token.isGoogleConnected === false && !hasGoogleConnectedCookie) {
-    return NextResponse.redirect(new URL("/en/connect-google", request.url));
+    return NextResponse.redirect(new URL(`/${locale}/connect-google`, request.url));
   }
 
   const response = handleI18nRouting(request);
