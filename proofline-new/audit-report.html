@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Proofline Audit Report</title>
+    <meta
+      name="description"
+      content="Proofline review-growth audit report with findings, recommended actions, and setup next steps."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="report-body">
+    <header class="site-header">
+      <a class="brand" href="./index.html">
+        <span class="brand-mark">P</span>
+        <span>Proofline</span>
+      </a>
+      <nav class="top-nav" aria-label="Report navigation">
+        <a href="./index.html">Home</a>
+        <a href="./workspace.html">Workspace</a>
+      </nav>
+      <a class="button primary small" href="./workspace.html">Set up routine</a>
+    </header>
+
+    <main class="report-shell">
+      <section class="report-hero">
+        <div>
+          <p class="eyebrow">Review growth audit</p>
+          <h1 id="reportTitle">Your review routine has quick wins.</h1>
+          <p id="reportSubtitle">
+            Proofline found opportunities around recent reviews, owner replies, proof assets, and repeat/referral loops.
+          </p>
+        </div>
+        <div class="audit-score-card">
+          <span>Opportunity score</span>
+          <strong id="auditScore">74</strong>
+          <p>Strong enough to act this week. Not so broken that it needs a huge project.</p>
+        </div>
+      </section>
+
+      <section class="report-grid">
+        <article class="report-card wide">
+          <div class="card-heading">
+            <div>
+              <h2>What Proofline noticed</h2>
+              <p>These are the first issues a local owner can understand without a sales call.</p>
+            </div>
+          </div>
+          <div class="finding-list" id="findingList"></div>
+        </article>
+
+        <article class="report-card">
+          <h2>30-day action plan</h2>
+          <ol class="action-plan" id="actionPlan"></ol>
+        </article>
+
+        <article class="report-card">
+          <h2>Suggested outreach</h2>
+          <p class="outreach-copy" id="outreachCopy"></p>
+          <button class="button secondary" id="copyOutreach" type="button">Copy message</button>
+        </article>
+
+        <article class="report-card dark-report">
+          <h2>Next step</h2>
+          <p>Turn this audit into a working routine: review requests, reply drafts, recovery tasks, widgets, referrals, and weekly owner brief.</p>
+          <a class="button primary" href="./workspace.html">Open setup workspace</a>
+        </article>
+      </section>
+    </main>
+
+    <script src="./report.js"></script>
+  </body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Proofline Workspace | Live product demo</title>
+    <meta
+      name="description"
+      content="Interactive Proofline workspace showing review requests, recovery, referrals, repeats, gifts, insights, sites, and compliance automation."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="workspace-body">
+    <aside class="workspace-sidebar">
+      <a class="brand workspace-brand" href="./index.html">
+        <span class="brand-mark">P</span>
+        <span>Proofline</span>
+      </a>
+      <div class="tenant-card">
+        <span>Demo business</span>
+        <strong>BrightClean Toronto</strong>
+        <small>Google connected - Stripe events ready - SMS consent tracked</small>
+      </div>
+      <nav class="module-nav" id="moduleNav" aria-label="Proofline product modules"></nav>
+      <div class="sidebar-note">
+        <b>Compliance mode</b>
+        <p>Proofline never blocks honest public reviews. Recovery, gifts, and referrals are tracked as customer-care actions.</p>
+      </div>
+    </aside>
+
+    <main class="workspace-main">
+      <header class="workspace-top">
+        <div>
+          <p class="eyebrow" id="moduleEyebrow">Command Center</p>
+          <h1 id="moduleTitle">Every growth action, already prioritized.</h1>
+          <p id="moduleDescription">
+            The AI operator turns reviews, replies, requests, referrals, repeats, sites, and compliance into one owner queue.
+          </p>
+          <label class="mobile-module-picker">
+            <span>Module</span>
+            <select id="moduleSelect" aria-label="Select workspace module"></select>
+          </label>
+        </div>
+        <div class="workspace-actions">
+          <button class="button secondary" id="secondaryAction" type="button">Export brief</button>
+          <button class="button primary" id="primaryAction" type="button">Approve actions</button>
+        </div>
+      </header>
+
+      <section class="decision-strip" aria-label="Proofline daily decision flow">
+        <div>
+          <span>Input</span>
+          <b>Customer event</b>
+        </div>
+        <div>
+          <span>AI reads</span>
+          <b>Risk, intent, value</b>
+        </div>
+        <div>
+          <span>System does</span>
+          <b>Send, draft, pause, publish</b>
+        </div>
+        <div>
+          <span>Owner sees</span>
+          <b>Only judgment work</b>
+        </div>
+      </section>
+
+      <section id="modulePanel" class="module-panel" aria-live="polite"></section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

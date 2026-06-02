@@ -1,0 +1,13 @@
+{
+  "name": "proofline",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI growth operations for local reputation, reviews, referrals, repeats, and owner-ready actions.",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check app.js && node --check public.js && node --check report.js && node --check setup.js && node --check lead-inbox.js && node --check server.js && node --check src/rules.js && node --check src/automation-engine.js && node --check src/prospects.js && node scripts/smoke-test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

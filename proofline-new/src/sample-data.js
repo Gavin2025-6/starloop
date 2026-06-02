@@ -1,0 +1,126 @@
+const business = {
+  id: "biz-brightclean",
+  name: "BrightClean Toronto",
+  industry: "Cleaning",
+  location: "Toronto, ON",
+  rating: 4.7,
+  reviewCount: 312,
+  connectedSources: ["Google Business", "CSV", "Stripe", "Website Form"],
+};
+
+const reviews = [
+  {
+    id: "rev-001",
+    rating: 2,
+    reviewerName: "Sarah M.",
+    source: "Private SMS reply",
+    content: "Wait time was too long, and the staff seemed overwhelmed.",
+    service: "Deep cleaning",
+    value: 420,
+    consent: true,
+    status: "unresolved",
+  },
+  {
+    id: "rev-002",
+    rating: 5,
+    reviewerName: "John D.",
+    source: "Google",
+    content: "Amazing same-day service. The team was careful and cleaned up perfectly.",
+    service: "Move-out cleaning",
+    value: 690,
+    consent: true,
+    status: "public",
+  },
+  {
+    id: "rev-003",
+    rating: 3,
+    reviewerName: "Mike T.",
+    source: "Google",
+    content: "Good service, but parking instructions were confusing.",
+    service: "Office cleaning",
+    value: 310,
+    consent: true,
+    status: "public",
+  },
+  {
+    id: "rev-004",
+    rating: 5,
+    reviewerName: "Priya S.",
+    source: "Private form",
+    content: "The owner followed up quickly and made a small issue right.",
+    service: "Recurring cleaning",
+    value: 260,
+    consent: true,
+    status: "resolved",
+  },
+];
+
+const customers = [
+  {
+    id: "cus-001",
+    name: "Sarah M.",
+    email: "sarah@example.com",
+    phone: "+1-416-555-0101",
+    lastService: "2026-05-20",
+    serviceType: "Deep cleaning",
+    consent: true,
+    lastContactDaysAgo: 1,
+    openIssue: true,
+    lifetimeValue: 1200,
+  },
+  {
+    id: "cus-002",
+    name: "John D.",
+    email: "john@example.com",
+    phone: "+1-416-555-0102",
+    lastService: "2026-05-21",
+    serviceType: "Move-out cleaning",
+    consent: true,
+    lastContactDaysAgo: 0,
+    openIssue: false,
+    lifetimeValue: 690,
+  },
+  {
+    id: "cus-003",
+    name: "Alicia R.",
+    email: "alicia@example.com",
+    phone: "+1-416-555-0103",
+    lastService: "2026-05-18",
+    serviceType: "Recurring cleaning",
+    consent: true,
+    lastContactDaysAgo: 7,
+    openIssue: false,
+    lifetimeValue: 2180,
+  },
+];
+
+const events = [
+  {
+    id: "evt-001",
+    type: "job.completed",
+    customerId: "cus-002",
+    source: "CSV import",
+    occurredAt: "2026-05-22T10:15:00Z",
+  },
+  {
+    id: "evt-002",
+    type: "private.reply.received",
+    customerId: "cus-001",
+    source: "SMS",
+    occurredAt: "2026-05-22T11:20:00Z",
+  },
+  {
+    id: "evt-003",
+    type: "repeat.due",
+    customerId: "cus-003",
+    source: "Proofline cadence",
+    occurredAt: "2026-05-22T12:30:00Z",
+  },
+];
+
+module.exports = {
+  business,
+  reviews,
+  customers,
+  events,
+};

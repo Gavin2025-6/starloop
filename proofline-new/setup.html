@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Proofline Setup</title>
+    <meta
+      name="description"
+      content="Set up Proofline review requests, customer import, AI replies, widgets, referrals, repeats, and weekly owner brief."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="setup-body">
+    <header class="site-header">
+      <a class="brand" href="./index.html">
+        <span class="brand-mark">P</span>
+        <span>Proofline</span>
+      </a>
+      <nav class="top-nav" aria-label="Setup navigation">
+        <a href="./audit-report.html">Audit</a>
+        <a href="./workspace.html">Workspace</a>
+        <a href="./index.html">Home</a>
+      </nav>
+      <a class="button primary small" href="./workspace.html">Open workspace</a>
+    </header>
+
+    <main class="setup-shell">
+      <section class="setup-hero">
+        <div>
+          <p class="eyebrow">Guided setup</p>
+          <h1>Turn the audit into a working review routine.</h1>
+          <p>
+            This setup flow shows what a new customer should experience: connect review source, import customers,
+            approve templates, activate automations, and see the first owner queue.
+          </p>
+        </div>
+        <aside class="setup-summary">
+          <span>Setup readiness</span>
+          <strong id="setupScore">20%</strong>
+          <p id="setupSummary">Complete the checklist to unlock the first weekly owner brief.</p>
+        </aside>
+      </section>
+
+      <section class="setup-grid">
+        <aside class="setup-steps" id="setupSteps" aria-label="Setup steps"></aside>
+        <section class="setup-panel" id="setupPanel" aria-live="polite"></section>
+      </section>
+    </main>
+
+    <script src="./setup.js"></script>
+  </body>
+</html>
