@@ -458,7 +458,9 @@ export default function OnboardingPage() {
 
   function goTo(s: Step) {
     setStep(s);
-    window.history.replaceState(null, "", `/en/onboarding?step=${s}`);
+    // Preserve whatever locale is in the current URL instead of hardcoding /en
+    const localePrefix = window.location.pathname.split("/")[1]; // "en" or "zh-CN"
+    window.history.replaceState(null, "", `/${localePrefix}/onboarding?step=${s}`);
     window.scrollTo(0, 0);
   }
 

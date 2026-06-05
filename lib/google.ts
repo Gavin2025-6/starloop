@@ -1,18 +1,26 @@
 import { google } from "googleapis";
 
-// Lazy init — never initialize at module top level on Railway (env vars may be absent at build time)
-let _oauth2Client: InstanceType<typeof google.auth.OAuth2> | null = null;
-
+/**
+ * Create a fresh OAuth2 client on every call — no singleton caching.
+ *
+ * Why no singleton: On Railway, if GOOGLE_REDIRECT_URI is incorrect and the
+ * process stays alive, a cached singleton would keep the wrong redirect_uri
+ * forever. A fresh instance always reads the current env var.
+ *
+ * The correct redirect_uri for this app is /api/google/callback (not NextAuth's
+ * /api/auth/callback/google). If GOOGLE_REDIRECT_URI is not set in Railway,
+ * we derive it from NEXT_PUBLIC_APP_URL.
+ */
 function getOAuth2Client() {
-  if (!_oauth2Client) {
-    _oauth2Client = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      // Must match the route that handles the OAuth callback — /api/google/callback
-      process.env.GOOGLE_REDIRECT_URI ?? `${process.env.NEXT_PUBLIC_APP_URL}/api/google/callback`,
-    );
-  }
-  return _oauth2Client;
+  const redirectUri =
+    process.env.GOOGLE_REDIRECT_URI ??
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/google/callback`;
+
+  return new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    redirectUri,
+  );
 }
 
 // Re-export for callers that need to set credentials directly
@@ -28,15 +36,6 @@ export function getOAuth2ClientWithToken(accessToken?: string, refreshToken?: st
   return client;
 }
 
-// Keep backward compat export — callers that set credentials separately still work
-export const oauth2Client = {
-  setCredentials: (creds: Parameters<InstanceType<typeof google.auth.OAuth2>["setCredentials"]>[0]) =>
-    getOAuth2Client().setCredentials(creds),
-  generateAuthUrl: (opts: Parameters<InstanceType<typeof google.auth.OAuth2>["generateAuthUrl"]>[0]) =>
-    getOAuth2Client().generateAuthUrl(opts),
-  getToken: (code: string) => getOAuth2Client().getToken(code),
-  refreshAccessToken: () => getOAuth2Client().refreshAccessToken(),
-};
 
 export function getAuthUrl(): string {
   return getOAuth2Client().generateAuthUrl({
