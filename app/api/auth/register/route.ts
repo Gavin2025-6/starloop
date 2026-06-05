@@ -15,18 +15,27 @@ export async function POST(request: Request) {
       );
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const existing = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        businesses: { select: { isGoogleConnected: true }, take: 1 },
+      },
+    });
 
     if (existing) {
-      if (existing.emailVerified) {
-        // Fully verified account → truly exists, can't be overwritten
+      const googleConnected = existing.businesses[0]?.isGoogleConnected ?? false;
+
+      // An account is considered COMPLETE only when BOTH conditions are met:
+      // 1. Email verified  2. Google Business connected
+      // Anything short of that is an incomplete registration — delete and allow restart.
+      if (existing.emailVerified && googleConnected) {
         return NextResponse.json(
           { error: "An account with this email already exists" },
           { status: 409 }
         );
       }
-      // Unverified account = incomplete registration → delete and let them restart
-      // (Cascade deletes business and all related records via Prisma schema)
+
+      // Incomplete account → delete (cascade removes Business, etc.) and re-register
       await prisma.user.delete({ where: { id: existing.id } });
     }
 
@@ -47,10 +56,7 @@ export async function POST(request: Request) {
     });
 
     await prisma.business.create({
-      data: {
-        userId: user.id,
-        name: businessName,
-      },
+      data: { userId: user.id, name: businessName },
     });
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://starloop-production.up.railway.app";
