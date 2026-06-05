@@ -1,13 +1,45 @@
 import { google } from "googleapis";
 
-export const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI
-);
+// Lazy init — never initialize at module top level on Railway (env vars may be absent at build time)
+let _oauth2Client: InstanceType<typeof google.auth.OAuth2> | null = null;
+
+function getOAuth2Client() {
+  if (!_oauth2Client) {
+    _oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      // Must match the route that handles the OAuth callback — /api/google/callback
+      process.env.GOOGLE_REDIRECT_URI ?? `${process.env.NEXT_PUBLIC_APP_URL}/api/google/callback`,
+    );
+  }
+  return _oauth2Client;
+}
+
+// Re-export for callers that need to set credentials directly
+export function getOAuth2ClientWithToken(accessToken?: string, refreshToken?: string) {
+  const client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI ?? `${process.env.NEXT_PUBLIC_APP_URL}/api/google/callback`,
+  );
+  if (accessToken || refreshToken) {
+    client.setCredentials({ access_token: accessToken, refresh_token: refreshToken });
+  }
+  return client;
+}
+
+// Keep backward compat export — callers that set credentials separately still work
+export const oauth2Client = {
+  setCredentials: (creds: Parameters<InstanceType<typeof google.auth.OAuth2>["setCredentials"]>[0]) =>
+    getOAuth2Client().setCredentials(creds),
+  generateAuthUrl: (opts: Parameters<InstanceType<typeof google.auth.OAuth2>["generateAuthUrl"]>[0]) =>
+    getOAuth2Client().generateAuthUrl(opts),
+  getToken: (code: string) => getOAuth2Client().getToken(code),
+  refreshAccessToken: () => getOAuth2Client().refreshAccessToken(),
+};
 
 export function getAuthUrl(): string {
-  return oauth2Client.generateAuthUrl({
+  return getOAuth2Client().generateAuthUrl({
     access_type: "offline",
     scope: [
       "https://www.googleapis.com/auth/business.manage",
@@ -18,23 +50,22 @@ export function getAuthUrl(): string {
 }
 
 export async function exchangeCodeForTokens(code: string) {
-  const { tokens } = await oauth2Client.getToken(code);
+  const { tokens } = await getOAuth2Client().getToken(code);
   return tokens;
 }
 
 export async function refreshAccessToken(refreshToken: string) {
-  oauth2Client.setCredentials({ refresh_token: refreshToken });
-  const { credentials } = await oauth2Client.refreshAccessToken();
+  const client = getOAuth2ClientWithToken(undefined, refreshToken);
+  const { credentials } = await client.refreshAccessToken();
   return credentials;
 }
 
 export async function getBusinessLocations(accessToken: string) {
-  oauth2Client.setCredentials({ access_token: accessToken });
+  const client = getOAuth2ClientWithToken(accessToken);
 
-  // Google Business Profile API — list accounts and locations
   const mybusiness = google.mybusinessaccountmanagement({
     version: "v1",
-    auth: oauth2Client,
+    auth: client,
   });
 
   const accountsRes = await mybusiness.accounts.list();
@@ -51,7 +82,7 @@ export async function getBusinessLocations(accessToken: string) {
 
   const mybusinessInfo = google.mybusinessbusinessinformation({
     version: "v1",
-    auth: oauth2Client,
+    auth: client,
   });
 
   for (const account of accounts) {
@@ -86,9 +117,6 @@ export async function getReviews(
   comment: string;
   createTime: string;
 }>> {
-  oauth2Client.setCredentials({ access_token: accessToken });
-
-  // Note: Reviews API requires mybusinessreviews endpoint
   const response = await fetch(
     `https://mybusiness.googleapis.com/v4/${locationName}/reviews?pageSize=50`,
     {
@@ -134,11 +162,8 @@ export async function publishReply(
 
 function ratingToNumber(rating: string): number {
   const map: Record<string, number> = {
-    ONE: 1,
-    TWO: 2,
-    THREE: 3,
-    FOUR: 4,
-    FIVE: 5,
+    ONE: 1, TWO: 2, THREE: 3, FOUR: 4, FIVE: 5,
   };
   return map[rating] || 0;
 }
+
