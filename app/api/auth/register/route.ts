@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { sendWelcomeEmail } from "@/lib/resend";
+import { randomBytes } from "crypto";
+import { sendEmailVerification } from "@/lib/resend";
 
 export async function POST(request: Request) {
   try {
@@ -24,6 +25,7 @@ export async function POST(request: Request) {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+    const verificationToken = randomBytes(32).toString("hex");
 
     const user = await prisma.user.create({
       data: {
@@ -32,10 +34,11 @@ export async function POST(request: Request) {
         passwordHash,
         plan: "FREE",
         trialEndsAt,
+        emailVerified: false,
+        emailVerificationToken: verificationToken,
       },
     });
 
-    // Create the business record immediately on registration
     await prisma.business.create({
       data: {
         userId: user.id,
@@ -43,11 +46,16 @@ export async function POST(request: Request) {
       },
     });
 
-    // Fire-and-forget welcome email
-    sendWelcomeEmail({ to: user.email, name: user.name ?? user.email.split("@")[0] })
-      .catch((err) => console.error("[Register/welcome-email]", err));
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://starloop-production.up.railway.app";
+    const verificationUrl = `${appUrl}/api/auth/verify-email?token=${verificationToken}`;
 
-    return NextResponse.json({ id: user.id, email: user.email });
+    sendEmailVerification({
+      to: user.email,
+      name: user.name ?? user.email.split("@")[0],
+      verificationUrl,
+    }).catch((err) => console.error("[Register/verify-email]", err));
+
+    return NextResponse.json({ id: user.id, email: user.email, requiresVerification: true });
   } catch (err) {
     console.error("[Auth/Register]", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

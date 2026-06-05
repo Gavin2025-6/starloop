@@ -54,22 +54,24 @@ enum ReviewSource {
 }
 
 model User {
-  id                   String    @id @default(cuid())
-  email                String    @unique
-  name                 String?
-  passwordHash         String
-  plan                 Plan      @default(FREE)
-  trialEndsAt          DateTime?
-  stripeCustomerId     String?   @unique
-  stripeSubscriptionId String?   @unique
-  currentPeriodEnd     DateTime?
-  smsCredits           Int       @default(0)
-  lastLoginAt          DateTime?
-  preferredLanguage      String    @default("en")
-  onboardingCompleted    Boolean   @default(false)
-  onboardingTourCompleted Boolean  @default(false)
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  id                      String    @id @default(cuid())
+  email                   String    @unique
+  name                    String?
+  passwordHash            String
+  plan                    Plan      @default(FREE)
+  trialEndsAt             DateTime?
+  stripeCustomerId        String?   @unique
+  stripeSubscriptionId    String?   @unique
+  currentPeriodEnd        DateTime?
+  smsCredits              Int       @default(0)
+  lastLoginAt             DateTime?
+  emailVerified           Boolean   @default(false)
+  emailVerificationToken  String?   @unique
+  preferredLanguage         String    @default("en")
+  onboardingCompleted       Boolean   @default(false)
+  onboardingTourCompleted   Boolean   @default(false)
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
 
   businesses          Business[]
   notifications       Notification[]

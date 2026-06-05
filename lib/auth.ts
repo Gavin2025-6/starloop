@@ -60,11 +60,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }),
           prisma.user.findUnique({
             where: { id: token.id as string },
-            select: { onboardingCompleted: true },
+            select: { onboardingCompleted: true, emailVerified: true },
           }),
         ]);
         token.isGoogleConnected = business?.isGoogleConnected ?? false;
         token.onboardingCompleted = user?.onboardingCompleted ?? false;
+        token.isEmailVerified = user?.emailVerified ?? false;
       }
       return token;
     },
@@ -75,6 +76,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.preferredLanguage = token.preferredLanguage;
         session.user.isGoogleConnected = token.isGoogleConnected;
         session.user.onboardingCompleted = token.onboardingCompleted;
+        session.user.isEmailVerified = token.isEmailVerified;
       }
       return session;
     },

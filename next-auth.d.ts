@@ -8,6 +8,7 @@ declare module "next-auth" {
       preferredLanguage?: string;
       isGoogleConnected?: boolean;
       onboardingCompleted?: boolean;
+      isEmailVerified?: boolean;
     } & DefaultSession["user"];
   }
 
@@ -24,5 +25,6 @@ declare module "next-auth/jwt" {
     preferredLanguage?: string;
     isGoogleConnected?: boolean;
     onboardingCompleted?: boolean;
+    isEmailVerified?: boolean;
   }
 }

@@ -33,6 +33,31 @@ export default async function middleware(request: NextRequest) {
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   });
 
+  const locale = detectLocale(request);
+
+  // ── Email-verification whitelist ─────────────────────────────────────────
+  // These paths are accessible even before the user's email is verified.
+  const emailVerifyWhitelist = [
+    "/auth/",
+    "/api/",
+    "/r/",
+    "/review/",
+    "/_next",
+    "/favicon",
+    "/widget",
+  ];
+
+  const isEmailVerifyWhitelisted =
+    pathname === "/" ||
+    pathname === "/en" ||
+    pathname === "/zh-CN" ||
+    emailVerifyWhitelist.some((p) => stripped.startsWith(p) || stripped === p);
+
+  // Enforce email verification before all other guards
+  if (token && !isEmailVerifyWhitelisted && token.isEmailVerified === false) {
+    return NextResponse.redirect(new URL(`/${locale}/auth/verify-email`, request.url));
+  }
+
   // ── Onboarding whitelist ─────────────────────────────────────────────────
   // These paths can be accessed before onboarding is complete.
   const onboardingWhitelist = [
@@ -54,8 +79,6 @@ export default async function middleware(request: NextRequest) {
     onboardingWhitelist.some(
       (p) => stripped.startsWith(p) || stripped === p
     );
-
-  const locale = detectLocale(request);
 
   // Enforce 5-step onboarding before allowing dashboard access
   if (token && !isOnboardingWhitelisted && token.onboardingCompleted === false) {

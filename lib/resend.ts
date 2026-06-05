@@ -700,3 +700,37 @@ export async function sendInactiveSummaryEmail({
     html: body,
   });
 }
+
+// ─── 11. Email Verification ───────────────────────────────────────────────────
+
+export async function sendEmailVerification({
+  to,
+  name,
+  verificationUrl,
+}: {
+  to: string;
+  name: string;
+  verificationUrl: string;
+}) {
+  const body = emailShell(`
+    ${emailHeader("✉️", "Verify your email address", "One click to activate your StarLoop account", "135deg,#0D1117,#374151")}
+    <tr><td style="padding:36px 40px 8px;">
+      <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
+        Hi ${name}, thanks for signing up! Click the button below to verify your email address and activate your account.
+      </p>
+
+      ${emailBtn(verificationUrl, "Verify Email Address →", "#0D1117")}
+
+      <p style="color:#9ca3af;font-size:12px;text-align:center;margin:0 0 8px;">
+        This link expires in 24 hours. If you didn't create an account, you can safely ignore this email.
+      </p>
+    </td></tr>
+  `);
+
+  return resend.emails.send({
+    from: "StarLoop <noreply@starloop.thinkmake.ai>",
+    to,
+    subject: "Verify your email — StarLoop",
+    html: body,
+  });
+}

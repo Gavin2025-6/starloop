@@ -1,26 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Logo from "@/components/ui/Logo";
 
 export default function ConnectGooglePage() {
   const searchParams = useSearchParams();
   const hasError = searchParams.get("error") === "true";
-  const [connecting, setConnecting] = useState(false);
 
-  // If the user lands here with ?connected=true (cookie set but JWT not yet
-  // refreshed), give the session a moment then push to dashboard.
   useEffect(() => {
     if (searchParams.get("connected") === "true") {
       window.location.replace("/en/dashboard");
     }
   }, [searchParams]);
-
-  function handleConnect() {
-    setConnecting(true);
-    window.location.href = "/api/google/connect";
-  }
 
   return (
     <div style={{
@@ -30,12 +22,10 @@ export default function ConnectGooglePage() {
       display: "flex",
       flexDirection: "column",
     }}>
-      {/* Logo */}
       <div style={{ padding: "32px 40px" }}>
         <Logo height={24} />
       </div>
 
-      {/* Content */}
       <div style={{
         flex: 1,
         display: "flex",
@@ -44,7 +34,6 @@ export default function ConnectGooglePage() {
         padding: "0 24px 80px",
       }}>
         <div style={{ width: "100%", maxWidth: "480px", textAlign: "center" }}>
-          {/* Icon */}
           <div style={{
             width: "72px", height: "72px", borderRadius: "20px",
             background: hasError ? "#FEF2F2" : "#F0F4FF",
@@ -59,20 +48,19 @@ export default function ConnectGooglePage() {
             lineHeight: 1.2, letterSpacing: "-0.02em",
             marginBottom: "12px",
           }}>
-            {hasError ? "连接失败，请重试" : "连接 Google Business"}
+            {hasError ? "Connection failed — please try again" : "Connect Google Business"}
           </h1>
 
           {hasError ? (
             <p style={{ fontSize: "1rem", color: "#EF4444", lineHeight: 1.6, marginBottom: "32px" }}>
-              Google 授权未完成或被拒绝。请重新点击下方按钮连接。
+              The Google authorization was not completed. Please click the button below to try again.
             </p>
           ) : (
             <p style={{ fontSize: "1rem", color: "#6B7280", lineHeight: 1.6, marginBottom: "32px" }}>
-              需要连接 Google Business 才能访问 Dashboard。完成授权后自动跳转，全程约 30 秒。
+              StarLoop needs access to your Google Business reviews. This takes 30 seconds.
             </p>
           )}
 
-          {/* Benefits */}
           {!hasError && (
             <div style={{
               background: "#F9FAFB", border: "1px solid #E5E7EB",
@@ -80,9 +68,9 @@ export default function ConnectGooglePage() {
               marginBottom: "32px", textAlign: "left",
             }}>
               {[
-                "自动同步 Google 评论，无需手动刷新",
-                "客户不满时私下捕获反馈，防止差评公开",
-                "每月自动生成声誉分析报告",
+                "Auto-sync Google reviews instantly",
+                "Get notified when customers need follow-up",
+                "Monthly reputation report generated automatically",
               ].map((item) => (
                 <div key={item} style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "8px" }}>
                   <span style={{ color: "#10B981", fontSize: "14px", flexShrink: 0 }}>✓</span>
@@ -92,31 +80,38 @@ export default function ConnectGooglePage() {
             </div>
           )}
 
-          {/* CTA button */}
-          <button
-            onClick={handleConnect}
-            disabled={connecting}
+          {/*
+            Use a plain <a> tag so the browser does a full navigation to the API
+            endpoint, which then 302-redirects to Google's OAuth consent screen.
+            This avoids any React state / JS timing issues.
+
+            IMPORTANT: Railway must have GOOGLE_REDIRECT_URI set to:
+            https://starloop-production.up.railway.app/api/google/callback
+            (NOT /api/auth/callback/google — that is NextAuth's own login callback)
+          */}
+          <a
+            href="/api/google/connect"
             style={{
               display: "inline-flex", alignItems: "center", justifyContent: "center",
               gap: "10px", width: "100%", height: "52px",
-              background: connecting ? "#6B7280" : "#0D1117",
-              color: "#fff",
+              background: "#0D1117", color: "#fff",
               border: "none", borderRadius: "10px",
               fontSize: "1rem", fontWeight: 600,
-              cursor: connecting ? "not-allowed" : "pointer",
-              fontFamily: "inherit",
+              cursor: "pointer", fontFamily: "inherit",
+              textDecoration: "none",
               transition: "opacity 150ms",
               marginBottom: "16px",
+              boxSizing: "border-box",
             }}
-            onMouseEnter={(e) => { if (!connecting) e.currentTarget.style.opacity = "0.85"; }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
             onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
           >
             <GoogleIcon />
-            {connecting ? "正在跳转 Google 授权..." : "连接 Google Business →"}
-          </button>
+            Connect Google Business →
+          </a>
 
           <p style={{ fontSize: "0.8125rem", color: "#9CA3AF" }}>
-            授权后可在 Settings 页面随时断开连接
+            You can disconnect anytime in Settings
           </p>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import Logo from "@/components/ui/Logo";
@@ -10,6 +10,8 @@ import Logo from "@/components/ui/Logo";
 export default function LoginPage() {
   const router = useRouter();
   const locale = useLocale();
+  const searchParams = useSearchParams();
+  const justVerified = searchParams.get("verified") === "true";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -135,6 +137,16 @@ export default function LoginPage() {
           <p style={{ fontSize: "0.875rem", color: "#6B7280", marginBottom: "28px" }}>
             Enter your email and password to continue.
           </p>
+
+          {justVerified && (
+            <div style={{
+              padding: "10px 14px", borderRadius: "8px", marginBottom: "16px",
+              background: "#F0FDF4", border: "1px solid #A7F3D0",
+              fontSize: "0.8125rem", color: "#065F46",
+            }}>
+              ✅ Email verified! You can now sign in.
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div>

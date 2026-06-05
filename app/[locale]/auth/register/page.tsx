@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
@@ -33,6 +34,8 @@ export default function RegisterPage() {
 
   const metCount = Object.values(passwordChecks).filter(Boolean).length;
   const allMet = metCount === 5;
+  const passwordsMatch = confirmPassword === "" || password === confirmPassword;
+  const confirmDone = confirmPassword.length > 0 && password === confirmPassword;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,7 +50,7 @@ export default function RegisterPage() {
     if (!res.ok) {
       setError(data.error || "Could not create account. Please try again.");
     } else {
-      router.push("/connect-google");
+      router.push("/auth/verify-email");
     }
     setLoading(false);
   }
@@ -276,6 +279,46 @@ export default function RegisterPage() {
                 </div>
               )}
             </div>
+            <div>
+              <label style={{
+                display: "block", fontSize: "0.75rem", fontWeight: 500,
+                color: "#374151", marginBottom: "6px",
+              }}>
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                onFocus={() => setFocused("confirmPassword")}
+                onBlur={() => setFocused(null)}
+                placeholder="Re-enter your password"
+                autoComplete="new-password"
+                style={{
+                  ...inputStyle("confirmPassword"),
+                  borderColor: confirmPassword.length > 0 && !passwordsMatch
+                    ? "#EF4444"
+                    : confirmDone
+                      ? "#10B981"
+                      : focused === "confirmPassword" ? "#000" : "#E5E7EB",
+                  boxShadow: confirmPassword.length > 0 && !passwordsMatch
+                    ? "0 0 0 3px rgba(239,68,68,0.1)"
+                    : focused === "confirmPassword" ? "0 0 0 3px rgba(0,0,0,0.06)" : "none",
+                }}
+              />
+              {confirmPassword.length > 0 && !passwordsMatch && (
+                <p style={{ fontSize: "0.6875rem", color: "#EF4444", marginTop: "4px" }}>
+                  Passwords do not match
+                </p>
+              )}
+              {confirmDone && (
+                <p style={{ fontSize: "0.6875rem", color: "#10B981", marginTop: "4px" }}>
+                  Passwords match ✓
+                </p>
+              )}
+            </div>
+
             {error && (
               <div style={{
                 padding: "10px 14px", borderRadius: "6px",
@@ -287,8 +330,8 @@ export default function RegisterPage() {
             )}
             <button
               type="submit"
-              disabled={loading || !allMet}
-              style={btnStyle(loading || !allMet)}
+              disabled={loading || !allMet || !confirmDone}
+              style={btnStyle(loading || !allMet || !confirmDone)}
               onMouseEnter={(e) => { if (!loading && allMet) e.currentTarget.style.opacity = "0.85"; }}
               onMouseLeave={(e) => { if (!loading && allMet) e.currentTarget.style.opacity = "1"; }}
             >
