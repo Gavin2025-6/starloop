@@ -1,8 +1,27 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Logo from "@/components/ui/Logo";
 
 export default function ConnectGooglePage() {
+  const searchParams = useSearchParams();
+  const hasError = searchParams.get("error") === "true";
+  const [connecting, setConnecting] = useState(false);
+
+  // If the user lands here with ?connected=true (cookie set but JWT not yet
+  // refreshed), give the session a moment then push to dashboard.
+  useEffect(() => {
+    if (searchParams.get("connected") === "true") {
+      window.location.replace("/en/dashboard");
+    }
+  }, [searchParams]);
+
+  function handleConnect() {
+    setConnecting(true);
+    window.location.href = "/api/google/connect";
+  }
+
   return (
     <div style={{
       minHeight: "100vh",
@@ -11,12 +30,12 @@ export default function ConnectGooglePage() {
       display: "flex",
       flexDirection: "column",
     }}>
-      {/* Logo top-left */}
+      {/* Logo */}
       <div style={{ padding: "32px 40px" }}>
         <Logo height={24} />
       </div>
 
-      {/* Centered content */}
+      {/* Content */}
       <div style={{
         flex: 1,
         display: "flex",
@@ -24,49 +43,94 @@ export default function ConnectGooglePage() {
         justifyContent: "center",
         padding: "0 24px 80px",
       }}>
-        <div style={{
-          width: "100%",
-          maxWidth: "480px",
-          textAlign: "center",
-        }}>
-          <h1 style={{
-            fontSize: "2.5rem", fontWeight: 700, color: "#000",
-            lineHeight: 1.15, letterSpacing: "-0.03em",
-            marginBottom: "16px",
+        <div style={{ width: "100%", maxWidth: "480px", textAlign: "center" }}>
+          {/* Icon */}
+          <div style={{
+            width: "72px", height: "72px", borderRadius: "20px",
+            background: hasError ? "#FEF2F2" : "#F0F4FF",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "36px", margin: "0 auto 24px",
           }}>
-            Connect your Google Business
-          </h1>
-          <p style={{
-            fontSize: "1rem", color: "#6B7280", lineHeight: 1.6,
-            marginBottom: "48px",
-          }}>
-            StarLoop needs access to your reviews to get started. This takes 30 seconds.
-          </p>
+            {hasError ? "⚠️" : "🔗"}
+          </div>
 
-          <a
-            href="/api/google/connect"
+          <h1 style={{
+            fontSize: "2rem", fontWeight: 700, color: "#0D1117",
+            lineHeight: 1.2, letterSpacing: "-0.02em",
+            marginBottom: "12px",
+          }}>
+            {hasError ? "连接失败，请重试" : "连接 Google Business"}
+          </h1>
+
+          {hasError ? (
+            <p style={{ fontSize: "1rem", color: "#EF4444", lineHeight: 1.6, marginBottom: "32px" }}>
+              Google 授权未完成或被拒绝。请重新点击下方按钮连接。
+            </p>
+          ) : (
+            <p style={{ fontSize: "1rem", color: "#6B7280", lineHeight: 1.6, marginBottom: "32px" }}>
+              需要连接 Google Business 才能访问 Dashboard。完成授权后自动跳转，全程约 30 秒。
+            </p>
+          )}
+
+          {/* Benefits */}
+          {!hasError && (
+            <div style={{
+              background: "#F9FAFB", border: "1px solid #E5E7EB",
+              borderRadius: "12px", padding: "16px 20px",
+              marginBottom: "32px", textAlign: "left",
+            }}>
+              {[
+                "自动同步 Google 评论，无需手动刷新",
+                "客户不满时私下捕获反馈，防止差评公开",
+                "每月自动生成声誉分析报告",
+              ].map((item) => (
+                <div key={item} style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "8px" }}>
+                  <span style={{ color: "#10B981", fontSize: "14px", flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: "14px", color: "#374151" }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* CTA button */}
+          <button
+            onClick={handleConnect}
+            disabled={connecting}
             style={{
               display: "inline-flex", alignItems: "center", justifyContent: "center",
-              width: "100%", height: "52px",
-              background: "#000", color: "#fff",
-              border: "none", borderRadius: "8px",
+              gap: "10px", width: "100%", height: "52px",
+              background: connecting ? "#6B7280" : "#0D1117",
+              color: "#fff",
+              border: "none", borderRadius: "10px",
               fontSize: "1rem", fontWeight: 600,
-              cursor: "pointer", fontFamily: "inherit",
-              textDecoration: "none",
+              cursor: connecting ? "not-allowed" : "pointer",
+              fontFamily: "inherit",
               transition: "opacity 150ms",
-              marginBottom: "32px",
+              marginBottom: "16px",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
+            onMouseEnter={(e) => { if (!connecting) e.currentTarget.style.opacity = "0.85"; }}
             onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
           >
-            Connect Google Business →
-          </a>
+            <GoogleIcon />
+            {connecting ? "正在跳转 Google 授权..." : "连接 Google Business →"}
+          </button>
 
           <p style={{ fontSize: "0.8125rem", color: "#9CA3AF" }}>
-            You can reconnect or disconnect anytime in Settings
+            授权后可在 Settings 页面随时断开连接
           </p>
         </div>
       </div>
     </div>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+      <path fill="#4285F4" d="M23.745 12.27c0-.79-.07-1.54-.19-2.27h-11.3v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/>
+      <path fill="#34A853" d="M12.255 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96h-3.98v3.09C3.515 21.3 7.565 24 12.255 24z"/>
+      <path fill="#FBBC05" d="M5.525 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62h-3.98a11.86 11.86 0 000 10.76l3.98-3.09z"/>
+      <path fill="#EA4335" d="M12.255 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C18.205 1.19 15.495 0 12.255 0c-4.69 0-8.74 2.7-10.71 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"/>
+    </svg>
   );
 }

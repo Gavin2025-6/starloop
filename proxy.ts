@@ -16,17 +16,26 @@ function detectLocale(request: NextRequest): string {
   return "en";
 }
 
+/**
+ * Strip the locale prefix (/en or /zh-CN) from a pathname so whitelist
+ * checks work uniformly regardless of which locale the user is browsing in.
+ */
+function stripLocale(pathname: string): string {
+  return pathname.replace(/^\/(en|zh-CN)/, "") || "/";
+}
+
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const stripped = stripLocale(pathname);
 
-  // Route guard: redirect authenticated users without Google connection
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   });
 
-  // Paths that bypass all guards
-  const whitelistPaths = [
+  // ── Onboarding whitelist ─────────────────────────────────────────────────
+  // These paths can be accessed before onboarding is complete.
+  const onboardingWhitelist = [
     "/auth/",
     "/connect-google",
     "/onboarding",
@@ -37,24 +46,50 @@ export default async function middleware(request: NextRequest) {
     "/favicon",
     "/widget",
   ];
-  const isWhitelisted = whitelistPaths.some(
-    (p) =>
-      pathname.startsWith(`/en${p}`) ||
-      pathname.startsWith(`/${p}`) ||
-      pathname === "/" ||
-      pathname === "/en",
-  );
+
+  const isOnboardingWhitelisted =
+    pathname === "/" ||
+    pathname === "/en" ||
+    pathname === "/zh-CN" ||
+    onboardingWhitelist.some(
+      (p) => stripped.startsWith(p) || stripped === p
+    );
 
   const locale = detectLocale(request);
 
   // Enforce 5-step onboarding before allowing dashboard access
-  if (token && !isWhitelisted && token.onboardingCompleted === false) {
+  if (token && !isOnboardingWhitelisted && token.onboardingCompleted === false) {
     return NextResponse.redirect(new URL(`/${locale}/onboarding`, request.url));
   }
 
-  const hasGoogleConnectedCookie = request.cookies.get("starloop_google_connected")?.value === "1";
+  // ── Google Business whitelist ────────────────────────────────────────────
+  // These paths are accessible even without Google Business connected.
+  // Billing and Settings remain accessible so users can top up credits or
+  // manage account settings before (or after) connecting Google.
+  const googleWhitelist = [
+    ...onboardingWhitelist,
+    "/dashboard/billing",
+    "/dashboard/settings",
+  ];
 
-  if (token && !isWhitelisted && token.isGoogleConnected === false && !hasGoogleConnectedCookie) {
+  const isGoogleWhitelisted =
+    pathname === "/" ||
+    pathname === "/en" ||
+    pathname === "/zh-CN" ||
+    googleWhitelist.some(
+      (p) => stripped.startsWith(p) || stripped === p
+    );
+
+  const hasGoogleConnectedCookie =
+    request.cookies.get("starloop_google_connected")?.value === "1";
+
+  // Enforce Google Business connection for all dashboard pages except the whitelist above
+  if (
+    token &&
+    !isGoogleWhitelisted &&
+    token.isGoogleConnected === false &&
+    !hasGoogleConnectedCookie
+  ) {
     return NextResponse.redirect(new URL(`/${locale}/connect-google`, request.url));
   }
 

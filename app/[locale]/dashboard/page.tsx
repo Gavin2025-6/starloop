@@ -38,17 +38,16 @@ export default async function DashboardPage({
     },
   });
 
-  // Only show data when Google is connected — avoid displaying stale test data
-  const isGoogleConnected = business?.isGoogleConnected ?? false;
-
-  const stats = (business && isGoogleConnected)
+  // Middleware guarantees Google is connected before the user reaches this page.
+  // Compute stats directly from DB — no conditional hiding needed.
+  const stats = business
     ? {
         totalReviews: business._count.reviews,
         pendingRequests: business._count.reviewRequests,
         averageRating:
           business.reviews.length > 0
             ? (
-                business.reviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) /
+                business.reviews.reduce((sum, r) => sum + r.rating, 0) /
                 business.reviews.length
               ).toFixed(1)
             : "—",
@@ -56,11 +55,18 @@ export default async function DashboardPage({
       }
     : null;
 
-  const privateIssues = isGoogleConnected ? (business?.reviews.filter((r) => r.source === "PRIVATE" && r.taskStatus !== "archived").length ?? 0) : 0;
-  const urgentIssues = isGoogleConnected ? (business?.reviews.filter((r) => r.rating <= 3 && r.taskStatus !== "resolved" && r.taskStatus !== "archived").length ?? 0) : 0;
+  const privateIssues = business?.reviews.filter(
+    (r) => r.source === "PRIVATE" && r.taskStatus !== "archived"
+  ).length ?? 0;
+  const urgentIssues = business?.reviews.filter(
+    (r) => r.rating <= 3 && r.taskStatus !== "resolved" && r.taskStatus !== "archived"
+  ).length ?? 0;
   const replyGaps = stats?.needsReply ?? 0;
-  const promoters = isGoogleConnected ? (business?.reviews.filter((r) => r.rating >= 4 && r.source !== "PRIVATE").length ?? 0) : 0;
+  const promoters = business?.reviews.filter(
+    (r) => r.rating >= 4 && r.source !== "PRIVATE"
+  ).length ?? 0;
   const openActions = urgentIssues + privateIssues + replyGaps;
+
   const topIssue = urgentIssues > 0
     ? "Recover unhappy customers first"
     : replyGaps > 0
@@ -103,6 +109,7 @@ export default async function DashboardPage({
 
   return (
     <div style={{ fontFamily: "var(--font-geist), -apple-system, sans-serif" }}>
+      {/* ── Action center ── */}
       <div
         className="mb-8 overflow-hidden rounded-2xl bg-white dashboard-overview"
         style={{ border: "1px solid #E5E7EB", boxShadow: "0 16px 50px rgba(15,23,42,0.06)" }}
@@ -114,7 +121,9 @@ export default async function DashboardPage({
               Today&apos;s action center
             </div>
             <h1 className="max-w-xl text-3xl font-bold leading-tight sm:text-4xl" style={{ color: "#0D1117" }}>
-              {openActions > 0 ? `${openActions} customer action${openActions === 1 ? "" : "s"} need attention.` : "All customers are handled. No open actions today."}
+              {openActions > 0
+                ? `${openActions} customer action${openActions === 1 ? "" : "s"} need attention.`
+                : "All customers are handled. No open actions today."}
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6" style={{ color: "#6B7280" }}>
               StarLoop turns feedback, review requests, recovery work, and reply gaps into a short list of owner actions.
@@ -149,10 +158,7 @@ export default async function DashboardPage({
                   key={title}
                   href={href}
                   className="group grid grid-cols-[42px_1fr_auto] items-center gap-3 rounded-xl bg-white p-3 transition-transform hover:-translate-y-0.5"
-                  style={{
-                    border: "1px solid #E6ECF4",
-                    animation: `pageFadeIn 200ms ease-out ${index * 50}ms both`,
-                  }}
+                  style={{ border: "1px solid #E6ECF4", animation: `pageFadeIn 200ms ease-out ${index * 50}ms both` }}
                 >
                   <span className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ background: bg, color: tone }}>
                     <Icon size={18} />
@@ -169,27 +175,10 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      {!isGoogleConnected && (
-        <div className="mb-8 rounded-2xl bg-white p-10 text-center" style={{ border: "1px solid #E5E7EB" }}>
-          <div style={{ fontSize: "48px", marginBottom: "16px" }}>🔗</div>
-          <h2 className="text-xl font-bold mb-2" style={{ color: "#0D1117" }}>
-            连接您的 Google Business 账号后，数据将在这里显示
-          </h2>
-          <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: "#6B7280", lineHeight: 1.6 }}>
-            StarLoop 需要连接 Google Business 才能自动同步评论、追踪评分趋势，并在客户留下差评时即时提醒您。
-          </p>
-          <Link
-            href="/onboarding?step=2"
-            className="inline-flex items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold"
-            style={{ background: "#0D1117", color: "#FFFFFF" }}
-          >
-            立即连接 Google Business →
-          </Link>
-        </div>
-      )}
-
+      {/* ── Stats ── */}
       {stats && <StatsOverview stats={stats} />}
 
+      {/* ── Trust brief ── */}
       <div
         className="mt-8 rounded-xl bg-white p-6 ai-reply-section"
         style={{ border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(15,23,42,0.05)" }}
@@ -200,9 +189,7 @@ export default async function DashboardPage({
               <Bot size={14} />
               AI operator active
             </div>
-            <h2 className="text-xl font-bold" style={{ color: "#0D1117" }}>
-              Customer trust brief
-            </h2>
+            <h2 className="text-xl font-bold" style={{ color: "#0D1117" }}>Customer trust brief</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6" style={{ color: "#6B7280" }}>
               A quick operating view of recovery risk, private feedback, reply gaps, and customer language.
             </p>
@@ -219,44 +206,12 @@ export default async function DashboardPage({
 
         <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-4 weekly-report-section">
           {[
-            {
-              label: "Needs owner attention",
-              value: urgentIssues,
-              helper: "Low-rating feedback not resolved",
-              Icon: AlertTriangle,
-              tone: "#B76200",
-              bg: "#FFF7ED",
-            },
-            {
-              label: "Recovery inbox",
-              value: privateIssues,
-              helper: "Private issues captured",
-              Icon: CheckCircle2,
-              tone: "#087C6D",
-              bg: "#EAFBF8",
-            },
-            {
-              label: "Reply gaps",
-              value: replyGaps,
-              helper: "Public reviews still open",
-              Icon: Bot,
-              tone: "#3157D5",
-              bg: "#EEF3FF",
-            },
-            {
-              label: "Language mode",
-              value: "Auto",
-              helper: "Customer language detection",
-              Icon: Languages,
-              tone: "#5B3FD5",
-              bg: "#F4F1FF",
-            },
+            { label: "Needs owner attention", value: urgentIssues, helper: "Low-rating feedback not resolved", Icon: AlertTriangle, tone: "#B76200", bg: "#FFF7ED" },
+            { label: "Recovery inbox",        value: privateIssues, helper: "Private issues captured",         Icon: CheckCircle2, tone: "#087C6D", bg: "#EAFBF8" },
+            { label: "Reply gaps",            value: replyGaps,     helper: "Public reviews still open",       Icon: Bot,          tone: "#3157D5", bg: "#EEF3FF" },
+            { label: "Language mode",         value: "Auto",        helper: "Customer language detection",     Icon: Languages,    tone: "#5B3FD5", bg: "#F4F1FF" },
           ].map(({ label, value, helper, Icon, tone, bg }, index) => (
-            <div key={label} className="rounded-xl p-4" style={{
-              border: "1px solid #E8ECF3",
-              background: "#FFFFFF",
-              animation: `pageFadeIn 200ms ease-out ${index * 50}ms both`,
-            }}>
+            <div key={label} className="rounded-xl p-4" style={{ border: "1px solid #E8ECF3", background: "#FFFFFF", animation: `pageFadeIn 200ms ease-out ${index * 50}ms both` }}>
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg" style={{ background: bg, color: tone }}>
                 <Icon size={19} />
               </div>
@@ -268,37 +223,36 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      {isGoogleConnected && (
-        <div className="mt-8 positive-reviews-section">
-          <RatingChart />
-        </div>
-      )}
+      {/* ── Rating chart ── */}
+      <div className="mt-8 positive-reviews-section">
+        <RatingChart />
+      </div>
 
-      {isGoogleConnected && (
-        <div className="mt-8 reviews-list">
-          <h2 className="text-lg font-semibold mb-4" style={{ color: "#0D1117" }}>
-            {t("reviews.title")}
-          </h2>
-          {business?.reviews.length ? (
-            <ReviewList reviews={business.reviews} businessId={business.id} />
-          ) : (
-            <EmptyState
-              type="reviews"
-              title={t("reviews.title")}
-              description={t("dashboard.noReviews")}
-              action={
-                <Link
-                  href="/dashboard/requests"
-                  className="inline-block mt-4 text-sm font-medium hover:underline"
-                  style={{ color: "#0D1117" }}
-                >
-                  发送首条邀评请求 →
-                </Link>
-              }
-            />
-          )}
-        </div>
-      )}
+      {/* ── Reviews list ── */}
+      <div className="mt-8 reviews-list">
+        <h2 className="text-lg font-semibold mb-4" style={{ color: "#0D1117" }}>
+          {t("reviews.title")}
+        </h2>
+        {business?.reviews.length ? (
+          <ReviewList reviews={business.reviews} businessId={business.id} />
+        ) : (
+          <EmptyState
+            type="reviews"
+            title={t("reviews.title")}
+            description={t("dashboard.noReviews")}
+            action={
+              <Link
+                href="/dashboard/requests"
+                className="inline-block mt-4 text-sm font-medium hover:underline"
+                style={{ color: "#0D1117" }}
+              >
+                发送首条邀评请求 →
+              </Link>
+            }
+          />
+        )}
+      </div>
+
       <Suspense fallback={null}>
         <OnboardingTour />
       </Suspense>
