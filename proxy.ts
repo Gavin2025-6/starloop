@@ -80,8 +80,17 @@ export default async function middleware(request: NextRequest) {
       (p) => stripped.startsWith(p) || stripped === p
     );
 
-  // Enforce 5-step onboarding before allowing dashboard access
-  if (token && !isOnboardingWhitelisted && token.onboardingCompleted === false) {
+  // Enforce 5-step onboarding before allowing dashboard access.
+  // Cookie covers the window between complete-onboarding POST and JWT refresh.
+  const hasOnboardingCompleteCookie =
+    request.cookies.get("starloop_onboarding_complete")?.value === "1";
+
+  if (
+    token &&
+    !isOnboardingWhitelisted &&
+    token.onboardingCompleted === false &&
+    !hasOnboardingCompleteCookie
+  ) {
     return NextResponse.redirect(new URL(`/${locale}/onboarding`, request.url));
   }
 

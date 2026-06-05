@@ -13,10 +13,23 @@ export default async function DashboardLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+
+  // auth() calls the JWT callback which hits the DB and refreshes all flags.
+  // This is the server-side source of truth — values here are always fresh.
   const session = await auth();
 
   if (!session?.user) {
     redirect(`/${locale}/auth/login`);
+  }
+
+  // Belt-and-suspenders: even if middleware is bypassed (e.g., stale cookie),
+  // these server-side checks guarantee hard enforcement.
+  if (session.user.isEmailVerified === false) {
+    redirect(`/${locale}/auth/verify-email`);
+  }
+
+  if (session.user.isGoogleConnected === false) {
+    redirect(`/${locale}/connect-google`);
   }
 
   return (

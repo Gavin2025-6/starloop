@@ -24,7 +24,7 @@ export default function LoginPage() {
     setLoading(true);
     const result = await signIn("credentials", { email, password, redirect: false });
     if (result?.error) {
-      setError("Invalid email or password");
+      setError("Incorrect email or password. If you just signed up, please verify your email first — check your inbox for a message from StarLoop.");
     } else {
       router.push(`/${locale}/dashboard`);
     }

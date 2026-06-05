@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import Logo from "@/components/ui/Logo";
@@ -8,6 +9,11 @@ export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
 
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [resent, setResent] = useState(false);
+  const [resendError, setResendError] = useState("");
+
   const errorMessages: Record<string, string> = {
     missing: "Verification link is missing a token. Please use the link from your email.",
     invalid: "This verification link is invalid or has already been used.",
@@ -15,6 +21,25 @@ export default function VerifyEmailPage() {
   };
 
   const errorMsg = error ? (errorMessages[error] ?? errorMessages.server) : null;
+
+  async function handleResend(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setSending(true);
+    setResendError("");
+    try {
+      await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      setResent(true);
+    } catch {
+      setResendError("Failed to resend. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
     <div style={{
@@ -34,6 +59,7 @@ export default function VerifyEmailPage() {
           textAlign: "center",
         }}>
           {errorMsg ? (
+            /* ── Error state (bad/expired token) ── */
             <>
               <div style={{ fontSize: "48px", marginBottom: "16px" }}>⚠️</div>
               <h1 style={{ fontSize: "22px", fontWeight: 700, color: "#0D1117", marginBottom: "10px" }}>
@@ -55,34 +81,80 @@ export default function VerifyEmailPage() {
               </Link>
             </>
           ) : (
+            /* ── Check email state ── */
             <>
               <div style={{ fontSize: "48px", marginBottom: "16px" }}>📧</div>
               <h1 style={{ fontSize: "22px", fontWeight: 700, color: "#0D1117", marginBottom: "10px" }}>
                 Check your email
               </h1>
-              <p style={{ fontSize: "14px", color: "#6B7280", lineHeight: 1.7, marginBottom: "8px" }}>
-                We sent a verification link to your email address. Click the link to activate your account.
-              </p>
-              <p style={{ fontSize: "13px", color: "#9CA3AF", marginBottom: "32px" }}>
-                Didn&apos;t receive it? Check your spam folder, or{" "}
-                <Link href="/auth/login" style={{ color: "#0D1117", fontWeight: 600 }}>
-                  sign in
-                </Link>
-                {" "}to resend.
+              <p style={{ fontSize: "14px", color: "#6B7280", lineHeight: 1.7, marginBottom: "28px" }}>
+                We sent a verification link to your email address. Click it to activate your account, then sign in.
               </p>
 
               <div style={{
                 background: "#F9FAFB", border: "1px solid #E5E7EB",
                 borderRadius: "10px", padding: "14px 16px",
                 fontSize: "13px", color: "#6B7280", textAlign: "left",
+                marginBottom: "28px",
               }}>
-                <strong style={{ color: "#374151" }}>Next steps:</strong>
-                <ol style={{ margin: "8px 0 0 16px", padding: 0, lineHeight: 2 }}>
-                  <li>Open your email inbox</li>
-                  <li>Click the link in the email from StarLoop</li>
-                  <li>You&apos;ll be redirected to sign in</li>
-                </ol>
+                <strong style={{ color: "#374151" }}>Didn&apos;t receive it?</strong>
+                <ul style={{ margin: "6px 0 0 16px", padding: 0, lineHeight: 2 }}>
+                  <li>Check your <strong>spam / junk</strong> folder</li>
+                  <li>Wait up to 2 minutes and refresh</li>
+                  <li>Use the form below to resend</li>
+                </ul>
               </div>
+
+              {/* Resend form */}
+              {!resent ? (
+                <form onSubmit={handleResend} style={{ textAlign: "left" }}>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: 500, color: "#374151", marginBottom: "6px" }}>
+                    Resend verification email
+                  </label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      style={{
+                        flex: 1, height: "40px", padding: "0 12px",
+                        fontSize: "14px", border: "1px solid #E5E7EB",
+                        borderRadius: "8px", outline: "none",
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={sending}
+                      style={{
+                        height: "40px", padding: "0 16px",
+                        background: "#0D1117", color: "#fff",
+                        border: "none", borderRadius: "8px",
+                        fontSize: "13px", fontWeight: 600,
+                        cursor: sending ? "not-allowed" : "pointer",
+                        opacity: sending ? 0.6 : 1, whiteSpace: "nowrap",
+                      }}
+                    >
+                      {sending ? "Sending…" : "Resend"}
+                    </button>
+                  </div>
+                  {resendError && (
+                    <p style={{ fontSize: "12px", color: "#EF4444", marginTop: "6px" }}>{resendError}</p>
+                  )}
+                </form>
+              ) : (
+                <div style={{ padding: "12px 16px", background: "#F0FDF4", border: "1px solid #A7F3D0", borderRadius: "8px", fontSize: "14px", color: "#065F46" }}>
+                  ✅ Verification email sent! Check your inbox.
+                </div>
+              )}
+
+              <p style={{ fontSize: "13px", color: "#9CA3AF", marginTop: "20px" }}>
+                Already verified?{" "}
+                <Link href="/auth/login" style={{ color: "#0D1117", fontWeight: 600 }}>
+                  Sign in →
+                </Link>
+              </p>
             </>
           )}
         </div>

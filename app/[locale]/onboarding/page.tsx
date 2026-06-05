@@ -475,7 +475,10 @@ export default function OnboardingPage() {
   }
 
   function handleComplete() {
-    router.push("/en/dashboard");
+    // Hard redirect so the browser makes a fresh request — the dashboard layout's
+    // auth() call will then refresh the JWT with onboardingCompleted=true and
+    // isGoogleConnected=true from DB, clearing the need for the bridge cookie.
+    window.location.href = "/en/dashboard";
   }
 
   return (

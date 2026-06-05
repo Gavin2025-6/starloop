@@ -112,7 +112,7 @@ export async function sendWelcomeEmail({
   `);
 
   return resend.emails.send({
-    from: "StarLoop <noreply@starloop.thinkmake.ai>",
+    from: "StarLoop <noreply@thinkmake.ai>",
     to,
     subject: `Welcome to StarLoop, ${name}! Here's how to get started`,
     html: body,
@@ -158,7 +158,7 @@ export async function sendNewReviewNotification({
   `);
 
   return resend.emails.send({
-    from: "StarLoop <noreply@starloop.thinkmake.ai>",
+    from: "StarLoop <noreply@thinkmake.ai>",
     to,
     subject: `${stars} New ${rating}-star review from ${reviewerName} — ${businessName}`,
     html: body,
@@ -232,7 +232,7 @@ export async function sendNegativeReviewAlert({
   `);
 
   return resend.emails.send({
-    from: "StarLoop <noreply@starloop.thinkmake.ai>",
+    from: "StarLoop <noreply@thinkmake.ai>",
     to,
     subject: `New negative review needs attention: ${businessName}`,
     html: body,
@@ -307,7 +307,7 @@ export async function sendRequestConfirmation({
   `);
 
   return resend.emails.send({
-    from: "StarLoop <noreply@starloop.thinkmake.ai>",
+    from: "StarLoop <noreply@thinkmake.ai>",
     to,
     subject: isScheduled
       ? `📅 Scheduled: Review request for ${customerName} — ${businessName}`
@@ -343,7 +343,7 @@ export async function sendReviewRequestEmail({
 
   return resend.emails.send({
     // TODO (before go-live): verify starloop.app in Resend → can use noreply@starloop.app
-    from: `${businessName} <noreply@starloop.thinkmake.ai>`,
+    from: `${businessName} <noreply@thinkmake.ai>`,
     to,
     subject,
     html,
@@ -503,7 +503,7 @@ export async function sendReputationReportEmail({
 </html>`;
 
   return resend.emails.send({
-    from: `StarLoop Reports <noreply@starloop.thinkmake.ai>`,
+    from: `StarLoop Reports <noreply@thinkmake.ai>`,
     to,
     subject: `📊 ${businessName} — ${monthLabel} Reputation Report`,
     html,
@@ -559,7 +559,7 @@ export async function sendSupportTicketConfirmation({
   `);
 
   return resend.emails.send({
-    from: "StarLoop Support <noreply@starloop.thinkmake.ai>",
+    from: "StarLoop Support <noreply@thinkmake.ai>",
     to,
     subject: `[#${ticketId}] We received your question — StarLoop Support`,
     html: body,
@@ -599,7 +599,7 @@ export async function sendLowCreditAlert({
   `);
 
   return resend.emails.send({
-    from: "StarLoop <noreply@starloop.thinkmake.ai>",
+    from: "StarLoop <noreply@thinkmake.ai>",
     to,
     subject: `⚠️ 短信余额不足 ${remainingCredits} 条 — 请及时充值`,
     html: body,
@@ -637,7 +637,7 @@ export async function sendGoogleDisconnectedAlert({
   `);
 
   return resend.emails.send({
-    from: "StarLoop <noreply@starloop.thinkmake.ai>",
+    from: "StarLoop <noreply@thinkmake.ai>",
     to,
     subject: `🔗 ${businessName} — Google 连接已断开，请重新授权`,
     html: body,
@@ -694,7 +694,7 @@ export async function sendInactiveSummaryEmail({
   `);
 
   return resend.emails.send({
-    from: "StarLoop <noreply@starloop.thinkmake.ai>",
+    from: "StarLoop <noreply@thinkmake.ai>",
     to,
     subject: `📊 ${businessName} — 30天数据摘要，欢迎回来`,
     html: body,
@@ -728,7 +728,7 @@ export async function sendEmailVerification({
   `);
 
   return resend.emails.send({
-    from: "StarLoop <noreply@starloop.thinkmake.ai>",
+    from: "StarLoop <noreply@thinkmake.ai>",
     to,
     subject: "Verify your email — StarLoop",
     html: body,
