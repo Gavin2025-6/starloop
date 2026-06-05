@@ -2,29 +2,24 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/navigation";
 import Logo from "@/components/ui/Logo";
 
 type Step = 1 | 2 | 3 | 4 | 5;
-
 const TOTAL_STEPS = 5;
 
+/* ─── Progress bar ────────────────────────────────────────────── */
 function ProgressBar({ step }: { step: Step }) {
   return (
     <div style={{ width: "100%", marginBottom: "32px" }}>
-      <div style={{
-        display: "flex", justifyContent: "space-between",
-        alignItems: "center", marginBottom: "8px",
-      }}>
-        <span style={{ fontSize: "13px", color: "#6B7280" }}>步骤 {step} / {TOTAL_STEPS}</span>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+        <span style={{ fontSize: "13px", color: "#6B7280" }}>Step {step} of {TOTAL_STEPS}</span>
         <span style={{ fontSize: "13px", color: "#6B7280" }}>{Math.round((step / TOTAL_STEPS) * 100)}%</span>
       </div>
       <div style={{ height: "6px", background: "#E5E7EB", borderRadius: "99px", overflow: "hidden" }}>
         <div style={{
           height: "100%", width: `${(step / TOTAL_STEPS) * 100}%`,
           background: "linear-gradient(90deg, #4A6FFF, #00C9A7)",
-          borderRadius: "99px",
-          transition: "width 0.4s ease",
+          borderRadius: "99px", transition: "width 0.4s ease",
         }} />
       </div>
     </div>
@@ -43,18 +38,18 @@ function Step1({ onNext }: { onNext: () => void }) {
           fontSize: "36px", margin: "0 auto 20px",
         }}>⭐</div>
         <h1 style={{ fontSize: "26px", fontWeight: 700, color: "#0D1117", marginBottom: "10px", lineHeight: 1.2 }}>
-          欢迎使用 StarLoop
+          Welcome to StarLoop
         </h1>
         <p style={{ fontSize: "16px", color: "#6B7280", lineHeight: 1.7 }}>
-          StarLoop 帮助本地商家把每一位客户变成下一位推荐者。
+          StarLoop helps local businesses turn every customer into the next referral.
         </p>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "32px" }}>
         {[
-          { icon: "📱", title: "一键发短信邀评", desc: "自动向客户发送邀评短信，省去手动操作" },
-          { icon: "🛡️", title: "服务补救协议", desc: "不满意的客户反馈直达您，方便主动跟进改善服务" },
-          { icon: "📊", title: "评分趋势分析", desc: "AI 每月生成报告，找出可改进的问题模式" },
+          { icon: "📱", title: "One-tap SMS review requests", desc: "Automatically send feedback requests to customers — no manual effort." },
+          { icon: "🛡️", title: "Service Recovery Protocol", desc: "Unhappy customer feedback comes to you privately so you can follow up." },
+          { icon: "📊", title: "Rating trend analysis", desc: "AI generates a monthly report identifying patterns you can improve." },
         ].map(({ icon, title, desc }) => (
           <div key={title} style={{
             display: "flex", gap: "14px", alignItems: "flex-start",
@@ -71,7 +66,7 @@ function Step1({ onNext }: { onNext: () => void }) {
       </div>
 
       <button onClick={onNext} style={btnPrimary}>
-        开始设置 →
+        Get started →
       </button>
     </div>
   );
@@ -79,15 +74,6 @@ function Step1({ onNext }: { onNext: () => void }) {
 
 /* ─── Step 2: Connect Google (mandatory) ──────────────────────── */
 function Step2() {
-  const [checking, setChecking] = useState(false);
-  const [error, setError] = useState("");
-
-  function handleConnect() {
-    setChecking(true);
-    // Redirect to Google OAuth; callback will redirect back to step 3
-    window.location.href = "/api/google/connect";
-  }
-
   return (
     <div>
       <div style={{ textAlign: "center", marginBottom: "28px" }}>
@@ -98,10 +84,10 @@ function Step2() {
           fontSize: "36px", margin: "0 auto 20px",
         }}>🔗</div>
         <h2 style={{ fontSize: "22px", fontWeight: 700, color: "#0D1117", marginBottom: "8px" }}>
-          连接 Google Business（必填）
+          Connect Google Business (required)
         </h2>
         <p style={{ fontSize: "14px", color: "#6B7280", lineHeight: 1.6 }}>
-          连接后，StarLoop 可以自动同步您的 Google 评论，并在客户留下反馈时及时通知您。
+          StarLoop needs your Google Business access to sync reviews and notify you when customers leave feedback.
         </p>
       </div>
 
@@ -110,12 +96,16 @@ function Step2() {
         borderRadius: "10px", padding: "12px 16px", marginBottom: "24px",
       }}>
         <p style={{ fontSize: "13px", color: "#B76200", margin: 0 }}>
-          ⚠️ 这一步必须完成才能继续。连接后会自动跳到下一步。
+          ⚠️ This step is required to continue. You will be automatically taken to the next step after connecting.
         </p>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
-        {["自动同步新评论，无需手动刷新", "客户反馈直达您，方便主动跟进服务", "每月自动生成声誉报告"].map(b => (
+        {[
+          "Auto-sync new reviews — no manual refresh needed",
+          "Customer feedback notifies you so you can follow up",
+          "Monthly reputation report generated automatically",
+        ].map(b => (
           <div key={b} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
             <span style={{ color: "#10B981", flexShrink: 0 }}>✓</span>
             <span style={{ fontSize: "14px", color: "#374151" }}>{b}</span>
@@ -123,15 +113,18 @@ function Step2() {
         ))}
       </div>
 
-      {error && <p style={{ fontSize: "13px", color: "#EF4444", marginBottom: "12px" }}>{error}</p>}
-
-      <button onClick={handleConnect} disabled={checking} style={{
-        ...btnPrimary,
-        display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
-      }}>
+      {/* Plain <a> tag — full page navigation avoids JS state timing issues */}
+      <a
+        href="/api/google/connect"
+        style={{
+          ...btnPrimary,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          gap: "10px", textDecoration: "none",
+        }}
+      >
         <GoogleIcon />
-        {checking ? "跳转中..." : "连接 Google Business"}
-      </button>
+        Connect Google Business →
+      </a>
     </div>
   );
 }
@@ -142,11 +135,10 @@ function Step3({ onNext }: { onNext: () => void }) {
   const [category, setCategory] = useState("");
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
-  const [loaded, setLoaded] = useState(false);
 
   const CATEGORIES = [
-    "餐饮", "清洁", "园艺绿化", "装修翻新", "美甲美容",
-    "汽车修理", "水电管道", "搬家服务", "其他",
+    "Restaurant", "Cleaning", "Landscaping", "Renovation",
+    "Nail Salon", "Auto Repair", "Plumbing", "Electrical", "Moving", "Other",
   ];
 
   useEffect(() => {
@@ -157,8 +149,7 @@ function Step3({ onNext }: { onNext: () => void }) {
         if (d.category) setCategory(d.category);
         if (d.phone) setPhone(d.phone);
       })
-      .catch(() => {})
-      .finally(() => setLoaded(true));
+      .catch(() => {});
   }, []);
 
   async function handleSave() {
@@ -178,38 +169,38 @@ function Step3({ onNext }: { onNext: () => void }) {
       <div style={{ textAlign: "center", marginBottom: "28px" }}>
         <div style={{ fontSize: "48px", marginBottom: "12px" }}>🏪</div>
         <h2 style={{ fontSize: "22px", fontWeight: 700, color: "#0D1117", marginBottom: "6px" }}>
-          确认门店信息
+          Confirm your business info
         </h2>
         <p style={{ fontSize: "14px", color: "#6B7280" }}>
-          这些信息会出现在发给客户的消息中。
+          This information appears in the messages sent to your customers.
         </p>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "28px" }}>
         <div>
-          <label style={labelStyle}>门店名称 *</label>
+          <label style={labelStyle}>Business name *</label>
           <input
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="例：王氏清洁服务"
+            placeholder="e.g. Wang's Cleaning Services"
             style={inputStyle}
           />
         </div>
         <div>
-          <label style={labelStyle}>门店类型</label>
+          <label style={labelStyle}>Business type</label>
           <select value={category} onChange={e => setCategory(e.target.value)} style={inputStyle}>
-            <option value="">选择类型</option>
+            <option value="">Select a type</option>
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div>
-          <label style={labelStyle}>联系电话（选填）</label>
+          <label style={labelStyle}>Phone number (optional)</label>
           <input
             type="tel"
             value={phone}
             onChange={e => setPhone(e.target.value)}
-            placeholder="例：416-555-0123"
+            placeholder="e.g. 416-555-0123"
             style={inputStyle}
           />
         </div>
@@ -220,7 +211,7 @@ function Step3({ onNext }: { onNext: () => void }) {
         disabled={!name.trim() || saving}
         style={{ ...btnPrimary, opacity: !name.trim() || saving ? 0.5 : 1 }}
       >
-        {saving ? "保存中..." : "确认，下一步 →"}
+        {saving ? "Saving…" : "Confirm and continue →"}
       </button>
     </div>
   );
@@ -233,7 +224,6 @@ function Step4({ onNext }: { onNext: () => void }) {
 
   async function handleSave() {
     setSaving(true);
-    // Settings stored in user preferences (future enhancement can persist this)
     await new Promise(r => setTimeout(r, 400));
     setSaving(false);
     onNext();
@@ -244,10 +234,10 @@ function Step4({ onNext }: { onNext: () => void }) {
       <div style={{ textAlign: "center", marginBottom: "28px" }}>
         <div style={{ fontSize: "48px", marginBottom: "12px" }}>🛡️</div>
         <h2 style={{ fontSize: "22px", fontWeight: 700, color: "#0D1117", marginBottom: "6px" }}>
-          设置服务补救协议
+          Set up Service Recovery Protocol
         </h2>
         <p style={{ fontSize: "14px", color: "#6B7280", lineHeight: 1.6 }}>
-          当客户给出较低评分时，StarLoop 会及时通知您，方便主动联系客户改善服务体验。
+          When customers leave a low rating, StarLoop notifies you privately so you can follow up before a review goes public.
         </p>
       </div>
 
@@ -255,13 +245,13 @@ function Step4({ onNext }: { onNext: () => void }) {
         background: "#F0FDF4", border: "1px solid #A7F3D0",
         borderRadius: "12px", padding: "16px", marginBottom: "24px",
       }}>
-        <p style={{ fontSize: "13px", fontWeight: 600, color: "#065F46", marginBottom: "8px" }}>✅ 默认补救流程（已启用）</p>
+        <p style={{ fontSize: "13px", fontWeight: 600, color: "#065F46", marginBottom: "8px" }}>✅ Default recovery flow (enabled)</p>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           {[
-            "客户反馈直接发给您，方便跟进",
-            "AI 生成服务改进建议",
-            "24小时跟进提醒",
-            "满意客户可自愿分享 Google 评价",
+            "Customer feedback sent to you privately — not posted publicly",
+            "AI generates a suggested reply",
+            "24-hour follow-up reminder",
+            "Happy customers can voluntarily share a Google review",
           ].map(t => (
             <div key={t} style={{ display: "flex", gap: "8px", fontSize: "13px", color: "#374151" }}>
               <span style={{ color: "#10B981" }}>→</span> {t}
@@ -277,33 +267,29 @@ function Step4({ onNext }: { onNext: () => void }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <p style={{ fontSize: "14px", fontWeight: 600, color: "#0D1117", marginBottom: "2px" }}>
-              邮件提醒（收到低分反馈时）
+              Email alert when low-rating feedback arrives
             </p>
-            <p style={{ fontSize: "12px", color: "#6B7280" }}>立即通知您采取行动</p>
+            <p style={{ fontSize: "12px", color: "#6B7280" }}>Notifies you immediately so you can take action</p>
           </div>
           <button
             onClick={() => setEmailAlert(!emailAlert)}
             style={{
-              width: "44px", height: "24px",
-              borderRadius: "12px", border: "none",
+              width: "44px", height: "24px", borderRadius: "12px", border: "none",
               background: emailAlert ? "#4A6FFF" : "#D1D5DB",
-              cursor: "pointer", position: "relative",
-              transition: "background 0.2s",
+              cursor: "pointer", position: "relative", transition: "background 0.2s",
             }}
           >
             <div style={{
-              width: "18px", height: "18px",
-              borderRadius: "50%", background: "#fff",
+              width: "18px", height: "18px", borderRadius: "50%", background: "#fff",
               position: "absolute", top: "3px",
-              left: emailAlert ? "23px" : "3px",
-              transition: "left 0.2s",
+              left: emailAlert ? "23px" : "3px", transition: "left 0.2s",
             }} />
           </button>
         </div>
       </div>
 
       <button onClick={handleSave} disabled={saving} style={btnPrimary}>
-        {saving ? "保存中..." : "完成设置，下一步 →"}
+        {saving ? "Saving…" : "Save settings and continue →"}
       </button>
     </div>
   );
@@ -329,12 +315,12 @@ function Step5({ onComplete }: { onComplete: () => void }) {
       });
       const data = await res.json();
       if (data.error) {
-        setError(`发送失败：${data.error}`);
+        setError(`Failed to send: ${data.error}`);
       } else {
         setSent(true);
       }
     } catch {
-      setError("发送失败，请稍后重试");
+      setError("Failed to send. Please try again.");
     } finally {
       setSending(false);
     }
@@ -351,22 +337,22 @@ function Step5({ onComplete }: { onComplete: () => void }) {
       <div style={{ textAlign: "center", marginBottom: "28px" }}>
         <div style={{ fontSize: "48px", marginBottom: "12px" }}>📱</div>
         <h2 style={{ fontSize: "22px", fontWeight: 700, color: "#0D1117", marginBottom: "6px" }}>
-          发一条测试短信给自己
+          Send a test SMS to yourself
         </h2>
         <p style={{ fontSize: "14px", color: "#6B7280", lineHeight: 1.6 }}>
-          输入您的手机号，收到测试短信确认一切正常后，设置就完成了！
+          Enter your phone number and confirm the message arrives. Then you&apos;re all set!
         </p>
       </div>
 
       {!sent ? (
         <>
           <div style={{ marginBottom: "20px" }}>
-            <label style={labelStyle}>您的手机号</label>
+            <label style={labelStyle}>Your phone number</label>
             <input
               type="tel"
               value={phone}
               onChange={e => setPhone(e.target.value)}
-              placeholder="例：+1 416-555-0123"
+              placeholder="e.g. +1 416-555-0123"
               style={inputStyle}
             />
           </div>
@@ -380,15 +366,11 @@ function Step5({ onComplete }: { onComplete: () => void }) {
             disabled={!phone.trim() || sending}
             style={{ ...btnPrimary, opacity: !phone.trim() || sending ? 0.5 : 1, marginBottom: "12px" }}
           >
-            {sending ? "发送中..." : "发送测试短信"}
+            {sending ? "Sending…" : "Send test SMS"}
           </button>
 
-          <button
-            onClick={handleComplete}
-            disabled={completing}
-            style={{ ...btnSecondary }}
-          >
-            {completing ? "完成中..." : "跳过这一步，直接进入 Dashboard →"}
+          <button onClick={handleComplete} disabled={completing} style={btnSecondary}>
+            {completing ? "Finishing…" : "Skip this step and go to Dashboard →"}
           </button>
         </>
       ) : (
@@ -399,19 +381,15 @@ function Step5({ onComplete }: { onComplete: () => void }) {
           }}>
             <div style={{ fontSize: "32px", marginBottom: "8px" }}>✅</div>
             <p style={{ fontSize: "15px", fontWeight: 600, color: "#065F46", marginBottom: "4px" }}>
-              短信已发送！
+              Test SMS sent!
             </p>
             <p style={{ fontSize: "13px", color: "#6B7280" }}>
-              请检查 {phone} 是否收到测试短信
+              Check {phone} for the test message.
             </p>
           </div>
 
-          <button
-            onClick={handleComplete}
-            disabled={completing}
-            style={btnPrimary}
-          >
-            {completing ? "进入中..." : "🎉 进入 Dashboard →"}
+          <button onClick={handleComplete} disabled={completing} style={btnPrimary}>
+            {completing ? "Loading…" : "🎉 Go to Dashboard →"}
           </button>
         </>
       )}
@@ -461,12 +439,22 @@ function GoogleIcon() {
 /* ─── Main page ───────────────────────────────────────────────── */
 export default function OnboardingPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const stepParam = searchParams.get("step");
+
+  // Initialize from URL search params. Default to 1 if missing.
   const [step, setStep] = useState<Step>(() => {
-    const n = parseInt(stepParam ?? "1");
+    const n = parseInt(searchParams.get("step") ?? "1");
     return (n >= 1 && n <= 5 ? n : 1) as Step;
   });
+
+  // Fallback: re-read from window.location after hydration.
+  // This handles the edge case where useSearchParams returns null during SSR
+  // (e.g., inside a Suspense boundary), which would incorrectly default step to 1
+  // even when the URL has ?step=3 (after Google OAuth callback).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const n = parseInt(params.get("step") ?? "1");
+    if (n >= 2 && n <= 5) setStep(n as Step); // only override if URL says step > 1
+  }, []); // runs once on mount
 
   function goTo(s: Step) {
     setStep(s);
@@ -475,9 +463,8 @@ export default function OnboardingPage() {
   }
 
   function handleComplete() {
-    // Hard redirect so the browser makes a fresh request — the dashboard layout's
-    // auth() call will then refresh the JWT with onboardingCompleted=true and
-    // isGoogleConnected=true from DB, clearing the need for the bridge cookie.
+    // Hard redirect so the dashboard layout's auth() call refreshes
+    // onboardingCompleted=true and isGoogleConnected=true from DB.
     window.location.href = "/en/dashboard";
   }
 
@@ -489,25 +476,18 @@ export default function OnboardingPage() {
       display: "flex",
       flexDirection: "column",
     }}>
-      {/* Logo */}
       <div style={{ padding: "20px 32px", borderBottom: "1px solid #E5E7EB", background: "#fff" }}>
         <Logo height={22} />
       </div>
 
-      {/* Card */}
       <div style={{
-        flex: 1,
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "center",
-        padding: "40px 24px 80px",
+        flex: 1, display: "flex", alignItems: "flex-start",
+        justifyContent: "center", padding: "40px 24px 80px",
       }}>
         <div style={{
           width: "100%", maxWidth: "480px",
-          background: "#fff",
-          borderRadius: "20px",
-          border: "1px solid #E5E7EB",
-          padding: "32px 28px",
+          background: "#fff", borderRadius: "20px",
+          border: "1px solid #E5E7EB", padding: "32px 28px",
           boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
         }}>
           <ProgressBar step={step} />

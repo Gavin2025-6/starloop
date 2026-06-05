@@ -328,6 +328,18 @@ export default function RegisterPage() {
                 {error}
               </div>
             )}
+            {/* Terms agreement — shown above the button */}
+            <p style={{ textAlign: "center", fontSize: "0.75rem", color: "#9CA3AF", lineHeight: 1.6 }}>
+              By creating an account, you agree to our{" "}
+              <a href="/en/terms" target="_blank" rel="noopener noreferrer" style={{ color: "#00C9A7", textDecoration: "none" }}>
+                Terms of Service
+              </a>
+              {" "}and{" "}
+              <a href="/en/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "#00C9A7", textDecoration: "none" }}>
+                Privacy Policy
+              </a>
+            </p>
+
             <button
               type="submit"
               disabled={loading || !allMet || !confirmDone}
