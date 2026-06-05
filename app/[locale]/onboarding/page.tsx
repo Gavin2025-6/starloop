@@ -315,12 +315,19 @@ function Step5({ onComplete }: { onComplete: () => void }) {
       });
       const data = await res.json();
       if (data.error) {
-        setError(`Failed to send: ${data.error}`);
+        // Translate error codes into user-friendly messages
+        if (data.error === "TRIAL_UNVERIFIED") {
+          setError("Your phone number isn't verified on the SMS service yet. Go to twilio.com → Verified Caller IDs and add your number, then try again. Or skip this step.");
+        } else if (data.error === "CREDENTIALS_INVALID") {
+          setError("SMS service is not configured. Please contact support or skip this step.");
+        } else {
+          setError(`Could not send SMS: ${data.error}`);
+        }
       } else {
         setSent(true);
       }
     } catch {
-      setError("Failed to send. Please try again.");
+      setError("Could not reach the server. Please try again or skip this step.");
     } finally {
       setSending(false);
     }
