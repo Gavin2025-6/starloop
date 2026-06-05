@@ -7,29 +7,29 @@ import { CreditCard, Zap, MessageSquare, TrendingUp } from "lucide-react";
 const PACKAGES = [
   {
     key: "BASIC",
-    name: "基础包",
+    name: "Starter",
     credits: 100,
     price: "$10",
-    unitPrice: "$0.10/条",
-    description: "适合刚开始收集评价的小型商家",
+    unitPrice: "$0.10 / credit",
+    description: "Best for getting started",
     badge: null,
   },
   {
     key: "STANDARD",
-    name: "标准包",
+    name: "Standard",
     credits: 280,
     price: "$25",
-    unitPrice: "$0.089/条",
-    description: "最受欢迎，发送量和单价最优平衡",
-    badge: "最划算",
+    unitPrice: "$0.089 / credit",
+    description: "Most popular",
+    badge: "Best value",
   },
   {
     key: "PRO",
-    name: "专业包",
+    name: "Pro",
     credits: 600,
     price: "$50",
-    unitPrice: "$0.083/条",
-    description: "高频发送，单价最低",
+    unitPrice: "$0.083 / credit",
+    description: "Lowest cost per credit",
     badge: null,
   },
 ];
@@ -63,7 +63,6 @@ export default function BillingPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Click = select + immediately go to Stripe checkout
   async function handlePurchase(packageKey: string) {
     if (purchasing) return;
     setPurchasing(packageKey);
@@ -100,24 +99,24 @@ export default function BillingPage() {
           fontSize: "12px", fontWeight: 600, marginBottom: "12px",
         }}>
           <CreditCard size={13} />
-          短信充值
+          SMS Credits
         </div>
         <h1 style={{ fontSize: "28px", fontWeight: 700, color: "#0D1117", marginBottom: "6px" }}>
-          为您的门店充值短信额度
+          Top up your SMS credits
         </h1>
         <p style={{ fontSize: "14px", color: "#6B7280" }}>
-          按需购买，无月费。短信额度永不过期。点击套餐直接跳转支付。
+          Pay as you go. No monthly fee. Credits never expire. Click a plan to checkout.
         </p>
       </div>
 
       {paymentParam === "success" && (
         <div style={{ marginBottom: "16px", padding: "12px 16px", borderRadius: "10px", background: "#EAFBF8", border: "1px solid #BDEFE8", color: "#087C6D", fontSize: "14px" }}>
-          ✅ 充值成功！短信额度已到账。
+          ✅ Payment successful! Credits have been added to your account.
         </div>
       )}
       {paymentParam === "cancelled" && (
         <div style={{ marginBottom: "16px", padding: "12px 16px", borderRadius: "10px", background: "#FFF7ED", border: "1px solid #FED7AA", color: "#B76200", fontSize: "14px" }}>
-          支付已取消，额度未变动。
+          Payment cancelled. Your balance was not changed.
         </div>
       )}
 
@@ -128,23 +127,23 @@ export default function BillingPage() {
             <MessageSquare size={22} color="#fff" />
           </div>
           <div>
-            <p style={{ fontSize: "13px", color: "#6B7280", marginBottom: "2px" }}>当前短信余额</p>
+            <p style={{ fontSize: "13px", color: "#6B7280", marginBottom: "2px" }}>Current SMS balance</p>
             <p style={{ fontSize: "32px", fontWeight: 700, color: "#0D1117", lineHeight: 1 }}>
               {loading ? "—" : (smsCredits ?? 0).toLocaleString()}
-              <span style={{ fontSize: "16px", fontWeight: 400, color: "#6B7280", marginLeft: "6px" }}>条</span>
+              <span style={{ fontSize: "16px", fontWeight: 400, color: "#6B7280", marginLeft: "6px" }}>credits</span>
             </p>
           </div>
         </div>
         {smsCredits !== null && smsCredits < 20 && (
           <div style={{ padding: "8px 14px", borderRadius: "8px", background: "#FFF7ED", border: "1px solid #FED7AA", fontSize: "13px", color: "#B76200" }}>
-            ⚠️ 余额不足 20 条，请及时充值
+            ⚠️ Low balance. Top up to keep sending.
           </div>
         )}
       </div>
 
-      {/* Package cards — click to select & purchase immediately */}
+      {/* Package cards */}
       <p style={{ fontSize: "13px", color: "#6B7280", marginBottom: "14px" }}>
-        点击套餐 → 直接跳转 Stripe 支付
+        Click a plan to checkout with Stripe
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px", marginBottom: "36px" }}>
         {PACKAGES.map(pkg => {
@@ -191,7 +190,7 @@ export default function BillingPage() {
               <div style={{ marginBottom: "20px" }}>
                 <div style={{ fontSize: "36px", fontWeight: 800, color: "#0D1117", lineHeight: 1 }}>{pkg.price}</div>
                 <div style={{ fontSize: "13px", color: "#6B7280", marginTop: "4px" }}>
-                  {pkg.credits.toLocaleString()} 条短信 · {pkg.unitPrice}
+                  {pkg.credits.toLocaleString()} credits · {pkg.unitPrice}
                 </div>
               </div>
 
@@ -200,10 +199,9 @@ export default function BillingPage() {
                 background: isSelected ? "#00C9A7" : "#0D1117",
                 color: "#fff", border: "none",
                 borderRadius: "10px", fontSize: "14px", fontWeight: 600,
-                textAlign: "center",
-                transition: "background 0.15s",
+                textAlign: "center", transition: "background 0.15s",
               }}>
-                {isSelected ? "跳转支付中..." : `充值 ${pkg.credits} 条 →`}
+                {isSelected ? "Redirecting to Stripe…" : `Get ${pkg.credits} credits →`}
               </div>
             </div>
           );
@@ -213,9 +211,9 @@ export default function BillingPage() {
       {/* Trust badges */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px", marginBottom: "36px" }}>
         {[
-          { Icon: Zap, title: "按需充值", text: "没有月费，额度永不过期，用完再买。" },
-          { Icon: CreditCard, title: "Stripe 安全支付", text: "银行级加密，不存储您的支付信息。" },
-          { Icon: TrendingUp, title: "量大更省", text: "购买越多，每条短信单价越低。" },
+          { Icon: Zap,        title: "Pay as you go",  text: "No subscription. Credits never expire." },
+          { Icon: CreditCard, title: "Secure checkout", text: "Bank-level encryption. No card stored." },
+          { Icon: TrendingUp, title: "Save more",       text: "Lower cost per credit on larger plans." },
         ].map(({ Icon, title, text }) => (
           <div key={title} style={{ padding: "16px", borderRadius: "12px", background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
             <Icon size={16} style={{ color: "#087C6D" }} />
@@ -228,16 +226,16 @@ export default function BillingPage() {
       {/* Transaction history */}
       {transactions.length > 0 && (
         <div>
-          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#0D1117", marginBottom: "14px" }}>充值记录</h2>
+          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#0D1117", marginBottom: "14px" }}>Transaction history</h2>
           <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: "16px", overflow: "hidden" }}>
             {transactions.map((tx, i) => (
               <div key={tx.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 20px", borderBottom: i < transactions.length - 1 ? "1px solid #F3F4F6" : "none" }}>
                 <div>
                   <p style={{ fontSize: "14px", color: "#0D1117", marginBottom: "2px" }}>{tx.note ?? tx.type}</p>
-                  <p style={{ fontSize: "12px", color: "#9CA3AF" }}>{new Date(tx.createdAt).toLocaleDateString("zh-CN")}</p>
+                  <p style={{ fontSize: "12px", color: "#9CA3AF" }}>{new Date(tx.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
                 </div>
                 <span style={{ fontSize: "15px", fontWeight: 600, color: tx.amount > 0 ? "#10B981" : "#EF4444" }}>
-                  {tx.amount > 0 ? `+${tx.amount}` : tx.amount} 条
+                  {tx.amount > 0 ? `+${tx.amount}` : tx.amount} credits
                 </span>
               </div>
             ))}
