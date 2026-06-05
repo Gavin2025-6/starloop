@@ -78,7 +78,7 @@ export async function POST(request: Request) {
 
       resend.emails
         .send({
-          from: "StarLoop <onboarding@resend.dev>",
+          from: "StarLoop <noreply@starloop.thinkmake.ai>",
           to: normalizedEmail,
           subject: "Reset your StarLoop password",
           html,
