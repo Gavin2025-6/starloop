@@ -50,7 +50,8 @@ export default function RegisterPage() {
     if (!res.ok) {
       setError(data.error || "Could not create account. Please try again.");
     } else {
-      router.push("/auth/verify-email");
+      // Pass email so verify-email page can pre-fill resend without asking again
+      router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
     }
     setLoading(false);
   }
