@@ -16,11 +16,18 @@ export async function POST(request: Request) {
     }
 
     const existing = await prisma.user.findUnique({ where: { email } });
+
     if (existing) {
-      return NextResponse.json(
-        { error: "An account with this email already exists" },
-        { status: 409 }
-      );
+      if (existing.emailVerified) {
+        // Fully verified account → truly exists, can't be overwritten
+        return NextResponse.json(
+          { error: "An account with this email already exists" },
+          { status: 409 }
+        );
+      }
+      // Unverified account = incomplete registration → delete and let them restart
+      // (Cascade deletes business and all related records via Prisma schema)
+      await prisma.user.delete({ where: { id: existing.id } });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
