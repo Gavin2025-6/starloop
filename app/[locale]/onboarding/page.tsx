@@ -134,11 +134,23 @@ function Step3({ onNext }: { onNext: () => void }) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [phone, setPhone] = useState("");
+  const [avgTransactionValue, setAvgTransactionValue] = useState("");
+  const [primaryAcquisitionChannel, setPrimaryAcquisitionChannel] = useState("");
+  const [industryType, setIndustryType] = useState("");
   const [saving, setSaving] = useState(false);
 
   const CATEGORIES = [
     "Restaurant", "Cleaning", "Landscaping", "Renovation",
     "Nail Salon", "Auto Repair", "Plumbing", "Electrical", "Moving", "Other",
+  ];
+
+  const ACQUISITION_CHANNELS = [
+    "Google Search", "Word of mouth", "WeChat/WhatsApp", "Instagram/Social media", "Walk-in", "Other",
+  ];
+
+  const INDUSTRY_TYPES = [
+    "Cleaning", "HVAC", "Nails & Beauty", "Auto Detailing", "Restaurant",
+    "Auto Repair", "Beauty Salon", "Pharmacy", "Landscaping", "Plumbing", "Other",
   ];
 
   useEffect(() => {
@@ -158,7 +170,14 @@ function Step3({ onNext }: { onNext: () => void }) {
     await fetch("/api/business", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim(), category, phone: phone.trim() }),
+      body: JSON.stringify({
+        name: name.trim(),
+        category,
+        phone: phone.trim(),
+        avgTransactionValue: avgTransactionValue ? Number(avgTransactionValue) : undefined,
+        primaryAcquisitionChannel: primaryAcquisitionChannel || undefined,
+        industryType: industryType || undefined,
+      }),
     }).catch(() => {});
     setSaving(false);
     onNext();
@@ -203,6 +222,37 @@ function Step3({ onNext }: { onNext: () => void }) {
             placeholder="e.g. 416-555-0123"
             style={inputStyle}
           />
+        </div>
+        <div>
+          <label style={labelStyle}>Average service transaction value (optional)</label>
+          <div style={{ position: "relative" }}>
+            <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#9CA3AF" }}>$</span>
+            <input
+              type="number"
+              value={avgTransactionValue}
+              onChange={e => setAvgTransactionValue(e.target.value)}
+              placeholder="e.g. 150"
+              min="0"
+              style={{ ...inputStyle, paddingLeft: "26px" }}
+            />
+          </div>
+          <p style={{ fontSize: "12px", color: "#9CA3AF", marginTop: "4px", marginBottom: 0 }}>
+            Used to calculate your estimated revenue from new reviews.
+          </p>
+        </div>
+        <div>
+          <label style={labelStyle}>How do you mainly acquire new customers?</label>
+          <select value={primaryAcquisitionChannel} onChange={e => setPrimaryAcquisitionChannel(e.target.value)} style={inputStyle}>
+            <option value="">Select a channel</option>
+            {ACQUISITION_CHANNELS.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={labelStyle}>Your primary industry</label>
+          <select value={industryType} onChange={e => setIndustryType(e.target.value)} style={inputStyle}>
+            <option value="">Select an industry</option>
+            {INDUSTRY_TYPES.map(i => <option key={i} value={i}>{i}</option>)}
+          </select>
         </div>
       </div>
 

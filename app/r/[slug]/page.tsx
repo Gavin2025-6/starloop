@@ -8,6 +8,22 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+
+  // Check if this is a referral code
+  const referralLink = await prisma.referralLink.findUnique({
+    where: { shareCode: slug },
+    include: { business: { select: { name: true, category: true } } },
+  });
+
+  if (referralLink) {
+    const biz = referralLink.business;
+    return {
+      title: `${biz.name} — ${referralLink.serviceType}`,
+      description: `Book ${referralLink.serviceType} with ${biz.name}. Recommended by a happy customer.`,
+    };
+  }
+
+  // Fallback: business slug
   const business = await prisma.business.findUnique({
     where: { slug },
     select: { name: true, category: true },
@@ -38,9 +54,210 @@ function StarRating({ rating, size = 20 }: { rating: number; size?: number }) {
 
 const AVATAR_COLORS = ["#4A6FFF", "#00C9A7", "#7C3AED", "#F59E0B", "#EF4444"];
 
+async function ReferralPage({ slug }: { slug: string }) {
+  const referralLink = await prisma.referralLink.findUnique({
+    where: { shareCode: slug },
+    include: {
+      business: {
+        include: {
+          reviews: {
+            where: { rating: { gte: 4 } },
+            orderBy: { createdAt: "desc" },
+            take: 3,
+          },
+        },
+      },
+    },
+  });
+
+  if (!referralLink) return null;
+
+  const business = referralLink.business;
+
+  const avgResult = await prisma.review.aggregate({
+    where: { businessId: business.id },
+    _avg: { rating: true },
+  });
+  const avgRating = avgResult._avg.rating
+    ? Number(avgResult._avg.rating.toFixed(1))
+    : null;
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#F8FAFC",
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      }}
+    >
+      <div style={{ maxWidth: "600px", margin: "0 auto", padding: "48px 24px" }}>
+        {/* Header card */}
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #E5E7EB",
+            borderRadius: "16px",
+            padding: "32px",
+            textAlign: "center",
+            marginBottom: "24px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "0.8125rem",
+              color: "#E8734A",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              marginBottom: "8px",
+            }}
+          >
+            Referred by a happy customer
+          </div>
+          <h1
+            style={{
+              fontSize: "1.75rem",
+              fontWeight: 700,
+              color: "#1E3A5F",
+              marginBottom: "8px",
+              marginTop: 0,
+            }}
+          >
+            {business.name}
+          </h1>
+          <div style={{ fontSize: "1rem", color: "#6B7280", marginBottom: "12px" }}>
+            {referralLink.serviceType}
+            {business.address && ` · ${business.address}`}
+          </div>
+          {avgRating && (
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "8px" }}>
+              <StarRating rating={avgRating} size={20} />
+              <span style={{ fontWeight: 600, color: "#1E3A5F" }}>{avgRating}</span>
+              <span style={{ color: "#9CA3AF", fontSize: "0.875rem" }}>Google rating</span>
+            </div>
+          )}
+        </div>
+
+        {/* Recent reviews */}
+        {business.reviews.length > 0 && (
+          <div style={{ marginBottom: "24px" }}>
+            <h2 style={{ fontSize: "1rem", fontWeight: 600, color: "#374151", marginBottom: "12px" }}>
+              Recent Reviews
+            </h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {business.reviews.map((review, i) => (
+                <div
+                  key={review.id}
+                  style={{
+                    background: "#fff",
+                    border: "1px solid #E5E7EB",
+                    borderRadius: "12px",
+                    padding: "16px",
+                    display: "flex",
+                    gap: "12px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      background: AVATAR_COLORS[i % AVATAR_COLORS.length],
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#fff",
+                      fontWeight: 600,
+                      fontSize: "0.875rem",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {(review.reviewerName || "?")[0].toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                      <span style={{ fontWeight: 600, fontSize: "0.875rem", color: "#111827" }}>
+                        {review.reviewerName ?? "Customer"}
+                      </span>
+                      <div style={{ display: "flex", gap: "1px" }}>
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <span key={s} style={{ color: s <= review.rating ? "#F59E0B" : "#E5E7EB", fontSize: "12px" }}>★</span>
+                        ))}
+                      </div>
+                    </div>
+                    {review.content && (
+                      <p style={{ fontSize: "0.8125rem", color: "#4B5563", lineHeight: 1.5, margin: 0 }}>
+                        {review.content.slice(0, 150)}{review.content.length > 150 ? "..." : ""}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* CTA buttons */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {business.phone && (
+            <a
+              href={`tel:${business.phone}`}
+              style={{
+                display: "block",
+                textAlign: "center",
+                padding: "14px 24px",
+                background: "#E8734A",
+                color: "#fff",
+                borderRadius: "10px",
+                fontWeight: 600,
+                fontSize: "1rem",
+                textDecoration: "none",
+              }}
+            >
+              Contact Business
+            </a>
+          )}
+          {business.googleReviewUrl && (
+            <a
+              href={business.googleReviewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "block",
+                textAlign: "center",
+                padding: "14px 24px",
+                background: "#fff",
+                color: "#1E3A5F",
+                border: "2px solid #1E3A5F",
+                borderRadius: "10px",
+                fontWeight: 600,
+                fontSize: "1rem",
+                textDecoration: "none",
+              }}
+            >
+              View All Reviews on Google
+            </a>
+          )}
+        </div>
+
+        <p style={{ textAlign: "center", fontSize: "0.75rem", color: "#9CA3AF", marginTop: "32px" }}>
+          Powered by StarLoop
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default async function BusinessPage({ params }: Props) {
   const { slug } = await params;
 
+  // Check if it's a referral code
+  const referralLink = await prisma.referralLink.findUnique({ where: { shareCode: slug } });
+  if (referralLink) {
+    return <ReferralPage slug={slug} />;
+  }
+
+  // Otherwise treat as business slug
   const business = await prisma.business.findUnique({
     where: { slug },
     include: {
@@ -68,7 +285,6 @@ export default async function BusinessPage({ params }: Props) {
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     }}>
       <div style={{ maxWidth: "640px", margin: "0 auto", padding: "48px 24px" }}>
-        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "48px" }}>
           <h1 style={{
             fontSize: "2rem", fontWeight: 700, color: "#111827",
@@ -94,7 +310,6 @@ export default async function BusinessPage({ params }: Props) {
           )}
         </div>
 
-        {/* Reviews */}
         {business.reviews.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "40px" }}>
             {business.reviews.map((review, i) => (
@@ -107,7 +322,6 @@ export default async function BusinessPage({ params }: Props) {
                 gap: "16px",
                 alignItems: "flex-start",
               }}>
-                {/* Avatar circle */}
                 <div style={{
                   width: "44px", height: "44px", borderRadius: "50%",
                   background: AVATAR_COLORS[i % AVATAR_COLORS.length],
@@ -117,7 +331,6 @@ export default async function BusinessPage({ params }: Props) {
                 }}>
                   {(review.reviewerName || "?")[0].toUpperCase()}
                 </div>
-                {/* Content */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
                     display: "flex", justifyContent: "space-between",
@@ -163,7 +376,6 @@ export default async function BusinessPage({ params }: Props) {
           </div>
         )}
 
-        {/* CTA Button */}
         {business.googleReviewUrl && (
           <div style={{ textAlign: "center", marginBottom: "40px" }}>
             <a
@@ -181,7 +393,6 @@ export default async function BusinessPage({ params }: Props) {
                 fontWeight: 600,
                 fontSize: "1rem",
                 textDecoration: "none",
-                transition: "transform 150ms ease, box-shadow 150ms ease",
               }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -192,7 +403,6 @@ export default async function BusinessPage({ params }: Props) {
           </div>
         )}
 
-        {/* Footer */}
         <p style={{ textAlign: "center", fontSize: "0.75rem", color: "#9CA3AF", marginTop: "32px" }}>
           Powered by StarLoop
         </p>

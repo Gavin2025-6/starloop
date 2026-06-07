@@ -37,22 +37,44 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, category, aiReplyTone } = await request.json();
+    const body = await request.json();
+    const {
+      name,
+      category,
+      aiReplyTone,
+      phone,
+      avgTransactionValue,
+      primaryAcquisitionChannel,
+      industryType,
+    } = body;
 
     const existing = await prisma.business.findFirst({
       where: { userId: session.user.id },
     });
 
+    const updateData: Record<string, unknown> = {};
+    if (name !== undefined) updateData.name = name;
+    if (category !== undefined) updateData.category = category;
+    if (aiReplyTone !== undefined) updateData.aiReplyTone = aiReplyTone;
+    if (phone !== undefined) updateData.phone = phone;
+    if (avgTransactionValue !== undefined) updateData.avgTransactionValue = avgTransactionValue;
+    if (primaryAcquisitionChannel !== undefined) updateData.primaryAcquisitionChannel = primaryAcquisitionChannel;
+    if (industryType !== undefined) updateData.industryType = industryType;
+
     if (existing) {
       const updated = await prisma.business.update({
         where: { id: existing.id },
-        data: { name, category, aiReplyTone },
+        data: updateData,
       });
       return NextResponse.json(updated);
     }
 
     const business = await prisma.business.create({
-      data: { userId: session.user.id!, name, category, aiReplyTone },
+      data: {
+        userId: session.user.id!,
+        name: name ?? "",
+        ...updateData,
+      },
     });
     return NextResponse.json(business);
   } catch (err) {
