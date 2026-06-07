@@ -4,20 +4,26 @@ import { useTranslations, useLocale } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import {
-  LayoutDashboard, Star, Send, Users, BarChart2, Settings, LogOut, CreditCard
+  LayoutDashboard, Star, Send, Users, BarChart2, Settings, LogOut, CreditCard,
+  TrendingUp, Globe, Share2,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import Logo from "@/components/ui/Logo";
 
 const NAV_ITEMS = [
-  { key: "dashboard", href: "/dashboard",           Icon: LayoutDashboard },
-  { key: "reviews",   href: "/dashboard/reviews",   Icon: Star },
-  { key: "requests",  href: "/dashboard/requests",  Icon: Send },
-  { key: "customers", href: "/dashboard/customers", Icon: Users },
-  { key: "reports",   href: "/dashboard/reports",   Icon: BarChart2 },
-  { key: "billing",   href: "/dashboard/billing",   Icon: CreditCard },
-  { key: "settings",  href: "/dashboard/settings",  Icon: Settings },
+  { key: "dashboard", href: "/dashboard",           Icon: LayoutDashboard, label: null },
+  { key: "reviews",   href: "/dashboard/reviews",   Icon: Star,           label: null },
+  { key: "requests",  href: "/dashboard/requests",  Icon: Send,           label: null },
+  { key: "customers", href: "/dashboard/customers", Icon: Users,          label: null },
+  { key: "roi",       href: "/dashboard/roi",       Icon: TrendingUp,     label: "ROI" },
+  { key: "platforms", href: "/dashboard/reviews/platforms", Icon: Globe,  label: "Platforms" },
+  { key: "geo",       href: "/dashboard/geo",       Icon: Share2,         label: "AI Search" },
+  { key: "reports",   href: "/dashboard/reports",   Icon: BarChart2,      label: null },
+  { key: "billing",   href: "/dashboard/billing",   Icon: CreditCard,     label: null },
+  { key: "settings",  href: "/dashboard/settings",  Icon: Settings,       label: null },
 ];
+
+type NavKey = "dashboard" | "reviews" | "requests" | "customers" | "reports" | "billing" | "settings";
 
 export default function Sidebar() {
   const t = useTranslations("nav");
@@ -25,6 +31,8 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
+
+  const TRANSLATED_KEYS: NavKey[] = ["dashboard", "reviews", "requests", "customers", "reports", "billing", "settings"];
 
   return (
     <aside style={{
@@ -45,10 +53,11 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: "12px", display: "flex", flexDirection: "column", gap: "2px" }}>
-        {NAV_ITEMS.map(({ key, href, Icon }) => {
+      <nav style={{ flex: 1, padding: "12px", display: "flex", flexDirection: "column", gap: "2px", overflowY: "auto" }}>
+        {NAV_ITEMS.map(({ key, href, Icon, label }) => {
           const fullHref = `/${locale}${href}`;
-          const isActive = pathname === fullHref || (href !== "/dashboard" && pathname.startsWith(`${fullHref}/`)) || (href === "/dashboard" && pathname === fullHref);
+          const isActive = pathname === fullHref || (href !== "/dashboard" && pathname.startsWith(`${fullHref}`)) || (href === "/dashboard" && pathname === fullHref);
+          const displayLabel = label ?? (TRANSLATED_KEYS.includes(key as NavKey) ? t(key as NavKey) : key);
 
           return (
             <Link
@@ -71,7 +80,7 @@ export default function Sidebar() {
               className={!isActive ? "hover:bg-[#F9FAFB] hover:text-[#0D1117]" : ""}
             >
               <Icon size={16} strokeWidth={isActive ? 2 : 1.5} />
-              {t(key as "dashboard" | "reviews" | "requests" | "customers" | "reports" | "billing" | "settings")}
+              {displayLabel}
             </Link>
           );
         })}
