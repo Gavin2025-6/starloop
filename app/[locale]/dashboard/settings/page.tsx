@@ -132,6 +132,9 @@ export default function SettingsPage() {
   const [slug, setSlug]               = useState("");
   const [slugError, setSlugError]     = useState("");
   const [category, setCategory]       = useState("");
+  const [avgTransactionValue, setAvgTransactionValue] = useState("");
+  const [primaryAcquisitionChannel, setPrimaryAcquisitionChannel] = useState("");
+  const [industryType, setIndustryType] = useState("");
   const [businessSaved, setBusinessSaved] = useState(false);
   const [businessError, setBusinessError] = useState("");
 
@@ -203,6 +206,9 @@ export default function SettingsPage() {
           setIsGoogleConnected(d.isGoogleConnected ?? false);
           setGoogleReviewUrl(d.googleReviewUrl ?? "");
           setBusinessId(d.id ?? "");
+          setAvgTransactionValue(d.avgTransactionValue != null ? String(d.avgTransactionValue) : "");
+          setPrimaryAcquisitionChannel(d.primaryAcquisitionChannel ?? "");
+          setIndustryType(d.industryType ?? "");
         }
       })
       .catch(() => {})
@@ -241,7 +247,14 @@ export default function SettingsPage() {
     const res = await fetch("/api/business", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: businessName, slug: cleanSlug || null, category }),
+      body: JSON.stringify({
+        name: businessName,
+        slug: cleanSlug || null,
+        category,
+        avgTransactionValue: avgTransactionValue ? Number(avgTransactionValue) : null,
+        primaryAcquisitionChannel: primaryAcquisitionChannel || null,
+        industryType: industryType || null,
+      }),
     });
     if (res.status === 409) { setSlugError("This URL slug is already taken."); return; }
     if (!res.ok) { setBusinessError("Save failed"); return; }
@@ -370,7 +383,7 @@ export default function SettingsPage() {
 
         {/* ── Business Profile ── */}
         <div style={cardStyle}>
-          <SectionHeader title="Business Profile" subtitle="Password required to save changes" />
+          <SectionHeader title="Business Profile" subtitle="Complete your business info to help AI search engines find and recommend you" />
           <div className="space-y-4">
             <div>
               <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>Business Name</label>
@@ -428,6 +441,70 @@ export default function SettingsPage() {
                 {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
+
+            {/* ── New fields: ROI & AI personalization ── */}
+            <div>
+              <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>
+                Average Transaction Value
+                <span className="text-xs ml-2" style={{ color: "#6B7280" }}>used to calculate your monthly ROI estimate</span>
+              </label>
+              <div className="flex items-center overflow-hidden" style={{ border: "1px solid #E8ECEF", borderRadius: "8px" }}
+                onFocusCapture={(e) => { e.currentTarget.style.borderColor = "#4A6FFF"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
+                onBlurCapture={(e) => { e.currentTarget.style.borderColor = "#E8ECEF"; e.currentTarget.style.boxShadow = "none"; }}
+              >
+                <span className="px-3 py-2.5 text-sm" style={{ background: "#F8F9FC", borderRight: "1px solid #E8ECEF", color: "#6B7280" }}>$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={avgTransactionValue}
+                  onChange={(e) => setAvgTransactionValue(e.target.value)}
+                  placeholder="e.g. 150"
+                  className="flex-1 px-3 py-2.5 text-sm"
+                  style={{ outline: "none", color: "#1A1D23" }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>
+                Primary Acquisition Channel
+              </label>
+              <select
+                value={primaryAcquisitionChannel}
+                onChange={(e) => setPrimaryAcquisitionChannel(e.target.value)}
+                className="px-3 py-2.5 text-sm"
+                style={{ ...inputStyle, appearance: "auto" }}
+                onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+              >
+                <option value="">Select channel</option>
+                {["Google Search", "Word of mouth", "WeChat/WhatsApp", "Instagram/Social media", "Walk-in", "Other"].map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>
+                Industry Type
+                <span className="text-xs ml-2" style={{ color: "#6B7280" }}>helps StarLoop generate more accurate lifecycle templates</span>
+              </label>
+              <select
+                value={industryType}
+                onChange={(e) => setIndustryType(e.target.value)}
+                className="px-3 py-2.5 text-sm"
+                style={{ ...inputStyle, appearance: "auto" }}
+                onFocus={(e) => { e.target.style.borderColor = "#4A6FFF"; e.target.style.boxShadow = "0 0 0 3px rgba(74,111,255,0.1)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "#E8ECEF"; e.target.style.boxShadow = "none"; }}
+              >
+                <option value="">Select industry</option>
+                {["Cleaning", "HVAC", "Nails & Beauty", "Auto Detailing", "Restaurant", "Auto Repair", "Beauty Salon", "Pharmacy", "Landscaping", "Plumbing", "Other"].map(i => (
+                  <option key={i} value={i}>{i}</option>
+                ))}
+              </select>
+            </div>
+
             {businessError && <p className="text-xs" style={{ color: "#FF4757" }}>{businessError}</p>}
             <button
               onClick={() => setModal("business")}
@@ -514,8 +591,11 @@ export default function SettingsPage() {
                 <div>
                   <label className="block text-sm mb-1.5" style={{ color: "#1A1D23" }}>
                     Google Review Link
-                    <span className="text-xs ml-2" style={{ color: "#6B7280" }}>(shown as a public review option)</span>
                   </label>
+                  <p className="text-xs mb-2" style={{ color: "#6B7280", lineHeight: 1.5 }}>
+                    Customers who are happy with your service are taken to this link to leave a public review.
+                    Find it in your Google Business dashboard under <strong>&ldquo;Get more reviews&rdquo;</strong>.
+                  </p>
                   <input
                     type="url"
                     value={googleReviewUrl}
@@ -633,14 +713,14 @@ export default function SettingsPage() {
             <button
               onClick={() => setShowDeleteModal(true)}
               style={{
-                background: "transparent", border: "1px solid #FCA5A5",
-                color: "#EF4444", borderRadius: "8px",
+                background: "transparent", border: "1px solid #D1D5DB",
+                color: "#6B7280", borderRadius: "8px",
                 padding: "8px 16px", fontSize: "0.8125rem",
                 fontWeight: 500, cursor: "pointer",
-                transition: "background 0.15s", whiteSpace: "nowrap",
+                transition: "background 0.15s, border-color 0.15s", whiteSpace: "nowrap",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "#FEF2F2"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "#F9FAFB"; e.currentTarget.style.borderColor = "#9CA3AF"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "#D1D5DB"; }}
             >
               Delete my account
             </button>

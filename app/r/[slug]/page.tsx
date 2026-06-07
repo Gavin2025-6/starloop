@@ -278,7 +278,34 @@ export default async function BusinessPage({ params }: Props) {
   });
   const avgRating = avgResult._avg.rating ? Number(avgResult._avg.rating.toFixed(1)) : null;
 
+  // JSON-LD structured data for AI search engines — embedded in <head> automatically
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://starloop-production.up.railway.app";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": business.name,
+    "url": `${appUrl}/r/${slug}`,
+    ...(business.address ? { "address": { "@type": "PostalAddress", "streetAddress": business.address } } : {}),
+    ...(business.phone ? { "telephone": business.phone } : {}),
+    ...(business.category ? { "description": `${business.category} services. ${business._count.reviews} verified customer reviews.` } : {}),
+    ...(avgRating && business._count.reviews > 0 ? {
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": avgRating,
+        "reviewCount": business._count.reviews,
+        "bestRating": "5",
+        "worstRating": "1",
+      }
+    } : {}),
+    "sameAs": business.googleReviewUrl ? [business.googleReviewUrl] : [],
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     <div style={{
       minHeight: "100vh",
       background: "#FAFAFA",
@@ -408,5 +435,6 @@ export default async function BusinessPage({ params }: Props) {
         </p>
       </div>
     </div>
+    </>
   );
 }

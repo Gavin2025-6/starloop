@@ -20,6 +20,9 @@ export async function GET() {
         isGoogleConnected: true,
         googleTokenExpiry: true,
         googleReviewUrl: true,
+        avgTransactionValue: true,
+        primaryAcquisitionChannel: true,
+        industryType: true,
       },
     });
 
