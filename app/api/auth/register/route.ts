@@ -1,74 +1,62 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { randomBytes } from "crypto";
-import { sendEmailVerification } from "@/lib/resend";
+
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 40);
+}
+
+async function uniqueSlug(base: string): Promise<string> {
+  let slug = base;
+  let i = 0;
+  while (await prisma.business.findUnique({ where: { slug } })) {
+    slug = `${base}-${++i}`;
+  }
+  return slug;
+}
 
 export async function POST(request: Request) {
   try {
-    const { name, businessName, email, password } = await request.json();
+    const { name, businessName, industry, email, password } = await request.json();
 
     if (!name || !businessName || !email || !password || password.length < 6) {
       return NextResponse.json(
-        { error: "All fields are required. Password must be at least 6 characters." },
+        { error: "All fields required. Password min 6 chars." },
         { status: 400 }
       );
     }
 
-    const existing = await prisma.user.findUnique({
-      where: { email },
-      include: {
-        businesses: { select: { isGoogleConnected: true }, take: 1 },
-      },
-    });
-
+    const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
-      const googleConnected = existing.businesses[0]?.isGoogleConnected ?? false;
-
-      // An account is considered COMPLETE only when BOTH conditions are met:
-      // 1. Email verified  2. Google Business connected
-      // Anything short of that is an incomplete registration — delete and allow restart.
-      if (existing.emailVerified && googleConnected) {
-        return NextResponse.json(
-          { error: "An account with this email already exists" },
-          { status: 409 }
-        );
-      }
-
-      // Incomplete account → delete (cascade removes Business, etc.) and re-register
-      await prisma.user.delete({ where: { id: existing.id } });
+      return NextResponse.json({ error: "Email already registered" }, { status: 409 });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-    const verificationToken = randomBytes(32).toString("hex");
+    const slug = await uniqueSlug(slugify(businessName));
 
     const user = await prisma.user.create({
       data: {
         name,
         email,
         passwordHash,
-        plan: "FREE",
-        trialEndsAt,
-        emailVerified: false,
-        emailVerificationToken: verificationToken,
+        emailVerified: true, // skip email verification for MVP speed
       },
     });
 
     await prisma.business.create({
-      data: { userId: user.id, name: businessName },
+      data: {
+        userId: user.id,
+        name: businessName,
+        industry: industry || "General",
+        slug,
+      },
     });
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://starloop-production.up.railway.app";
-    const verificationUrl = `${appUrl}/api/auth/verify-email?token=${verificationToken}`;
-
-    sendEmailVerification({
-      to: user.email,
-      name: user.name ?? user.email.split("@")[0],
-      verificationUrl,
-    }).catch((err) => console.error("[Register/verify-email]", err));
-
-    return NextResponse.json({ id: user.id, email: user.email, requiresVerification: true });
+    return NextResponse.json({ id: user.id, email: user.email });
   } catch (err) {
     console.error("[Auth/Register]", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

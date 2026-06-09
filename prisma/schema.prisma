@@ -5,210 +5,24 @@ generator client {
 datasource db {
   provider = "postgresql"
   // URL is configured in prisma.config.ts (Prisma v7 requirement)
-  // For migrations: prisma.config.ts datasource.url
-  // For PrismaClient: @prisma/adapter-pg in lib/prisma.ts
-}
-
-enum Plan {
-  FREE
-  STARTER
-  PRO
-}
-
-enum AiReplyTone {
-  PROFESSIONAL
-  WARM
-  FRIENDLY
-}
-
-enum RequestStatus {
-  PENDING
-  SENT
-  DELIVERED
-  CLICKED
-  REVIEWED
-  FAILED
-}
-
-enum Platform {
-  GOOGLE
-  YELP
-  FACEBOOK
-}
-
-enum Channel {
-  SMS
-  EMAIL
-}
-
-enum NotificationType {
-  NEW_REVIEW
-  NEGATIVE_REVIEW
-  FOLLOW_UP_SENT
-  REPLY_PUBLISHED
-}
-
-enum ReviewSource {
-  GOOGLE
-  PRIVATE
 }
 
 model User {
-  id                      String    @id @default(cuid())
-  email                   String    @unique
-  name                    String?
-  passwordHash            String
-  plan                    Plan      @default(FREE)
-  trialEndsAt             DateTime?
-  stripeCustomerId        String?   @unique
-  stripeSubscriptionId    String?   @unique
-  currentPeriodEnd        DateTime?
-  smsCredits              Int       @default(0)
-  lastLoginAt             DateTime?
-  emailVerified           Boolean   @default(false)
-  emailVerificationToken  String?   @unique
-  preferredLanguage         String    @default("en")
-  onboardingCompleted       Boolean   @default(false)
-  onboardingTourCompleted   Boolean   @default(false)
-  createdAt                 DateTime  @default(now())
-  updatedAt                 DateTime  @updatedAt
-
-  businesses          Business[]
-  notifications       Notification[]
-  creditTransactions  CreditTransaction[]
-}
-
-model CreditTransaction {
-  id              String   @id @default(cuid())
-  userId          String
-  amount          Int
-  type            String   // PURCHASE | SMS_SENT | REFUND | BONUS
-  note            String?
-  stripeSessionId String?
-  createdAt       DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Business {
-  id                        String      @id @default(cuid())
-  userId                    String
-  name                      String
-  slug                      String?     @unique
-  phone                     String?
-  email                     String?
-  address                   String?
-  googleBusinessId          String?
-  googleReviewUrl           String?
-  googleAccessToken         String?
-  googleRefreshToken        String?
-  googleTokenExpiry         DateTime?
-  isGoogleConnected         Boolean     @default(false)
-  category                  String?
-  aiReplyTone               AiReplyTone @default(WARM)
-  avgTransactionValue       Float?
-  onboardingRating          Float?
-  primaryAcquisitionChannel String?
-  industryType              String?
-  platformUrls              Json?
-  createdAt                 DateTime    @default(now())
-  updatedAt                 DateTime    @updatedAt
-
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  customers         Customer[]
-  reviewRequests    ReviewRequest[]
-  reviews           Review[]
-  reputationReports ReputationReport[]
-  replyPerformances ReplyPerformance[]
-  referralLinks     ReferralLink[]
-  monthlySnapshots  MonthlySnapshot[]
-}
-
-model ReputationReport {
-  id              String   @id @default(cuid())
-  businessId      String
-  month           String   // "2025-05" format
-  avgRating       Float
-  totalReviews    Int
-  positiveCount   Int
-  negativeCount   Int
-  ratingChange    Float?
-  positiveKeywords String[]
-  negativeKeywords String[]
-  actionItems     String[]
-  summary         String
-  emailSentAt     DateTime?
-  createdAt       DateTime @default(now())
-
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-
-  @@unique([businessId, month])
-}
-
-model Customer {
   id                     String    @id @default(cuid())
-  businessId             String
-  name                   String
-  phone                  String?
-  email                  String?
-  socialMedia            Json?
-  lifetimeTransactions   Int       @default(0)
-  referralCount          Int       @default(0)
-  lastContactedAt        DateTime?
-  nextScheduledContact   DateTime?
-  industryLifecycleStage String?
+  email                  String    @unique
+  name                   String?
+  passwordHash           String
+  stripeCustomerId       String?   @unique
+  stripeSubscriptionId   String?   @unique
+  currentPeriodEnd       DateTime?
+  emailVerified          Boolean   @default(false)
+  emailVerificationToken String?   @unique
   createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
-  business       Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  reviewRequests ReviewRequest[]
-  referralLinks  ReferralLink[]
-}
-
-model ReviewRequest {
-  id             String        @id @default(cuid())
-  businessId     String
-  customerId     String
-  token          String?       @unique
-  status         RequestStatus @default(PENDING)
-  sentAt         DateTime?
-  clickedAt      DateTime?
-  reviewedAt     DateTime?
-  followUpCount  Int           @default(0)
-  nextFollowUpAt DateTime?
-  platform       Platform      @default(GOOGLE)
-  channel        Channel       @default(SMS)
-  messageBody    String?
-  scheduledAt    DateTime?
-
-  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  customer Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-}
-
-model Review {
-  id               String    @id @default(cuid())
-  businessId       String
-  platform         Platform  @default(GOOGLE)
-  reviewerName     String?
-  rating           Int
-  content          String?
-  publishedAt      DateTime
-  isReplied        Boolean   @default(false)
-  replyContent     String?
-  replyPublishedAt DateTime?
-  aiDraftReply     String?
-  isNegative       Boolean       @default(false)
-  source           ReviewSource  @default(GOOGLE)
-  contactPhone     String?
-  contactEmail     String?
-  externalId       String?
-  taskStatus       String        @default("new")
-  resolvedAt       DateTime?
-  archivedAt       DateTime?
-  createdAt        DateTime      @default(now())
-
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-
-  @@unique([businessId, externalId])
+  business            Business?
+  notifications       Notification[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model PasswordResetToken {
@@ -218,191 +32,100 @@ model PasswordResetToken {
   expiresAt DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  user User @relation(fields: [email], references: [email])
 }
 
 model Notification {
-  id        String           @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
-  type      NotificationType
   title     String
   body      String
-  isRead    Boolean          @default(false)
-  createdAt DateTime         @default(now())
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-enum ProblemCategory {
-  WAITING_TIME
-  PRICE
-  ATTITUDE
-  APPOINTMENT
-  QUALITY
-  COMMUNICATION
-  BILLING
-  CLEANLINESS
-  PARKING
-  OTHER
+model Business {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id])
+  name              String
+  industry          String
+  phone             String?
+  email             String?
+  address           String?
+  city              String?
+  slug              String   @unique
+  googleBusinessUrl String?
+  stripeCustomerId  String?
+  plan              String   @default("free")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  customers Customer[]
+  campaigns Campaign[]
+  profile   PublicProfile?
 }
 
-enum Severity {
-  HIGH
-  MEDIUM
-  LOW
-}
-
-enum OutcomeResult {
-  SAVED
-  LOST
-  PENDING
-  REVIEW_UPDATED
-  NO_RESPONSE
-}
-
-enum ProspectPriority {
-  HIGH
-  MEDIUM
-  LOW
-}
-
-enum OutreachStatus {
-  NEW
-  CONTACTED
-  REPLIED
-  CONVERTED
-  NOT_INTERESTED
-}
-
-model IndustryBenchmark {
-  id               String          @id @default(cuid())
-  industry         String
-  industryCategory String
-  city             String
-  stateProvince    String
-  country          String
-  tier             Int
-  problemCategory  ProblemCategory
-  severity         Severity
-  count            Int             @default(0)
-  percentage       Float           @default(0)
-  sampleSize       Int             @default(0)
-  suggestedAction  String
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-}
-
-model RecoveryPlaybook {
-  id                   String          @id @default(cuid())
-  industry             String
-  problemCategory      ProblemCategory
-  recommendedAction    String
-  successRate          Float           @default(0)
-  totalAttempts        Int             @default(0)
-  avgRevenueRecovered  Float           @default(0)
-  notes                String?
-  updatedAt            DateTime        @updatedAt
-}
-
-model OutcomeTracking {
-  id               String          @id @default(cuid())
-  businessId       String
-  industry         String
-  city             String
-  problemCategory  ProblemCategory
-  actionTaken      String
-  result           OutcomeResult
-  revenueRecovered Float           @default(0)
-  daysToResolve    Int?
-  createdAt        DateTime        @default(now())
-}
-
-model ReviewQueue {
-  id               String   @id @default(cuid())
-  googlePlaceId    String
-  businessName     String
-  industry         String
-  industryCategory String
-  city             String
-  stateProvince    String
-  country          String
-  tier             Int
-  rawText          String
-  authorName       String?
-  rating           Int
-  problemCategory  String   @default("PENDING")
-  severity         String?
-  suggestedAction  String?
-  analysisStatus   String   @default("PENDING")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-}
-
-model BusinessProspects {
-  id                 String           @id @default(cuid())
-  businessName       String
-  industry           String
-  industryCategory   String
-  address            String
-  city               String
-  stateProvince      String
-  country            String
-  tier               Int
-  phone              String?
-  website            String?
-  googlePlaceId      String           @unique
-  googleRating       Float?
-  totalReviews       Int              @default(0)
-  negativeReviews    Int              @default(0)
-  negativeReviewRate Float            @default(0)
-  priority           ProspectPriority @default(MEDIUM)
-  outreachStatus     OutreachStatus   @default(NEW)
-  outreachNote       String?
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
-}
-
-model ReplyPerformance {
-  id                 String   @id @default(cuid())
-  businessId         String
-  reviewId           String
-  platform           String
-  versionChosen      String
-  ctaClicked         Boolean  @default(false)
-  returnVisitTracked Boolean  @default(false)
-  createdAt          DateTime @default(now())
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-}
-
-model ReferralLink {
-  id          String   @id @default(cuid())
-  shareCode   String   @unique
-  customerId  String
-  businessId  String
-  serviceType String
-  clicks      Int      @default(0)
-  conversions Int      @default(0)
-  createdAt   DateTime @default(now())
-  business    Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  customer    Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  conversionsData ReferralConversion[]
-}
-
-model ReferralConversion {
-  id             String   @id @default(cuid())
-  referralLinkId String
-  convertedAt    DateTime @default(now())
-  referralLink   ReferralLink @relation(fields: [referralLinkId], references: [id], onDelete: Cascade)
-}
-
-model MonthlySnapshot {
-  id              String   @id @default(cuid())
+model Customer {
+  id              String    @id @default(cuid())
   businessId      String
-  month           String
-  invitesSent     Int      @default(0)
-  reviewsReceived Int      @default(0)
-  ratingSnapshot  Float?
-  revenueEstimate Float?
-  createdAt       DateTime @default(now())
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  @@unique([businessId, month])
+  business        Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name            String
+  phone           String?
+  email           String?
+  lastServiceDate DateTime?
+  totalSpend      Float     @default(0)
+  serviceCount    Int       @default(0)
+  status          String    @default("active")
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  campaignResults CampaignResult[]
+}
+
+model Campaign {
+  id              String    @id @default(cuid())
+  businessId      String
+  business        Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  type            String    @default("winback")
+  status          String    @default("draft")
+  targetSegment   String    @default("at-risk")
+  messageTemplate String?
+  scheduledAt     DateTime?
+  sentAt          DateTime?
+  createdAt       DateTime  @default(now())
+
+  results CampaignResult[]
+}
+
+model CampaignResult {
+  id         String    @id @default(cuid())
+  campaignId String
+  campaign   Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  status     String    @default("sent")
+  revenue    Float     @default(0)
+  sentAt     DateTime  @default(now())
+  repliedAt  DateTime?
+}
+
+model PublicProfile {
+  id          String   @id @default(cuid())
+  businessId  String   @unique
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  headline    String?
+  description String?
+  services    String?
+  reviewCount Int      @default(0)
+  avgRating   Float    @default(0)
+  bookingUrl  String?
+  isPublished Boolean  @default(true)
+  viewCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

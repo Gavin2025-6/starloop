@@ -28,22 +28,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!isValid) return null;
 
-        // Block login until email is verified
         if (!user.emailVerified) return null;
 
-        // Update lastLoginAt on successful login
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { lastLoginAt: new Date() },
-        });
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          plan: user.plan,
-          preferredLanguage: user.preferredLanguage,
-        };
+        return { id: user.id, email: user.email, name: user.name };
       },
     }),
   ],
@@ -51,45 +38,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.plan = user.plan;
-        token.preferredLanguage = user.preferredLanguage;
-      }
-      // Always refresh isGoogleConnected + onboardingCompleted from DB
-      if (token.id) {
-        const [business, user] = await Promise.all([
-          prisma.business.findFirst({
-            where: { userId: token.id as string },
-            select: { isGoogleConnected: true },
-          }),
-          prisma.user.findUnique({
-            where: { id: token.id as string },
-            select: { onboardingCompleted: true, emailVerified: true },
-          }),
-        ]);
-        token.isGoogleConnected = business?.isGoogleConnected ?? false;
-        token.onboardingCompleted = user?.onboardingCompleted ?? false;
-        token.isEmailVerified = user?.emailVerified ?? false;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
-        session.user.plan = token.plan;
-        session.user.preferredLanguage = token.preferredLanguage;
-        session.user.isGoogleConnected = token.isGoogleConnected;
-        session.user.onboardingCompleted = token.onboardingCompleted;
-        session.user.isEmailVerified = token.isEmailVerified;
       }
       return session;
     },
   },
   pages: {
-    signIn: "/en/auth/login",
-    error: "/en/auth/login",
+    signIn: "/auth/login",
+    error: "/auth/login",
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
 });
