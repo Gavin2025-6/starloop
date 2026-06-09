@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // URL is configured in prisma.config.ts (Prisma v7 requirement)
 }
 
 model User {
@@ -64,9 +63,13 @@ model Business {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  customers Customer[]
-  campaigns Campaign[]
-  profile   PublicProfile?
+  customers  Customer[]
+  campaigns  Campaign[]
+  profile    PublicProfile?
+  calls      Call[]
+  reviews    Review[]
+  agentLogs  AgentLog[]
+  referrals  Referral[]
 }
 
 model Customer {
@@ -81,10 +84,13 @@ model Customer {
   serviceCount    Int       @default(0)
   status          String    @default("active")
   notes           String?
+  lastFollowupAt  DateTime?
+  referralCode    String?   @unique
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   campaignResults CampaignResult[]
+  referrals       Referral[]
 }
 
 model Campaign {
@@ -128,4 +134,54 @@ model PublicProfile {
   viewCount   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Call {
+  id               String   @id @default(cuid())
+  businessId       String
+  business         Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  callerPhone      String
+  status           String   @default("answered") // answered | missed | voicemail | transferred
+  intent           String?  // appointment | emergency | inquiry | complaint
+  transcript       String?
+  appointmentBooked Boolean @default(false)
+  createdAt        DateTime @default(now())
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  platform    String   @default("google") // google | yelp | facebook
+  rating      Int
+  content     String?
+  authorName  String?
+  aiReply     String?
+  isReplied   Boolean  @default(false)
+  reviewDate  DateTime
+  createdAt   DateTime @default(now())
+}
+
+model AgentLog {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  agent      String   // intake | followup | reputation | winback | referral
+  action     String
+  detail     String?
+  customerId String?
+  createdAt  DateTime @default(now())
+}
+
+model Referral {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  code        String   @unique
+  clicks      Int      @default(0)
+  conversions Int      @default(0)
+  rewarded    Boolean  @default(false)
+  createdAt   DateTime @default(now())
 }
