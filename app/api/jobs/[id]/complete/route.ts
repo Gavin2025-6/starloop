@@ -27,7 +27,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     });
 
     // Trigger follow-up agent
-    await runFollowup(job.customerId, job.serviceType, job.total).catch(() => {});
+    await runFollowup(job.id).catch(() => {});
 
     // Log
     await prisma.agentLog.create({
