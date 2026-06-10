@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { runFollowup } from "@/lib/agents/followup-agent";
 
 export async function POST(req: NextRequest) {
@@ -7,10 +8,16 @@ export async function POST(req: NextRequest) {
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { customerId, serviceType, amount } = await req.json();
-    if (!customerId) return NextResponse.json({ error: "customerId required" }, { status: 400 });
+    const { jobId } = await req.json();
+    if (!jobId) return NextResponse.json({ error: "jobId required" }, { status: 400 });
 
-    const result = await runFollowup(customerId, serviceType, amount);
+    // Mark job as completed
+    await prisma.job.update({
+      where: { id: jobId },
+      data: { status: "completed", completedAt: new Date() },
+    });
+
+    const result = await runFollowup(jobId);
     return NextResponse.json(result);
   } catch (err) {
     console.error("[services/complete]", err);

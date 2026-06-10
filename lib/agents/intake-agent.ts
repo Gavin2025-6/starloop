@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import { sendSms } from "@/lib/twilio";
+import { generateJobNumber } from "@/lib/job-number";
 
 const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -149,4 +150,83 @@ export async function logCall(params: {
   }
 
   return call;
+}
+
+export async function handleVapiWebhook(data: {
+  callerPhone: string;
+  extractedData: { name?: string; serviceType?: string; address?: string; preferredDate?: string };
+  businessId: string;
+}): Promise<string> {
+  const { callerPhone, extractedData, businessId } = data;
+
+  const business = await prisma.business.findUniqueOrThrow({
+    where: { id: businessId },
+  });
+
+  // 1. Find or create Customer by callerPhone
+  let customer = await prisma.customer.findFirst({
+    where: { businessId, phone: callerPhone },
+  });
+
+  if (!customer) {
+    customer = await prisma.customer.create({
+      data: {
+        businessId,
+        name: extractedData.name ?? "Unknown Caller",
+        phone: callerPhone,
+      },
+    });
+  } else if (extractedData.name && customer.name === "Unknown Caller") {
+    customer = await prisma.customer.update({
+      where: { id: customer.id },
+      data: { name: extractedData.name },
+    });
+  }
+
+  // 2. Create Job
+  const jobNumber = await generateJobNumber();
+  const hasDate = !!extractedData.preferredDate;
+  const job = await prisma.job.create({
+    data: {
+      jobNumber,
+      businessId,
+      customerId: customer.id,
+      title: extractedData.serviceType ?? "Service Request",
+      serviceType: extractedData.serviceType ?? "General",
+      address: extractedData.address ?? undefined,
+      scheduledAt: hasDate ? new Date(extractedData.preferredDate!) : undefined,
+      status: hasDate ? "scheduled" : "requested",
+      source: "call",
+    },
+  });
+
+  // 3. Send customer confirmation SMS
+  const confirmMsg = `Hi ${customer.name}! Your ${job.serviceType} request with ${business.name} has been received. We'll be in touch shortly.`;
+  if (customer.phone) {
+    await sendSms({ to: customer.phone, body: confirmMsg }).catch(() => {});
+  }
+
+  // 4. Log Call record
+  await prisma.call.create({
+    data: {
+      businessId,
+      callerPhone,
+      status: "answered",
+      intent: "appointment",
+      appointmentBooked: hasDate,
+    },
+  });
+
+  await prisma.agentLog.create({
+    data: {
+      businessId,
+      agent: "intake",
+      action: "vapi webhook processed",
+      detail: `Job ${jobNumber} created for ${callerPhone}`,
+      customerId: customer.id,
+    },
+  });
+
+  // 5. Return jobId
+  return job.id;
 }
