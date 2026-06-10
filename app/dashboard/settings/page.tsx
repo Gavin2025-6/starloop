@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save, ExternalLink } from "lucide-react";
+import { Save, ExternalLink, Clock } from "lucide-react";
 
 const INDUSTRIES = [
   "HVAC","Plumbing","Electrical","Cleaning","Landscaping","Roofing",
@@ -15,6 +15,36 @@ interface BizData {
   profile?: { headline: string; description: string; services: string; bookingUrl: string; };
 }
 
+interface AvailData {
+  workingDays: { mon: boolean; tue: boolean; wed: boolean; thu: boolean; fri: boolean; sat: boolean; sun: boolean };
+  startTime: string;
+  endTime: string;
+  slotDuration: number;
+  bufferTime: number;
+  timezone: string;
+}
+
+const DEFAULT_AVAIL: AvailData = {
+  workingDays: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: false, sun: false },
+  startTime: "08:00",
+  endTime: "18:00",
+  slotDuration: 120,
+  bufferTime: 30,
+  timezone: "America/Toronto",
+};
+
+const TIMEZONES = [
+  "America/Toronto", "America/New_York", "America/Chicago",
+  "America/Denver", "America/Los_Angeles", "America/Vancouver",
+  "America/Edmonton", "America/Winnipeg", "America/Halifax",
+];
+
+const DAYS: { key: keyof AvailData["workingDays"]; label: string }[] = [
+  { key: "mon", label: "Mon" }, { key: "tue", label: "Tue" }, { key: "wed", label: "Wed" },
+  { key: "thu", label: "Thu" }, { key: "fri", label: "Fri" },
+  { key: "sat", label: "Sat" }, { key: "sun", label: "Sun" },
+];
+
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
 }
@@ -25,15 +55,20 @@ export default function SettingsPage() {
     address: "", city: "", slug: "", googleBusinessUrl: "",
     profile: { headline: "", description: "", services: "", bookingUrl: "" },
   });
+  const [avail, setAvail] = useState<AvailData>(DEFAULT_AVAIL);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savingAvail, setSavingAvail] = useState(false);
+  const [savedAvail, setSavedAvail] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/business/profile")
-      .then((r) => r.json())
-      .then((d) => {
+    Promise.all([
+      fetch("/api/business/profile").then((r) => r.json()),
+      fetch("/api/availability").then((r) => r.json()),
+    ])
+      .then(([d, a]) => {
         setBiz({
           name: d.name ?? "",
           industry: d.industry ?? "",
@@ -49,6 +84,14 @@ export default function SettingsPage() {
             services: d.profile?.services ?? "",
             bookingUrl: d.profile?.bookingUrl ?? "",
           },
+        });
+        setAvail({
+          workingDays: a.workingDays ?? DEFAULT_AVAIL.workingDays,
+          startTime: a.startTime ?? "08:00",
+          endTime: a.endTime ?? "18:00",
+          slotDuration: a.slotDuration ?? 120,
+          bufferTime: a.bufferTime ?? 30,
+          timezone: a.timezone ?? "America/Toronto",
         });
       })
       .catch(() => {})
@@ -76,6 +119,18 @@ export default function SettingsPage() {
 
   function setProfile(k: keyof NonNullable<BizData["profile"]>, v: string) {
     setBiz((b) => ({ ...b, profile: { ...(b.profile ?? {}), [k]: v } as BizData["profile"] }));
+  }
+
+  async function handleSaveAvail(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingAvail(true);
+    const res = await fetch("/api/availability", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(avail),
+    });
+    if (res.ok) { setSavedAvail(true); setTimeout(() => setSavedAvail(false), 2500); }
+    setSavingAvail(false);
   }
 
   if (loading) return <div className="p-8 text-gray-400 text-sm">Loading settings...</div>;
@@ -191,6 +246,83 @@ export default function SettingsPage() {
           className="flex items-center gap-2 bg-[#1a2744] text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-[#243460] transition-colors disabled:opacity-60">
           <Save size={16} />
           {saving ? "Saving..." : saved ? "✓ Saved!" : "Save Changes"}
+        </button>
+      </form>
+
+      {/* Availability Settings */}
+      <form onSubmit={handleSaveAvail} className="space-y-6 mt-8">
+        <section className="bg-white border border-gray-200 rounded-xl p-6">
+          <h2 className="font-semibold text-[#0d1117] mb-1 flex items-center gap-2">
+            <Clock size={16} /> Availability
+          </h2>
+          <p className="text-gray-400 text-xs mb-5">Control when customers can book appointments.</p>
+
+          {/* Working days */}
+          <div className="mb-5">
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Working Days</label>
+            <div className="flex gap-2 flex-wrap">
+              {DAYS.map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setAvail((a) => ({ ...a, workingDays: { ...a.workingDays, [key]: !a.workingDays[key] } }))}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                    avail.workingDays[key]
+                      ? "bg-[#1a2744] text-white border-[#1a2744]"
+                      : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Time range */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Start Time</label>
+              <input type="time" value={avail.startTime}
+                onChange={(e) => setAvail((a) => ({ ...a, startTime: e.target.value }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2744]/20" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">End Time</label>
+              <input type="time" value={avail.endTime}
+                onChange={(e) => setAvail((a) => ({ ...a, endTime: e.target.value }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2744]/20" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Slot Duration (min)</label>
+              <input type="number" min={30} max={480} step={15} value={avail.slotDuration}
+                onChange={(e) => setAvail((a) => ({ ...a, slotDuration: parseInt(e.target.value) || 120 }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2744]/20" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Buffer Between Jobs (min)</label>
+              <input type="number" min={0} max={120} step={15} value={avail.bufferTime}
+                onChange={(e) => setAvail((a) => ({ ...a, bufferTime: parseInt(e.target.value) || 0 }))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2744]/20" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Timezone</label>
+            <select value={avail.timezone}
+              onChange={(e) => setAvail((a) => ({ ...a, timezone: e.target.value }))}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2744]/20 bg-white">
+              {TIMEZONES.map((tz) => <option key={tz} value={tz}>{tz}</option>)}
+            </select>
+          </div>
+        </section>
+
+        <button type="submit" disabled={savingAvail}
+          className="flex items-center gap-2 bg-[#1a2744] text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-[#243460] transition-colors disabled:opacity-60">
+          <Save size={16} />
+          {savingAvail ? "Saving..." : savedAvail ? "✓ Saved!" : "Save Availability"}
         </button>
       </form>
     </div>
