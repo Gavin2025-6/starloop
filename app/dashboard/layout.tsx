@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { LayoutDashboard, Users, Megaphone, Settings } from "lucide-react";
 
 const nav = [
@@ -13,6 +15,24 @@ const nav = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/auth/login");
+    }
+  }, [status, router]);
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-[#1a2744] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!session) return null;
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc]">
@@ -53,10 +73,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="px-4 py-4 border-t border-white/10">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold">B</span>
+              <span className="text-white text-xs font-bold">{session.user?.name?.[0]?.toUpperCase() ?? "U"}</span>
             </div>
             <div>
-              <p className="text-white text-sm font-medium">My Business</p>
+              <p className="text-white text-sm font-medium">{session.user?.name ?? "My Business"}</p>
               <span className="text-[10px] bg-[#f97316] text-white px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide">
                 Free
               </span>
