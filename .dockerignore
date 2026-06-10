@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+*.md
+audit-screenshots
+scripts
+proofline-new
+.env*
+!.env.example
+.claude
