@@ -86,7 +86,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 ml-64 min-h-screen">{children}</main>
+      <main className="flex-1 ml-64 min-h-screen pb-16 lg:pb-0">{children}</main>
+
+      {/* Mobile bottom nav */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 flex">
+        {nav.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+          return (
+            <Link key={href} href={href}
+              className={`flex-1 flex flex-col items-center justify-center py-3 gap-0.5 text-[10px] font-medium transition-colors ${active ? "text-[#f97316]" : "text-gray-400"}`}>
+              <Icon size={20} />
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }

@@ -7,8 +7,10 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 
 export const metadata: Metadata = {
   title: "Service Star — Revenue Recovery for Local Businesses",
-  description:
-    "Automatically win back at-risk customers with AI-personalized SMS campaigns. Track revenue, analyze customer patterns, grow your business.",
+  description: "AI-powered revenue system for local service businesses.",
+  manifest: "/manifest.json",
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Service Star" },
+  other: { "mobile-web-app-capable": "yes" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
