@@ -59,17 +59,22 @@ model Business {
   slug              String   @unique
   googleBusinessUrl String?
   stripeCustomerId  String?
-  plan              String   @default("free")
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  plan                  String   @default("free")
+  autoConfirmBooking    Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
-  customers   Customer[]
-  campaigns   Campaign[]
-  profile     PublicProfile?
-  calls       Call[]
-  reviews     Review[]
-  agentLogs   AgentLog[]
-  referrals   Referral[]
+  customers             Customer[]
+  campaigns             Campaign[]
+  profile               PublicProfile?
+  calls                 Call[]
+  reviews               Review[]
+  agentLogs             AgentLog[]
+  referrals             Referral[]
+  availability          Availability[]
+  timeOff               TimeOff[]
+  businessMembers       BusinessMember[]
+  googleConnection      GoogleBusinessConnection?
   jobs        Job[]
   invoices    Invoice[]
   teamMembers TeamMember[]
@@ -221,6 +226,7 @@ model Job {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   invoice         Invoice?
+  events          JobEvent[]
 }
 
 model Invoice {
@@ -252,4 +258,58 @@ model TeamMember {
   role       String   @default("technician")
   isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
+}
+
+model Availability {
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  dayOfWeek       Int
+  startTime       String
+  endTime         String
+  slotDurationMin Int      @default(60)
+  createdAt       DateTime @default(now())
+}
+
+model TimeOff {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  date       DateTime @db.Date
+  reason     String?
+  createdAt  DateTime @default(now())
+}
+
+model BusinessMember {
+  id           String   @id @default(cuid())
+  businessId   String
+  business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  userId       String?
+  role         String   @default("member")
+  invitedEmail String?
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+}
+
+model GoogleBusinessConnection {
+  id           String    @id @default(cuid())
+  businessId   String    @unique
+  business     Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  accessToken  String
+  refreshToken String?
+  locationId   String?
+  reviewUrl    String?
+  placeId      String?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model JobEvent {
+  id        String   @id @default(cuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  type      String
+  payload   Json?
+  createdAt DateTime @default(now())
 }
