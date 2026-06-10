@@ -22,8 +22,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Analyze intent with Claude
-    const result = await analyzeCallIntent(transcript, business.name, business.industry);
+    // Analyze intent with Claude (passes businessId so agent can quote available slots)
+    const result = await analyzeCallIntent(transcript, business.name, business.industry, businessId);
 
     // Log call with full details
     await logCall({

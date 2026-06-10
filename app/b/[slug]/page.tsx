@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import BookingWidget from "./BookingWidget";
 
 export const dynamic = "force-dynamic";
 
@@ -13,14 +14,13 @@ export default async function PublicProfilePage({
 
   const business = await prisma.business.findUnique({
     where: { slug },
-    include: { profile: true },
+    include: { profile: true, availability: true },
   });
 
   if (!business) notFound();
 
   const profile = business.profile;
 
-  // Increment view count (fire-and-forget)
   if (profile) {
     prisma.publicProfile.update({
       where: { businessId: business.id },
@@ -92,26 +92,15 @@ export default async function PublicProfilePage({
           </div>
         )}
 
-        {/* Book button */}
-        {profile?.bookingUrl ? (
-          <a
-            href={profile.bookingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full bg-[#f97316] text-white text-center py-4 rounded-2xl font-bold text-base hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200"
-          >
-            Book an Appointment
-          </a>
-        ) : (
-          business.phone && (
-            <a
-              href={`tel:${business.phone}`}
-              className="block w-full bg-[#f97316] text-white text-center py-4 rounded-2xl font-bold text-base hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200"
-            >
-              Call to Book: {business.phone}
-            </a>
-          )
-        )}
+        {/* Booking widget */}
+        <BookingWidget
+          businessId={business.id}
+          businessName={business.name}
+          businessPhone={business.phone ?? null}
+          bookingUrl={profile?.bookingUrl ?? null}
+          hasAvailability={!!business.availability}
+          services={services}
+        />
 
         {/* Contact info */}
         {(business.email || business.address) && (

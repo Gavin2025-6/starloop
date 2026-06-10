@@ -38,26 +38,63 @@ interface IntentResult {
   responseMessage: string;
 }
 
+// Fetch next available slots across today + next 7 days for the intake agent
+export async function getUpcomingSlots(businessId: string): Promise<string> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const results: string[] = [];
+
+  for (let offset = 0; offset < 7; offset++) {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    const dateStr = d.toISOString().slice(0, 10);
+
+    try {
+      const res = await fetch(`${appUrl}/api/availability/slots?businessId=${businessId}&date=${dateStr}`);
+      if (!res.ok) continue;
+      const { slots } = await res.json();
+      if (slots && slots.length > 0) {
+        const dayLabel = offset === 0 ? "today" : offset === 1 ? "tomorrow"
+          : d.toLocaleDateString("en-US", { weekday: "long" });
+        results.push(`${dayLabel} (${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}) at ${slots.slice(0, 3).map((s: { label: string }) => s.label).join(", ")}`);
+        if (results.length >= 3) break;
+      }
+    } catch {}
+  }
+
+  if (results.length === 0) return "";
+  return results.join("; ");
+}
+
 export async function analyzeCallIntent(
   transcript: string,
   businessName: string,
-  industry: string
+  industry: string,
+  businessId?: string
 ): Promise<IntentResult> {
+  // Pre-fetch availability slots if this might be an appointment call
+  let availabilityContext = "";
+  if (businessId) {
+    const slotsText = await getUpcomingSlots(businessId).catch(() => "");
+    if (slotsText) {
+      availabilityContext = `\n\nAvailable appointment slots: ${slotsText}`;
+    }
+  }
+
   const msg = await claude.messages.create({
     model: "claude-haiku-4-5-20251001",
-    max_tokens: 300,
+    max_tokens: 400,
     messages: [
       {
         role: "user",
         content: `You are analyzing a phone call to ${businessName} (${industry} business).
-The caller said: "${transcript}"
+The caller said: "${transcript}"${availabilityContext}
 
 Respond in JSON only:
 {
   "intent": "appointment" | "emergency" | "inquiry" | "complaint" | "other",
   "isEmergency": true/false,
   "summary": "one sentence summary",
-  "responseMessage": "what to say back to the caller (under 30 words, friendly)"
+  "responseMessage": "what to say back to the caller (under 50 words, friendly). If intent is appointment AND availability is listed above, mention 2-3 specific times naturally, e.g. 'We have openings this week on Tuesday at 10am and Wednesday at 2pm. Which works best for you?'"
 }
 
 Emergency = burst pipe, no heat in winter, gas leak, flooding, no power, urgent safety issue.`,
