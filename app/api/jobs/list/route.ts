@@ -13,7 +13,10 @@ export async function GET(req: NextRequest) {
     const status = req.nextUrl.searchParams.get("status");
     const jobs = await prisma.job.findMany({
       where: { businessId: business.id, ...(status ? { status } : {}) },
-      include: { customer: { select: { name: true, phone: true } } },
+      include: {
+        customer: { select: { name: true, phone: true } },
+        invoice: { select: { id: true, status: true } },
+      },
       orderBy: { createdAt: "desc" },
     });
 
