@@ -11,10 +11,10 @@ interface Job {
 }
 
 const KANBAN_COLS = [
-  { key: "quoted",      label: "Quoted",      color: "border-blue-200 bg-blue-50" },
-  { key: "scheduled",   label: "Scheduled",   color: "border-purple-200 bg-purple-50" },
-  { key: "in_progress", label: "In Progress", color: "border-yellow-200 bg-yellow-50" },
-  { key: "completed",   label: "Completed",   color: "border-green-200 bg-green-50" },
+  { key: "quoted",      label: "Quoted",      color: "border-[#e2e8f0] bg-[#f8fafc]" },
+  { key: "scheduled",   label: "Scheduled",   color: "border-[#e2e8f0] bg-[#f8fafc]" },
+  { key: "in_progress", label: "In Progress", color: "border-[#e2e8f0] bg-[#f8fafc]" },
+  { key: "completed",   label: "Completed",   color: "border-[#e2e8f0] bg-[#f8fafc]" },
 ];
 
 const STATUS_OPTS = ["requested","quoted","confirmed","scheduled","in_progress","completed","invoiced","paid","cancelled"];
@@ -132,7 +132,7 @@ export default function JobsPage() {
               </div>
               <div className="space-y-2">
                 {kanbanJobs(col.key).map((job) => (
-                  <div key={job.id} className="bg-white rounded-xl p-3 shadow-sm border border-white/80 cursor-pointer hover:shadow-md transition-shadow">
+                  <div key={job.id} className="bg-white rounded-xl p-3 border border-[#e2e8f0] cursor-pointer hover:shadow-sm transition-shadow">
                     <div className="flex items-start justify-between mb-1.5">
                       <span className="text-xs font-mono text-gray-400">{job.jobNumber}</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${priorityBadge(job.priority)}`}>{job.priority}</span>

@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Users, DollarSign, AlertTriangle, TrendingUp, Play, ArrowRight } from "lucide-react";
+import { Users, DollarSign, AlertTriangle, TrendingUp, Phone, FileText, Star, Briefcase } from "lucide-react";
 
 interface Stats {
+  todayJobs: number;
+  callsAnswered7d: number;
+  invoicedUnpaid: number;
+  reviewsRequested30d: number;
   thisMonthRecovered: number;
   thisMonthRevenue: number;
   pendingRecovery: number;
@@ -27,19 +31,13 @@ interface ActivityLog {
   detail: string | null; createdAt: string;
 }
 
-const AGENT_COLORS: Record<string, string> = {
-  intake: "bg-blue-500", followup: "bg-purple-500",
-  reputation: "bg-yellow-500", winback: "bg-orange-500", referral: "bg-green-500",
-};
-
-const LOOP_NODES = [
-  { key: "totalCustomers",   label: "Call",     color: "bg-[#1a2744]",  emoji: "📞" },
-  { key: "totalCustomers",   label: "Book",     color: "bg-blue-600",   emoji: "📅" },
-  { key: "totalCustomers",   label: "Service",  color: "bg-purple-600", emoji: "🔧" },
-  { key: "thisMonthRevenue", label: "Payment",  color: "bg-green-600",  emoji: "💳", isMoney: true },
-  { key: "reputationCount",  label: "Review",   color: "bg-yellow-500", emoji: "⭐" },
-  { key: "pendingRecovery",  label: "Winback",  color: "bg-[#f97316]",  emoji: "↩️" },
-  { key: "referralCount",    label: "Referral", color: "bg-teal-600",   emoji: "🤝" },
+const TIMELINE_NODES = [
+  { key: "callsAnswered7d",     label: "Call",    emoji: "📞" },
+  { key: "todayJobs",           label: "Book",    emoji: "📅" },
+  { key: "todayJobs",           label: "Service", emoji: "🔧" },
+  { key: "invoicedUnpaid",      label: "Invoice", emoji: "💳", isMoney: true },
+  { key: "reviewsRequested30d", label: "Review",  emoji: "⭐" },
+  { key: "pendingRecovery",     label: "Winback", emoji: "↩" },
 ];
 
 function timeAgo(iso: string): string {
@@ -104,11 +102,8 @@ export default function DashboardPage() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
-  const agentEntries = agents
-    ? (["intake","followup","reputation","winback","referral"] as const).map((k) => ({
-        key: k, ...agents[k],
-      }))
-    : [];
+  // suppress unused variable warning
+  void agents;
 
   return (
     <div className="p-8 space-y-6">
@@ -121,11 +116,6 @@ export default function DashboardPage() {
           </h1>
           <p className="text-gray-400 text-sm mt-0.5">Your business is running automatically.</p>
         </div>
-        <button onClick={runCampaign} disabled={running}
-          className="flex items-center gap-2 bg-[#f97316] text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-orange-600 transition-colors disabled:opacity-60">
-          <Play size={15} />
-          {running ? "Running..." : "Run Recovery Campaign"}
-        </button>
       </div>
 
       {/* System status */}
@@ -135,8 +125,43 @@ export default function DashboardPage() {
         <span className="text-xs text-gray-400 ml-auto">Last activity: {activity.length > 0 ? timeAgo(activity[0].createdAt) : "—"}</span>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* TODAY'S BUSINESS — Row 1 */}
+      <div>
+        <p className="text-xs font-semibold text-[#64748b] uppercase tracking-wider mb-3">Today&apos;s Business</p>
+        <div className="grid grid-cols-4 gap-4">
+          <MetricCard
+            icon={<Briefcase size={20} />}
+            label="Today's Jobs"
+            value={loading ? "—" : String(stats?.todayJobs ?? 0)}
+            sub="Scheduled or created today"
+            accent="text-[#0d1117]"
+            iconBg="bg-[#f8fafc]" />
+          <MetricCard
+            icon={<Phone size={20} />}
+            label="Calls Answered (7d)"
+            value={loading ? "—" : String(stats?.callsAnswered7d ?? 0)}
+            sub="Last 7 days"
+            accent="text-[#0d1117]"
+            iconBg="bg-[#f8fafc]" />
+          <MetricCard
+            icon={<FileText size={20} />}
+            label="Invoiced Unpaid ($)"
+            value={loading ? "—" : `$${(stats?.invoicedUnpaid ?? 0).toLocaleString()}`}
+            sub="Awaiting payment"
+            accent="text-[#0d1117]"
+            iconBg="bg-[#f8fafc]" />
+          <MetricCard
+            icon={<Star size={20} />}
+            label="Reviews Requested"
+            value={loading ? "—" : String(stats?.reviewsRequested30d ?? 0)}
+            sub="Last 30 days"
+            accent="text-[#0d1117]"
+            iconBg="bg-[#f8fafc]" />
+        </div>
+      </div>
+
+      {/* EXISTING METRICS — Row 2 */}
+      <div className="grid grid-cols-4 gap-4">
         <MetricCard icon={<Users size={20} />} label="Customers Recovered"
           value={loading ? "—" : String(stats?.thisMonthRecovered ?? 0)}
           sub="This month" accent="text-[#f97316]" iconBg="bg-orange-50" />
@@ -151,28 +176,43 @@ export default function DashboardPage() {
           sub="In database" accent="text-[#1a2744]" iconBg="bg-blue-50" />
       </div>
 
-      {/* 7-Node Revenue Loop */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+      {/* Revenue Loop — monochrome horizontal timeline */}
+      <div className="bg-white border border-[#e2e8f0] rounded-xl p-6">
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-5">Revenue Loop</h2>
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-2">
-          {LOOP_NODES.map((node, i) => {
+        <div className="flex items-start gap-0 overflow-x-auto pb-2">
+          {TIMELINE_NODES.map((node, i) => {
             const raw = stats ? (stats as unknown as Record<string, unknown>)[node.key] : null;
+            const numVal = typeof raw === "number" ? raw : 0;
+            const isActive = !loading && numVal > 0;
             const display = node.isMoney && typeof raw === "number"
               ? `$${(raw as number).toLocaleString()}`
               : typeof raw === "number" ? String(raw) : "—";
+
             return (
-              <div key={`${node.key}-${i}`} className="flex items-center gap-1.5 flex-shrink-0">
-                <div className={`${node.color} text-white rounded-xl px-4 py-3 text-center min-w-[80px]`}>
-                  <div className="text-lg">{node.emoji}</div>
-                  <div className="text-sm font-bold mt-0.5">
-                    {node.key === "reputationCount" || node.key === "referralCount" ? "—" : loading ? "—" : display}
+              <div key={`${node.key}-${i}`} className="flex items-start flex-shrink-0">
+                <div className="flex flex-col items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${isActive ? "bg-[#0d1117] text-white" : "bg-[#e2e8f0] text-[#0d1117]"}`}>
+                    {node.emoji}
                   </div>
-                  <div className="text-[10px] text-white/70 mt-0.5">{node.label}</div>
+                  <span className="text-xs text-[#64748b] mt-1.5 text-center">{node.label}</span>
+                  <span className="text-sm font-bold text-[#0d1117] mt-0.5">
+                    {loading ? "—" : display}
+                  </span>
                 </div>
-                {i < LOOP_NODES.length - 1 && <ArrowRight size={14} className="text-gray-300 flex-shrink-0" />}
+                {i < TIMELINE_NODES.length - 1 && (
+                  <span className="text-[#e2e8f0] text-lg mx-3 mt-1.5 flex-shrink-0">→</span>
+                )}
               </div>
             );
           })}
+        </div>
+
+        {/* Run Recovery Campaign — secondary style, below timeline */}
+        <div className="mt-5 pt-4 border-t border-[#e2e8f0]">
+          <button onClick={runCampaign} disabled={running}
+            className="flex items-center gap-2 border border-[#e2e8f0] bg-white text-[#64748b] hover:bg-[#f8fafc] px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60">
+            ↩ {running ? "Running..." : "Run Recovery Campaign"}
+          </button>
         </div>
       </div>
 
@@ -248,7 +288,7 @@ function MetricCard({ icon, label, value, sub, accent, iconBg }: {
   sub: string; accent: string; iconBg: string;
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl p-5">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">{label}</p>

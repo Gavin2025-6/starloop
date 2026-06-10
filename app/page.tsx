@@ -4,11 +4,10 @@ import { DM_Sans } from "next/font/google";
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
 
 const agents = [
-  { icon: "📞", name: "Intake Agent", desc: "Answers every call, qualifies leads, and books appointments automatically. Never miss a customer again." },
-  { icon: "📋", name: "Follow-up Agent", desc: "Sends invoices and review requests the moment a job is complete. Gets you paid faster." },
-  { icon: "⭐", name: "Reputation Agent", desc: "Monitors every new review. Alerts you to bad ones instantly. Suggests replies for good ones." },
-  { icon: "🔄", name: "Winback Agent", desc: "Identifies customers who've gone quiet and sends personalized messages to bring them back." },
-  { icon: "👥", name: "Referral Agent", desc: "Turns happy customers into your best salespeople with automated referral tracking and rewards." },
+  { icon: "📞", name: "Every call answered", desc: "Answers every call, qualifies leads, and books appointments automatically. Never miss a customer again." },
+  { icon: "📋", name: "Invoices sent automatically", desc: "Sends invoices and review requests the moment a job is complete. Gets you paid faster." },
+  { icon: "⭐", name: "Reviews managed", desc: "Monitors every new review. Alerts you to bad ones instantly. Suggests replies for good ones." },
+  { icon: "🔄", name: "Lost customers recovered", desc: "Identifies customers who've gone quiet and sends personalized messages to bring them back." },
 ];
 
 const trades = [
@@ -85,7 +84,7 @@ export default function LandingPage() {
             <div className="hidden lg:block">
               <div className="bg-[#1e293b] rounded-2xl p-6 border border-white/10 shadow-2xl">
                 <div className="flex items-center gap-2 mb-5">
-                  {["Intake", "Winback", "Referral"].map((a) => (
+                  {["Calls", "Invoices", "Winback"].map((a) => (
                     <span key={a} className="flex items-center gap-1.5 text-xs text-[#94a3b8]">
                       <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
                       {a}
@@ -127,12 +126,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 5 Agents */}
+      {/* Systems */}
       <section className="bg-[#f8fafc] px-6 py-20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-4xl font-extrabold text-[#0f172a] mb-4">
-              One system. Five agents. Zero effort.
+              One system. All systems. Zero effort.
             </h2>
             <p className="text-[#64748b] text-lg max-w-xl mx-auto">
               Each agent handles a different part of your business — automatically, 24/7.
@@ -149,7 +148,7 @@ export default function LandingPage() {
             {/* 6th card — CTA */}
             <div className="bg-[#0f172a] border border-transparent rounded-xl p-6 flex flex-col justify-between">
               <div>
-                <p className="text-[#94a3b8] text-sm mb-3">All 5 agents, working together.</p>
+                <p className="text-[#94a3b8] text-sm mb-3">All systems, working together.</p>
                 <p className="text-white font-bold text-base">Your business runs itself while you focus on the work.</p>
               </div>
               <Link href="/auth/register"
@@ -229,7 +228,7 @@ export default function LandingPage() {
               </div>
               <p className="text-[#64748b] text-sm mb-7">Get started, no commitment.</p>
               <ul className="space-y-3 mb-8">
-                {["Up to 50 customers", "3 campaigns / month", "Public booking page", "AI-personalized SMS", "Winback Agent"].map((f) => (
+                {["Up to 50 customers", "3 campaigns / month", "Public booking page", "AI-personalized SMS", "Lost customers recovered"].map((f) => (
                   <li key={f} className="flex items-center gap-2.5 text-sm text-[#475569]">
                     <span className="text-[#94a3b8]">✓</span> {f}
                   </li>
@@ -252,7 +251,7 @@ export default function LandingPage() {
               </div>
               <p className="text-[#64748b] text-sm mb-7">For businesses serious about growth.</p>
               <ul className="space-y-3 mb-8">
-                {["Unlimited customers", "Unlimited campaigns", "All 5 AI agents active", "Advanced analytics", "Priority SMS delivery", "24/7 agent monitoring"].map((f) => (
+                {["Unlimited customers", "Unlimited campaigns", "All systems active", "Advanced analytics", "Priority SMS delivery", "24/7 monitoring"].map((f) => (
                   <li key={f} className="flex items-center gap-2.5 text-sm text-white">
                     <span className="text-[#f97316]">✓</span> {f}
                   </li>
