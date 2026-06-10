@@ -119,7 +119,7 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-[#0d1117]">
             {greeting}. Here&apos;s your revenue loop.
           </h1>
-          <p className="text-gray-400 text-sm mt-0.5">All 5 agents working automatically.</p>
+          <p className="text-gray-400 text-sm mt-0.5">Your business is running automatically.</p>
         </div>
         <button onClick={runCampaign} disabled={running}
           className="flex items-center gap-2 bg-[#f97316] text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-orange-600 transition-colors disabled:opacity-60">
@@ -128,18 +128,11 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {/* Agent Status Bar */}
-      <div className="bg-white border border-gray-200 rounded-xl px-5 py-3 flex items-center gap-6 overflow-x-auto">
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide flex-shrink-0">Agents</span>
-        {agentEntries.map(({ key, label, count }) => (
-          <div key={key} className="flex items-center gap-2 flex-shrink-0">
-            <div className={`w-2.5 h-2.5 rounded-full ${AGENT_COLORS[key]} shadow-sm`} />
-            <span className="text-sm font-medium text-[#0d1117]">{label}</span>
-            {count > 0 && (
-              <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">{count} today</span>
-            )}
-          </div>
-        ))}
+      {/* System status */}
+      <div className="bg-white border border-gray-200 rounded-xl px-5 py-3 flex items-center gap-3">
+        <span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" />
+        <span className="text-sm font-medium text-[#0d1117]">All systems active</span>
+        <span className="text-xs text-gray-400 ml-auto">Last activity: {activity.length > 0 ? timeAgo(activity[0].createdAt) : "—"}</span>
       </div>
 
       {/* Metric Cards */}
