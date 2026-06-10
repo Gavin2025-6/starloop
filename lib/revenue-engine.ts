@@ -107,7 +107,17 @@ export async function getDashboardStats(businessId: string) {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const [thisMonthResults, customers, recentActivity] = await Promise.all([
+  // Today's date boundaries
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayEnd = new Date(todayStart.getTime() + 86400000);
+
+  // 7 days ago
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
+
+  // 30 days ago
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
+
+  const [thisMonthResults, customers, recentActivity, todayJobs, callsAnswered7d, invoicedUnpaid, reviewsRequested30d] = await Promise.all([
     prisma.campaignResult.findMany({
       where: {
         campaign: { businessId },
@@ -121,11 +131,47 @@ export async function getDashboardStats(businessId: string) {
       orderBy: { sentAt: "desc" },
       take: 5,
     }),
+    // Today's jobs: scheduledAt = today OR createdAt = today, status != cancelled
+    prisma.job.count({
+      where: {
+        businessId,
+        status: { not: "cancelled" },
+        OR: [
+          { scheduledAt: { gte: todayStart, lt: todayEnd } },
+          { createdAt: { gte: todayStart, lt: todayEnd } },
+        ],
+      },
+    }),
+    // Calls answered in last 7 days
+    prisma.call.count({
+      where: {
+        businessId,
+        createdAt: { gte: sevenDaysAgo },
+      },
+    }),
+    // Sum of Invoice.total WHERE status = 'sent'
+    prisma.invoice.aggregate({
+      where: { businessId, status: "sent" },
+      _sum: { total: true },
+    }),
+    // AgentLog WHERE agent='followup' AND action LIKE '%review%' AND last 30 days
+    prisma.agentLog.count({
+      where: {
+        businessId,
+        agent: "followup",
+        action: { contains: "review", mode: "insensitive" },
+        createdAt: { gte: thirtyDaysAgo },
+      },
+    }),
   ]);
 
   const recovered = thisMonthResults.filter((r) => r.status === "replied");
 
   return {
+    todayJobs,
+    callsAnswered7d,
+    invoicedUnpaid: invoicedUnpaid._sum.total ?? 0,
+    reviewsRequested30d,
     thisMonthRecovered: recovered.length,
     thisMonthRevenue: recovered.reduce((sum, r) => sum + r.revenue, 0),
     pendingRecovery: customers.filter(
