@@ -4,10 +4,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { LayoutDashboard, Users, Megaphone, Settings } from "lucide-react";
+import { LayoutDashboard, Users, Megaphone, Settings, Briefcase } from "lucide-react";
 
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/jobs", label: "Jobs", icon: Briefcase },
   { href: "/dashboard/customers", label: "Customers", icon: Users },
   { href: "/dashboard/campaigns", label: "Campaigns", icon: Megaphone },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },

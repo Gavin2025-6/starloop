@@ -63,13 +63,16 @@ model Business {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  customers  Customer[]
-  campaigns  Campaign[]
-  profile    PublicProfile?
-  calls      Call[]
-  reviews    Review[]
-  agentLogs  AgentLog[]
-  referrals  Referral[]
+  customers   Customer[]
+  campaigns   Campaign[]
+  profile     PublicProfile?
+  calls       Call[]
+  reviews     Review[]
+  agentLogs   AgentLog[]
+  referrals   Referral[]
+  jobs        Job[]
+  invoices    Invoice[]
+  teamMembers TeamMember[]
 }
 
 model Customer {
@@ -91,6 +94,7 @@ model Customer {
 
   campaignResults CampaignResult[]
   referrals       Referral[]
+  jobs            Job[]
 }
 
 model Campaign {
@@ -184,4 +188,68 @@ model Referral {
   conversions Int      @default(0)
   rewarded    Boolean  @default(false)
   createdAt   DateTime @default(now())
+}
+
+model Job {
+  id              String    @id @default(cuid())
+  jobNumber       String    @unique
+  businessId      String
+  business        Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerId      String
+  customer        Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  serviceType     String
+  status          String    @default("requested")
+  priority        String    @default("normal")
+  scheduledAt     DateTime?
+  completedAt     DateTime?
+  address         String?
+  lineItems       Json?
+  subtotal        Float     @default(0)
+  tax             Float     @default(0)
+  total           Float     @default(0)
+  notes           String?
+  internalNotes   String?
+  photos          String[]
+  assignedTo      String?
+  stripePaymentIntentId   String?
+  stripeCustomerId        String?
+  stripePaymentMethodId   String?
+  captureStatus   String?
+  source          String    @default("manual")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  invoice         Invoice?
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  jobId         String   @unique
+  job           Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  businessId    String
+  business      Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerId    String
+  invoiceNumber String   @unique
+  status        String   @default("draft")
+  lineItems     Json
+  subtotal      Float
+  tax           Float
+  total         Float
+  stripePaymentLink String?
+  paidAt        DateTime?
+  dueDate       DateTime?
+  createdAt     DateTime @default(now())
+}
+
+model TeamMember {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name       String
+  email      String?
+  phone      String?
+  role       String   @default("technician")
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
 }
