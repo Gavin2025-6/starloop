@@ -4,64 +4,144 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { DM_Sans } from "next/font/google";
+
+const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
 
 const INDUSTRIES = [
-  "HVAC","Plumbing","Electrical","Cleaning","Landscaping","Roofing",
-  "Auto Detailing","Pest Control","Pool Service","Appliance Repair",
-  "Handyman","Painting","Flooring","General Contractor","Other",
+  "HVAC", "Plumbing", "Electrical", "Cleaning", "Landscaping", "Roofing",
+  "Auto Detailing", "Pest Control", "Pool Service", "Appliance Repair",
+  "Handyman", "Painting", "Flooring", "General Contractor", "Other",
 ];
-
-interface FormData {
-  name: string; email: string; password: string;
-  businessName: string; industry: string; phone: string;
-}
-interface CustomerForm {
-  name: string; phone: string; lastServiceDate: string; totalSpend: string;
-}
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
 }
 
+const STEPS = ["Account", "Business", "Customers", "Launch"];
+
+const RIGHT_PANEL: Record<number, { title: string; body: React.ReactNode }> = {
+  1: {
+    title: "Join thousands of local service businesses running on autopilot.",
+    body: (
+      <div className="space-y-6">
+        {[["$2,400", "avg. recovered / month"], ["34%", "customer return rate"], ["5 min", "setup time"]].map(([v, l]) => (
+          <div key={l}>
+            <p className="text-3xl font-extrabold text-white">{v}</p>
+            <p className="text-[#64748b] text-sm mt-0.5">{l}</p>
+          </div>
+        ))}
+      </div>
+    ),
+  },
+  2: {
+    title: "Your agents will be configured for your trade.",
+    body: (
+      <div className="space-y-3">
+        {[["📞", "Intake Agent"], ["📋", "Follow-up Agent"], ["⭐", "Reputation Agent"], ["🔄", "Winback Agent"], ["👥", "Referral Agent"]].map(([icon, name]) => (
+          <div key={name as string} className="flex items-center gap-3">
+            <span className="text-xl">{icon}</span>
+            <span className="text-white text-sm font-medium">{name}</span>
+            <span className="ml-auto text-[#475569] text-xs">Active</span>
+          </div>
+        ))}
+        <p className="text-[#475569] text-xs pt-2 leading-relaxed">
+          Each agent understands the specific language and needs of your trade.
+        </p>
+      </div>
+    ),
+  },
+  3: {
+    title: "This is what your customers will receive.",
+    body: (
+      <div>
+        <div className="bg-[#1e293b] rounded-2xl p-4 mb-4 border border-white/10">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 bg-[#f97316]/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-[#f97316] text-sm">S</span>
+            </div>
+            <div className="bg-[#334155] rounded-xl rounded-tl-none px-4 py-3">
+              <p className="text-white text-sm leading-relaxed">
+                Hi [Name] 👋 It&apos;s been a while since your last service with [Business Name]. Ready to book again? Reply YES or visit: servicestar.app/b/[slug]
+              </p>
+            </div>
+          </div>
+        </div>
+        <p className="text-[#475569] text-xs leading-relaxed">
+          Personalized. Automatic. Effective. Your Winback Agent sends this when customers go quiet.
+        </p>
+      </div>
+    ),
+  },
+  4: {
+    title: "Your business is now running on autopilot.",
+    body: (
+      <div className="space-y-3">
+        {[
+          ["📞", "Intake Agent", "Active"],
+          ["📋", "Follow-up Agent", "Active"],
+          ["⭐", "Reputation Agent", "Active"],
+          ["🔄", "Winback Agent", "Active"],
+          ["👥", "Referral Agent", "Active"],
+        ].map(([icon, name, status]) => (
+          <div key={name as string} className="flex items-center gap-3 py-1">
+            <span className="text-xl">{icon}</span>
+            <span className="text-white text-sm font-medium">{name}</span>
+            <div className="ml-auto flex items-center gap-1.5">
+              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              <span className="text-green-400 text-xs font-medium">{status}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    ),
+  },
+};
+
 export default function RegisterPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState<FormData>({
-    name: "", email: "", password: "", businessName: "", industry: "", phone: "",
-  });
-  const [customer, setCustomer] = useState<CustomerForm>({
-    name: "", phone: "", lastServiceDate: "", totalSpend: "",
-  });
-  const [slug, setSlug] = useState("");
-  const [services, setServices] = useState("");
-  const [bookingUrl, setBookingUrl] = useState("");
-  const [analysisResult, setAnalysisResult] = useState<{ active: number; atRisk: number; lost: number } | null>(null);
+  const [account, setAccount] = useState({ name: "", email: "", password: "" });
+  const [biz, setBiz] = useState({ businessName: "", industry: "", city: "", phone: "" });
+  const [customer, setCustomer] = useState({ name: "", phone: "", lastServiceDate: "", totalSpend: "" });
+  const [analysis, setAnalysis] = useState<{ active: number; atRisk: number; lost: number } | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function setField(k: keyof FormData, v: string) {
-    setForm((f) => ({ ...f, [k]: v }));
-    if (k === "businessName") setSlug(slugify(v));
+  const progress = ((step - 1) / (STEPS.length - 1)) * 100;
+
+  // Step 1 → 2: just validate locally, no API call yet
+  function handleStep1(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (account.password.length < 6) { setError("Password must be at least 6 characters."); return; }
+    setStep(2);
   }
 
-  // ── Step 1: Register + immediately sign in ─────────────────────
-  async function handleStep1(e: React.FormEvent) {
+  // Step 2 → 3: register account + business, then sign in
+  async function handleStep2(e: React.FormEvent) {
     e.preventDefault();
     setError(""); setLoading(true);
 
-    // 1. Create account
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        name: account.name,
+        email: account.email,
+        password: account.password,
+        businessName: biz.businessName,
+        industry: biz.industry,
+        phone: biz.phone,
+      }),
     });
     const data = await res.json();
     if (!res.ok) { setError(data.error || "Registration failed"); setLoading(false); return; }
 
-    // 2. Sign in immediately while we have the password in state
+    // Update business with city + slug
     const loginResult = await signIn("credentials", {
-      email: form.email,
-      password: form.password,
+      email: account.email,
+      password: account.password,
       redirect: false,
     });
     if (loginResult?.error) {
@@ -71,12 +151,19 @@ export default function RegisterPage() {
       return;
     }
 
+    // Update city + slug via profile API
+    await fetch("/api/business/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ city: biz.city, slug: slugify(biz.businessName) }),
+    }).catch(() => {});
+
     setLoading(false);
-    setStep(2);
+    setStep(3);
   }
 
-  // ── Step 2: Add first customer ─────────────────────────────────
-  async function handleStep2(e: React.FormEvent) {
+  // Step 3 → 4: add customer (optional), then analyze
+  async function handleStep3(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     await fetch("/api/customers/add", {
@@ -89,241 +176,217 @@ export default function RegisterPage() {
         totalSpend: parseFloat(customer.totalSpend) || 0,
       }),
     });
-    setLoading(false);
-    setStep(3);
-  }
-
-  // ── Step 3: Public profile ─────────────────────────────────────
-  async function handleStep3(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    await fetch("/api/business/profile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, services, bookingUrl }),
-    });
+    await triggerAnalysis();
     setLoading(false);
     setStep(4);
-    // Trigger analysis in background
-    fetch("/api/customers/analyze", { method: "POST" })
-      .then((r) => r.json())
-      .then((d) => setAnalysisResult(d))
-      .catch(() => {});
   }
 
-  // ── Step 4 → Dashboard ─────────────────────────────────────────
-  // Already signed in from Step 1 — just navigate
-  function goToDashboard() {
-    router.push("/dashboard");
+  async function skipToLaunch() {
+    await triggerAnalysis();
+    setStep(4);
   }
 
-  const stepLabels = ["Account", "First Customer", "Profile", "Results"];
+  async function triggerAnalysis() {
+    try {
+      const r = await fetch("/api/customers/analyze", { method: "POST" });
+      const d = await r.json();
+      setAnalysis(d);
+    } catch { /* ignore */ }
+  }
+
+  const panel = RIGHT_PANEL[step];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className={`${dmSans.className} min-h-screen flex flex-col`}>
+      {/* Progress bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-[#e2e8f0]">
+        <div className="h-full bg-[#f97316] transition-all duration-500" style={{ width: `${progress}%` }} />
+      </div>
 
-        {/* Logo */}
-        <div className="text-center mb-6">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#1a2744] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">S</span>
-            </div>
-            <span className="text-lg font-bold text-[#1a2744]">Service Star</span>
-          </Link>
-        </div>
-
-        {/* Step indicator */}
-        <div className="flex items-center justify-between mb-6 px-1">
-          {stepLabels.map((label, i) => (
-            <div key={label} className="flex items-center">
-              <div className="flex flex-col items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
-                  step > i + 1 ? "bg-green-500 text-white"
-                  : step === i + 1 ? "bg-[#1a2744] text-white"
-                  : "bg-gray-200 text-gray-400"
-                }`}>
-                  {step > i + 1 ? "✓" : i + 1}
-                </div>
-                <span className="text-[10px] text-gray-400 mt-1 text-center leading-tight max-w-[52px]">{label}</span>
+      {/* Step dots */}
+      <div className="fixed top-1 left-0 right-0 z-50 flex justify-center gap-8 pt-3 pb-2 bg-white border-b border-[#e2e8f0]">
+        <Link href="/" className="absolute left-6 top-3 flex items-center gap-1.5 text-[#0f172a]">
+          <div className="w-6 h-6 bg-[#0f172a] rounded-full flex items-center justify-center">
+            <span className="text-white font-bold text-[10px]">S</span>
+          </div>
+          <span className="text-sm font-semibold hidden sm:block">Service Star</span>
+        </Link>
+        {STEPS.map((label, i) => {
+          const s = i + 1;
+          const done = step > s;
+          const active = step === s;
+          return (
+            <div key={label} className="flex items-center gap-1.5">
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${done ? "bg-green-500 text-white" : active ? "bg-[#f97316] text-white" : "bg-[#e2e8f0] text-[#94a3b8]"}`}>
+                {done ? "✓" : s}
               </div>
-              {i < 3 && (
-                <div className={`h-0.5 w-8 mx-1 mb-4 transition-colors ${step > i + 1 ? "bg-green-500" : "bg-gray-200"}`} />
-              )}
+              <span className={`text-xs font-medium hidden sm:block ${active ? "text-[#0f172a] font-semibold" : done ? "text-[#64748b]" : "text-[#94a3b8]"}`}>
+                {label}
+              </span>
             </div>
-          ))}
+          );
+        })}
+      </div>
+
+      {/* Main layout */}
+      <div className="flex flex-1 pt-12">
+        {/* Left — form */}
+        <div className="flex-1 flex items-center justify-center px-6 py-12 lg:py-20">
+          <div className="w-full max-w-md">
+
+            {/* Step 1 — Account */}
+            {step === 1 && (
+              <>
+                <h1 className="text-3xl font-extrabold text-[#0f172a] mb-2">Create your account</h1>
+                <p className="text-[#64748b] mb-8">Get started free — no credit card needed.</p>
+                {error && <div className="mb-5 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">{error}</div>}
+                <form onSubmit={handleStep1} className="space-y-4">
+                  <F label="YOUR NAME" type="text" value={account.name} onChange={(v) => setAccount((a) => ({ ...a, name: v }))} required />
+                  <F label="EMAIL" type="email" value={account.email} onChange={(v) => setAccount((a) => ({ ...a, email: v }))} required />
+                  <F label="PASSWORD" type="password" value={account.password} onChange={(v) => setAccount((a) => ({ ...a, password: v }))} required placeholder="min 6 characters" />
+                  <div className="pt-1">
+                    <button type="submit" className="w-full bg-[#f97316] text-white py-3.5 rounded-xl font-bold text-base hover:bg-orange-600 transition-colors">
+                      Continue →
+                    </button>
+                  </div>
+                  <p className="text-[#94a3b8] text-xs text-center">By signing up you agree to our Terms of Service</p>
+                </form>
+                <p className="text-center text-sm text-[#64748b] mt-6">
+                  Already have an account?{" "}
+                  <Link href="/auth/login" className="text-[#0f172a] font-semibold hover:underline">Sign in</Link>
+                </p>
+              </>
+            )}
+
+            {/* Step 2 — Business */}
+            {step === 2 && (
+              <>
+                <h1 className="text-3xl font-extrabold text-[#0f172a] mb-2">Tell us about your business</h1>
+                <p className="text-[#64748b] mb-8">We&apos;ll personalize your agents based on your trade.</p>
+                {error && <div className="mb-5 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">{error}</div>}
+                <form onSubmit={handleStep2} className="space-y-4">
+                  <F label="BUSINESS NAME" type="text" value={biz.businessName} onChange={(v) => setBiz((b) => ({ ...b, businessName: v }))} required />
+                  <div>
+                    <label className="block text-xs font-semibold text-[#64748b] tracking-wider mb-1.5">INDUSTRY</label>
+                    <select value={biz.industry} onChange={(e) => setBiz((b) => ({ ...b, industry: e.target.value }))} required
+                      className="w-full border border-[#e2e8f0] rounded-xl px-4 py-3 text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#f97316]/30 bg-white">
+                      <option value="">Select your trade...</option>
+                      {INDUSTRIES.map((i) => <option key={i} value={i}>{i}</option>)}
+                    </select>
+                  </div>
+                  <F label="CITY" type="text" value={biz.city} onChange={(v) => setBiz((b) => ({ ...b, city: v }))} placeholder="e.g. Toronto" />
+                  <F label="PHONE NUMBER" type="tel" value={biz.phone} onChange={(v) => setBiz((b) => ({ ...b, phone: v }))} placeholder="+1 416 555 0100" />
+                  <div className="flex gap-3 pt-1">
+                    <button type="button" onClick={() => setStep(1)}
+                      className="px-5 py-3.5 border border-[#e2e8f0] rounded-xl text-sm font-medium text-[#64748b] hover:bg-[#f8fafc] transition-colors">
+                      ← Back
+                    </button>
+                    <button type="submit" disabled={loading}
+                      className="flex-1 bg-[#f97316] text-white py-3.5 rounded-xl font-bold text-base hover:bg-orange-600 transition-colors disabled:opacity-60">
+                      {loading ? "Setting up..." : "Continue →"}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
+
+            {/* Step 3 — Customers */}
+            {step === 3 && (
+              <>
+                <h1 className="text-3xl font-extrabold text-[#0f172a] mb-2">Add your first customer</h1>
+                <p className="text-[#64748b] mb-8">
+                  We&apos;ll use this to show you how the Winback Agent works in real-time.
+                </p>
+                <form onSubmit={handleStep3} className="space-y-4">
+                  <F label="CUSTOMER NAME" type="text" value={customer.name} onChange={(v) => setCustomer((c) => ({ ...c, name: v }))} required />
+                  <F label="PHONE NUMBER" type="tel" value={customer.phone} onChange={(v) => setCustomer((c) => ({ ...c, phone: v }))} required placeholder="+1 416 555 0100" />
+                  <F label="LAST SERVICE DATE" type="date" value={customer.lastServiceDate} onChange={(v) => setCustomer((c) => ({ ...c, lastServiceDate: v }))} required />
+                  <F label="AMOUNT SPENT ($)" type="number" value={customer.totalSpend} onChange={(v) => setCustomer((c) => ({ ...c, totalSpend: v }))} placeholder="Optional" />
+                  <button type="submit" disabled={loading}
+                    className="w-full bg-[#f97316] text-white py-3.5 rounded-xl font-bold text-base hover:bg-orange-600 transition-colors disabled:opacity-60">
+                    {loading ? "Saving..." : "Add Customer & Continue →"}
+                  </button>
+                </form>
+                <button onClick={skipToLaunch} className="block w-full text-center text-sm text-[#94a3b8] mt-3 hover:text-[#64748b] transition-colors py-2">
+                  Skip — I&apos;ll import a CSV later
+                </button>
+              </>
+            )}
+
+            {/* Step 4 — Launch */}
+            {step === 4 && (
+              <div>
+                {/* Checkmark animation */}
+                <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mb-6 animate-[scale-in_0.3s_ease-out]">
+                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h1 className="text-3xl font-extrabold text-[#0f172a] mb-2">You&apos;re all set.</h1>
+                <p className="text-[#64748b] mb-8">Your 5 agents are now active and working automatically.</p>
+
+                {analysis && (
+                  <div className="border border-[#e2e8f0] rounded-xl p-5 mb-5">
+                    <p className="text-xs font-semibold text-[#94a3b8] uppercase tracking-wider mb-4">CUSTOMER SNAPSHOT</p>
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div>
+                        <p className="text-2xl font-extrabold text-green-600">{analysis.active}</p>
+                        <p className="text-xs text-[#64748b] mt-0.5">Active</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-extrabold text-[#f97316]">{analysis.atRisk}</p>
+                        <p className="text-xs text-[#64748b] mt-0.5">At-Risk</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-extrabold text-red-500">{analysis.lost}</p>
+                        <p className="text-xs text-[#64748b] mt-0.5">Lost</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {analysis && (analysis.atRisk + analysis.lost) > 0 && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6">
+                    <p className="text-[#f97316] text-sm font-semibold">
+                      ⚡ We found {analysis.atRisk + analysis.lost} customers who haven&apos;t returned.
+                    </p>
+                    <p className="text-[#64748b] text-xs mt-1">Your Winback Agent is ready to bring them back.</p>
+                  </div>
+                )}
+
+                <button onClick={() => router.push("/dashboard")}
+                  className="w-full bg-[#f97316] text-white py-3.5 rounded-xl font-bold text-base hover:bg-orange-600 transition-colors">
+                  Go to Dashboard →
+                </button>
+              </div>
+            )}
+
+          </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-
-          {/* ── Step 1: Account ── */}
-          {step === 1 && (
-            <>
-              <h2 className="font-bold text-[#1a2744] text-lg mb-1">Create your account</h2>
-              <p className="text-gray-400 text-sm mb-5">Free forever · No credit card needed</p>
-              {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg">{error}</div>
-              )}
-              <form onSubmit={handleStep1} className="space-y-3">
-                <Field label="Your Name" type="text" value={form.name} onChange={(v) => setField("name", v)} required />
-                <Field label="Email" type="email" value={form.email} onChange={(v) => setField("email", v)} required />
-                <Field label="Password (min 6 chars)" type="password" value={form.password} onChange={(v) => setField("password", v)} required />
-                <Field label="Business Name" type="text" value={form.businessName} onChange={(v) => setField("businessName", v)} required />
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Industry</label>
-                  <select value={form.industry} onChange={(e) => setField("industry", e.target.value)} required
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2744]/20 bg-white">
-                    <option value="">Select industry...</option>
-                    {INDUSTRIES.map((i) => <option key={i} value={i}>{i}</option>)}
-                  </select>
-                </div>
-                <Field label="Phone (optional)" type="tel" value={form.phone} onChange={(v) => setField("phone", v)} />
-                <button type="submit" disabled={loading}
-                  className="w-full bg-[#f97316] text-white py-3 rounded-xl font-bold hover:bg-orange-600 transition-colors disabled:opacity-60 mt-2">
-                  {loading ? "Creating account..." : "Create Account →"}
-                </button>
-              </form>
-              <p className="text-center text-xs text-gray-400 mt-4">
-                Already have an account?{" "}
-                <Link href="/auth/login" className="text-[#1a2744] font-medium hover:underline">Sign in</Link>
-              </p>
-            </>
-          )}
-
-          {/* ── Step 2: Add first customer ── */}
-          {step === 2 && (
-            <>
-              <h2 className="font-bold text-[#1a2744] text-lg mb-1">Add a customer to get started</h2>
-              <p className="text-gray-400 text-sm mb-5">
-                We&apos;ll use this to show you how recovery works.
-              </p>
-              <form onSubmit={handleStep2} className="space-y-4">
-                <Field label="Customer Name *" type="text" value={customer.name}
-                  onChange={(v) => setCustomer((c) => ({ ...c, name: v }))} required />
-                <Field label="Phone Number *" type="tel" value={customer.phone}
-                  onChange={(v) => setCustomer((c) => ({ ...c, phone: v }))} required
-                  placeholder="+1 416 555 0100" />
-                <Field label="Last Service Date *" type="date" value={customer.lastServiceDate}
-                  onChange={(v) => setCustomer((c) => ({ ...c, lastServiceDate: v }))} required />
-                <Field label="Amount Spent ($)" type="number" value={customer.totalSpend}
-                  onChange={(v) => setCustomer((c) => ({ ...c, totalSpend: v }))}
-                  placeholder="0" />
-                <button type="submit" disabled={loading}
-                  className="w-full bg-[#f97316] text-white py-3 rounded-xl font-bold hover:bg-orange-600 transition-colors disabled:opacity-60">
-                  {loading ? "Saving..." : "Add Customer & Continue →"}
-                </button>
-              </form>
-              <button onClick={() => setStep(3)}
-                className="block w-full text-center text-xs text-gray-400 mt-3 hover:text-gray-600">
-                Skip for now →
-              </button>
-            </>
-          )}
-
-          {/* ── Step 3: Public profile ── */}
-          {step === 3 && (
-            <>
-              <h2 className="font-bold text-[#1a2744] text-lg mb-1">Set up your public profile</h2>
-              <p className="text-gray-400 text-sm mb-5">
-                Customers can find you at{" "}
-                <span className="font-mono text-[#1a2744] text-xs">
-                  servicestar.app/b/{slug || "your-business"}
-                </span>
-              </p>
-              <form onSubmit={handleStep3} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Your URL Slug</label>
-                  <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
-                    <span className="bg-gray-50 px-3 py-2.5 text-xs text-gray-400 border-r border-gray-200">/b/</span>
-                    <input type="text" value={slug} onChange={(e) => setSlug(slugify(e.target.value))}
-                      className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
-                      placeholder="your-business-name" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Services Offered</label>
-                  <textarea rows={2} value={services} onChange={(e) => setServices(e.target.value)}
-                    placeholder="e.g. Water heater repair, Drain cleaning..."
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none resize-none" />
-                </div>
-                <Field label="Booking URL (optional)" type="url" value={bookingUrl}
-                  onChange={setBookingUrl} placeholder="https://..." />
-                <div className="flex gap-2 pt-1">
-                  <button type="button" onClick={() => { setStep(4); fetch("/api/customers/analyze", { method: "POST" }).then((r) => r.json()).then(setAnalysisResult).catch(() => {}); }}
-                    className="flex-1 border border-gray-200 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-50">
-                    Skip
-                  </button>
-                  <button type="submit" disabled={loading}
-                    className="flex-1 bg-[#1a2744] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#243460] disabled:opacity-60">
-                    {loading ? "Saving..." : "Save & Continue →"}
-                  </button>
-                </div>
-              </form>
-            </>
-          )}
-
-          {/* ── Step 4: Results ── */}
-          {step === 4 && (
-            <div className="text-center py-2">
-              <div className="text-5xl mb-4">🎯</div>
-              <h2 className="font-bold text-[#1a2744] text-xl mb-2">You&apos;re all set!</h2>
-              <p className="text-gray-400 text-sm mb-6">Your revenue recovery loop is ready.</p>
-
-              {analysisResult ? (
-                <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 mb-6 text-left">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Customer Snapshot</p>
-                  <div className="grid grid-cols-3 gap-3 text-center">
-                    <div>
-                      <div className="text-2xl font-bold text-green-600">{analysisResult.active}</div>
-                      <div className="text-xs text-gray-500 mt-0.5">Active</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-[#f97316]">{analysisResult.atRisk}</div>
-                      <div className="text-xs text-gray-500 mt-0.5">At-Risk</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-red-500">{analysisResult.lost}</div>
-                      <div className="text-xs text-gray-500 mt-0.5">Lost</div>
-                    </div>
-                  </div>
-                  {(analysisResult.atRisk + analysisResult.lost) > 0 && (
-                    <p className="text-xs text-[#f97316] font-semibold mt-3 text-center">
-                      {analysisResult.atRisk + analysisResult.lost} customers ready to recover!
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                  <p className="text-sm text-gray-400">Analyzing your customers...</p>
-                </div>
-              )}
-
-              <button onClick={goToDashboard}
-                className="w-full bg-[#f97316] text-white py-3 rounded-xl font-bold hover:bg-orange-600 transition-colors">
-                Go to Dashboard →
-              </button>
-            </div>
-          )}
-
+        {/* Right — dark panel (lg+) */}
+        <div className="hidden lg:flex w-[40%] bg-[#0f172a] flex-col justify-center px-12 py-20 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] to-[#1e293b]" />
+          <div className="relative z-10">
+            <p className="text-white text-2xl font-bold leading-snug mb-8">{panel.title}</p>
+            {panel.body}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// Reusable field component
-function Field({
-  label, type, value, onChange, required, placeholder,
-}: {
+function F({ label, type, value, onChange, required, placeholder }: {
   label: string; type: string; value: string;
   onChange: (v: string) => void; required?: boolean; placeholder?: string;
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">{label}</label>
+      <label className="block text-xs font-semibold text-[#64748b] tracking-wider mb-1.5">{label}</label>
       <input type={type} value={value} onChange={(e) => onChange(e.target.value)}
         required={required} placeholder={placeholder}
-        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2744]/20" />
+        className="w-full border border-[#e2e8f0] rounded-xl px-4 py-3 text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#f97316]/30 focus:border-[#f97316]/50 transition-all" />
     </div>
   );
 }

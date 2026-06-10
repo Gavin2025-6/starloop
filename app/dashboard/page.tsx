@@ -33,13 +33,13 @@ const AGENT_COLORS: Record<string, string> = {
 };
 
 const LOOP_NODES = [
-  { key: "totalCustomers",   label: "来电",     color: "bg-[#1a2744]",  emoji: "📞" },
-  { key: "totalCustomers",   label: "预约",     color: "bg-blue-600",   emoji: "📅" },
-  { key: "totalCustomers",   label: "服务",     color: "bg-purple-600", emoji: "🔧" },
-  { key: "thisMonthRevenue", label: "付款",     color: "bg-green-600",  emoji: "💳", isMoney: true },
-  { key: "reputationCount",  label: "评价",     color: "bg-yellow-500", emoji: "⭐" },
-  { key: "pendingRecovery",  label: "召回",     color: "bg-[#f97316]",  emoji: "↩️" },
-  { key: "referralCount",    label: "转介绍",   color: "bg-teal-600",   emoji: "🤝" },
+  { key: "totalCustomers",   label: "Call",     color: "bg-[#1a2744]",  emoji: "📞" },
+  { key: "totalCustomers",   label: "Book",     color: "bg-blue-600",   emoji: "📅" },
+  { key: "totalCustomers",   label: "Service",  color: "bg-purple-600", emoji: "🔧" },
+  { key: "thisMonthRevenue", label: "Payment",  color: "bg-green-600",  emoji: "💳", isMoney: true },
+  { key: "reputationCount",  label: "Review",   color: "bg-yellow-500", emoji: "⭐" },
+  { key: "pendingRecovery",  label: "Winback",  color: "bg-[#f97316]",  emoji: "↩️" },
+  { key: "referralCount",    label: "Referral", color: "bg-teal-600",   emoji: "🤝" },
 ];
 
 function timeAgo(iso: string): string {
