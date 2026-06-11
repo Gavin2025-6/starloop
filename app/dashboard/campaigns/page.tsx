@@ -219,7 +219,7 @@ export default function CampaignsPage() {
                 {previewLoading ? (
                   <span className="text-gray-300 animate-pulse">Generating preview...</span>
                 ) : smsPreview || (
-                  <span className="text-gray-300">Hi [Name], it's been a while since your last visit at [Business]! We'd love to have you back. Book here: servicestar.app/b/[slug]</span>
+                  <span className="text-gray-300">Hi [Name], it&apos;s been a while since your last visit at [Business]! We&apos;d love to have you back. Book here: {process.env.NEXT_PUBLIC_APP_URL}/b/[slug]</span>
                 )}
               </div>
               <button onClick={fetchSmsPreview} className="text-xs text-[#1a2744] mt-1 hover:underline">↻ Regenerate</button>

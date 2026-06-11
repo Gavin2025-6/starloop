@@ -11,13 +11,13 @@ interface Job {
 }
 
 const KANBAN_COLS = [
-  { key: "quoted",      label: "Quoted",      color: "border-[#e2e8f0] bg-[#f8fafc]" },
+  { key: "requested",   label: "Requested",   color: "border-[#e2e8f0] bg-[#f8fafc]" },
   { key: "scheduled",   label: "Scheduled",   color: "border-[#e2e8f0] bg-[#f8fafc]" },
   { key: "in_progress", label: "In Progress", color: "border-[#e2e8f0] bg-[#f8fafc]" },
   { key: "completed",   label: "Completed",   color: "border-[#e2e8f0] bg-[#f8fafc]" },
 ];
 
-const STATUS_OPTS = ["requested","quoted","confirmed","scheduled","in_progress","completed","invoiced","paid","cancelled"];
+const STATUS_OPTS = ["requested","confirmed","scheduled","in_progress","completed","invoiced","paid","cancelled"];
 
 const priorityBadge = (p: string) =>
   p === "emergency" ? "bg-red-100 text-red-700" :
@@ -36,6 +36,7 @@ export default function JobsPage() {
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ customerId: "", serviceType: "", description: "", priority: "normal", address: "", scheduledAt: "" });
+  const [newCust, setNewCust] = useState({ name: "", phone: "", email: "" });
   const [customers, setCustomers] = useState<Array<{ id: string; name: string; phone: string | null }>>([]);
   const [aiTiers, setAiTiers] = useState<Array<{ name: string; total: number }>>([]);
   const [quoting, setQuoting] = useState(false);
@@ -56,12 +57,22 @@ export default function JobsPage() {
 
   async function createJob(e: React.FormEvent) {
     e.preventDefault();
+    let customerId = form.customerId;
+    if (customerId === "new_customer") {
+      const res = await fetch("/api/customers/add", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newCust.name, phone: newCust.phone || null, email: newCust.email || null }),
+      });
+      const created = await res.json();
+      customerId = created.id;
+    }
     await fetch("/api/jobs/create", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, title: form.serviceType }),
+      body: JSON.stringify({ ...form, customerId, title: form.serviceType }),
     });
     setShowModal(false);
     setForm({ customerId: "", serviceType: "", description: "", priority: "normal", address: "", scheduledAt: "" });
+    setNewCust({ name: "", phone: "", email: "" });
     load();
   }
 
@@ -211,7 +222,27 @@ export default function JobsPage() {
                   className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none bg-white">
                   <option value="">Select customer...</option>
                   {customers.map((c) => <option key={c.id} value={c.id}>{c.name} {c.phone ? `· ${c.phone}` : ""}</option>)}
+                  <option value="new_customer">+ New customer</option>
                 </select>
+                {form.customerId === "new_customer" && (
+                  <div className="mt-3 border border-gray-200 rounded-xl p-3 space-y-2 bg-gray-50">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Name *</label>
+                      <input type="text" value={newCust.name} onChange={(e) => setNewCust((n) => ({ ...n, name: e.target.value }))} required
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none bg-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Phone *</label>
+                      <input type="tel" value={newCust.phone} onChange={(e) => setNewCust((n) => ({ ...n, phone: e.target.value }))} required
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none bg-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Email <span className="normal-case text-gray-400 font-normal">(optional)</span></label>
+                      <input type="email" value={newCust.email} onChange={(e) => setNewCust((n) => ({ ...n, email: e.target.value }))}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none bg-white" />
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Service Type *</label>

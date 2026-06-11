@@ -46,7 +46,7 @@ export async function generateWinbackSMS(
     messages: [
       {
         role: "user",
-        content: `Write a friendly, natural SMS (under 160 chars) from ${business.name} to ${customer.name} who last used their ${business.industry} service ${daysAgo} days ago. Offer to book again. End with: Book here: servicestar.app/b/${business.slug}\nNo hashtags. Sound like a human, not marketing.`,
+        content: `Write a friendly, natural SMS (under 160 chars) from ${business.name} to ${customer.name} who last used their ${business.industry} service ${daysAgo} days ago. Offer to book again. End with: Book here: ${process.env.NEXT_PUBLIC_APP_URL}/b/${business.slug}\nNo hashtags. Sound like a human, not marketing.`,
       },
     ],
   });

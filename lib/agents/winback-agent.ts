@@ -18,7 +18,7 @@ async function generateSms(customer: { name: string; lastServiceDate: Date | nul
   const style = template === "A" ? "warm and personal, mention time passed" : "value-focused with mild urgency";
   const msg = await claude.messages.create({
     model: "claude-haiku-4-5-20251001", max_tokens: 180,
-    messages: [{ role: "user", content: `Write winback SMS (under 155 chars) from ${business.name} to ${customer.name}. Style: ${style}. ${days} days since last ${business.industry} service. End: Book: servicestar.app/b/${business.slug}. No hashtags.` }],
+    messages: [{ role: "user", content: `Write winback SMS (under 155 chars) from ${business.name} to ${customer.name}. Style: ${style}. ${days} days since last ${business.industry} service. End: Book: ${process.env.NEXT_PUBLIC_APP_URL}/b/${business.slug}. No hashtags.` }],
   });
   return msg.content[0].type === "text" ? msg.content[0].text.trim() : "";
 }

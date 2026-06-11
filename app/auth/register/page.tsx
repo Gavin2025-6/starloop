@@ -20,33 +20,37 @@ function slugify(s: string) {
 
 const STEPS = ["Account", "Business", "Customers", "Launch"];
 
+const RESULT_LINES: [string, string][] = [
+  ["📞", "Calls answered automatically"],
+  ["📋", "Invoices & review requests sent for you"],
+  ["🔄", "Quiet customers win themselves back"],
+];
+
 const RIGHT_PANEL: Record<number, { title: string; body: React.ReactNode }> = {
   1: {
-    title: "Join thousands of local service businesses running on autopilot.",
+    title: "Every call answered. Every invoice sent. Every lost customer recovered.",
     body: (
-      <div className="space-y-6">
-        {[["$2,400", "avg. recovered / month"], ["34%", "customer return rate"], ["5 min", "setup time"]].map(([v, l]) => (
-          <div key={l}>
-            <p className="text-3xl font-extrabold text-white">{v}</p>
-            <p className="text-[#64748b] text-sm mt-0.5">{l}</p>
-          </div>
-        ))}
+      <div className="space-y-5">
+        <p className="text-white text-base font-medium">You just do the work.</p>
+        <div className="flex items-center gap-2">
+          <span className="text-[#00C9A7] font-bold">✓</span>
+          <span className="text-[#64748b] text-sm">5 min setup</span>
+        </div>
       </div>
     ),
   },
   2: {
-    title: "Your agents will be configured for your trade.",
+    title: "Your business, running automatically.",
     body: (
-      <div className="space-y-3">
-        {[["📞", "Intake Agent"], ["📋", "Follow-up Agent"], ["⭐", "Reputation Agent"], ["🔄", "Winback Agent"], ["👥", "Referral Agent"]].map(([icon, name]) => (
-          <div key={name as string} className="flex items-center gap-3">
+      <div className="space-y-4">
+        {RESULT_LINES.map(([icon, text]) => (
+          <div key={text} className="flex items-center gap-3">
             <span className="text-xl">{icon}</span>
-            <span className="text-white text-sm font-medium">{name}</span>
-            <span className="ml-auto text-[#475569] text-xs">Active</span>
+            <span className="text-white text-sm font-medium">{text}</span>
           </div>
         ))}
         <p className="text-[#475569] text-xs pt-2 leading-relaxed">
-          Each agent understands the specific language and needs of your trade.
+          Configured for your trade automatically.
         </p>
       </div>
     ),
@@ -62,13 +66,13 @@ const RIGHT_PANEL: Record<number, { title: string; body: React.ReactNode }> = {
             </div>
             <div className="bg-[#334155] rounded-xl rounded-tl-none px-4 py-3">
               <p className="text-white text-sm leading-relaxed">
-                Hi [Name] 👋 It&apos;s been a while since your last service with [Business Name]. Ready to book again? Reply YES or visit: servicestar.app/b/[slug]
+                Hi [Name] 👋 It&apos;s been a while since your last service with [Business Name]. Ready to book again? Reply YES or visit: {process.env.NEXT_PUBLIC_APP_URL}/b/[slug]
               </p>
             </div>
           </div>
         </div>
         <p className="text-[#475569] text-xs leading-relaxed">
-          Personalized. Automatic. Effective. Your Winback Agent sends this when customers go quiet.
+          Personalized. Automatic. Effective. Sent automatically when customers go quiet.
         </p>
       </div>
     ),
@@ -76,20 +80,14 @@ const RIGHT_PANEL: Record<number, { title: string; body: React.ReactNode }> = {
   4: {
     title: "Your business is now running on autopilot.",
     body: (
-      <div className="space-y-3">
-        {[
-          ["📞", "Intake Agent", "Active"],
-          ["📋", "Follow-up Agent", "Active"],
-          ["⭐", "Reputation Agent", "Active"],
-          ["🔄", "Winback Agent", "Active"],
-          ["👥", "Referral Agent", "Active"],
-        ].map(([icon, name, status]) => (
-          <div key={name as string} className="flex items-center gap-3 py-1">
+      <div className="space-y-4">
+        {RESULT_LINES.map(([icon, text]) => (
+          <div key={text} className="flex items-center gap-3 py-1">
             <span className="text-xl">{icon}</span>
-            <span className="text-white text-sm font-medium">{name}</span>
+            <span className="text-white text-sm font-medium">{text}</span>
             <div className="ml-auto flex items-center gap-1.5">
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              <span className="text-green-400 text-xs font-medium">{status}</span>
+              <span className="text-green-400 text-xs font-medium">Live</span>
             </div>
           </div>
         ))}
@@ -262,7 +260,7 @@ export default function RegisterPage() {
             {step === 2 && (
               <>
                 <h1 className="text-3xl font-extrabold text-[#0f172a] mb-2">Tell us about your business</h1>
-                <p className="text-[#64748b] mb-8">We&apos;ll personalize your agents based on your trade.</p>
+                <p className="text-[#64748b] mb-8">We&apos;ll configure everything based on your trade.</p>
                 {error && <div className="mb-5 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">{error}</div>}
                 <form onSubmit={handleStep2} className="space-y-4">
                   <F label="BUSINESS NAME" type="text" value={biz.businessName} onChange={(v) => setBiz((b) => ({ ...b, businessName: v }))} required />
@@ -323,7 +321,7 @@ export default function RegisterPage() {
                   </svg>
                 </div>
                 <h1 className="text-3xl font-extrabold text-[#0f172a] mb-2">You&apos;re all set.</h1>
-                <p className="text-[#64748b] mb-8">Your 5 agents are now active and working automatically.</p>
+                <p className="text-[#64748b] mb-8">Everything is set up and running automatically.</p>
 
                 {analysis && (
                   <div className="border border-[#e2e8f0] rounded-xl p-5 mb-5">

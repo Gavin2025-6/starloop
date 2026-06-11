@@ -12,7 +12,7 @@ const INDUSTRIES = [
 interface BizData {
   name: string; industry: string; phone: string; email: string;
   address: string; city: string; slug: string; googleBusinessUrl: string;
-  profile?: { headline: string; description: string; services: string; bookingUrl: string; };
+  profile?: { headline: string; description: string; services: string; };
   googleConnection?: { reviewUrl: string | null; locationId: string | null; } | null;
 }
 
@@ -24,7 +24,7 @@ export default function SettingsPage() {
   const [biz, setBiz] = useState<BizData>({
     name: "", industry: "", phone: "", email: "",
     address: "", city: "", slug: "", googleBusinessUrl: "",
-    profile: { headline: "", description: "", services: "", bookingUrl: "" },
+    profile: { headline: "", description: "", services: "" },
     googleConnection: null,
   });
   const [loading, setLoading] = useState(true);
@@ -49,7 +49,6 @@ export default function SettingsPage() {
             headline: d.profile?.headline ?? "",
             description: d.profile?.description ?? "",
             services: d.profile?.services ?? "",
-            bookingUrl: d.profile?.bookingUrl ?? "",
           },
           googleConnection: d.googleConnection ?? null,
         });
@@ -69,7 +68,7 @@ export default function SettingsPage() {
         email: biz.email, address: biz.address, city: biz.city,
         slug: biz.slug, googleBusinessUrl: biz.googleBusinessUrl,
         headline: biz.profile?.headline, description: biz.profile?.description,
-        services: biz.profile?.services, bookingUrl: biz.profile?.bookingUrl,
+        services: biz.profile?.services,
       }),
     });
     if (!res.ok) { setError("Save failed. Try again."); }
@@ -169,7 +168,7 @@ export default function SettingsPage() {
           <p className="text-gray-400 text-xs mb-5">
             Your public page: <a href={`/b/${biz.slug || "your-slug"}`} target="_blank" rel="noopener"
               className="text-[#1a2744] hover:underline inline-flex items-center gap-1">
-              servicestar.app/b/{biz.slug || "your-slug"} <ExternalLink size={10} />
+              {process.env.NEXT_PUBLIC_APP_URL}/b/{biz.slug || "your-slug"} <ExternalLink size={10} />
             </a>
           </p>
           <div className="space-y-4">
@@ -197,12 +196,6 @@ export default function SettingsPage() {
               <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Services (comma-separated)</label>
               <input value={biz.profile?.services ?? ""} onChange={(e) => setProfile("services", e.target.value)}
                 placeholder="Drain cleaning, Water heater, Emergency plumbing"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2744]/20" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Booking URL</label>
-              <input type="url" value={biz.profile?.bookingUrl ?? ""} onChange={(e) => setProfile("bookingUrl", e.target.value)}
-                placeholder="https://calendly.com/..."
                 className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2744]/20" />
             </div>
           </div>
