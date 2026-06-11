@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
         phone: phone || null,
         email: email || null,
         lastServiceDate: lastServiceDate ? new Date(lastServiceDate) : null,
-        totalSpend: totalSpend || 0,
+        totalSpend: totalSpend ? parseFloat(totalSpend) : 0,
         notes: notes || null,
       },
     });
