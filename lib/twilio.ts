@@ -20,6 +20,10 @@ interface SendSmsParams {
 }
 
 export async function sendSms({ to, body }: SendSmsParams): Promise<string> {
+  if (process.env.TWILIO_MOCK === "1") {
+    console.log(`[TWILIO_MOCK] SMS to ${to}: ${body}`);
+    return "MOCKED_SID";
+  }
   const message = await getClient().messages.create({
     from: process.env.TWILIO_PHONE_NUMBER,
     to,

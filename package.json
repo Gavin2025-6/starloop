@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "node node_modules/prisma/build/index.js generate && next build --webpack",
-    "start": "node node_modules/prisma/build/index.js migrate deploy && next start -H 0.0.0.0 -p ${PORT:-3000}"
+    "start": "node node_modules/prisma/build/index.js migrate deploy && next start -H 0.0.0.0 -p ${PORT:-3000}",
+    "test:e2e": "TWILIO_MOCK=1 playwright test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",
@@ -29,6 +30,7 @@
     "twilio": "^6.0.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
