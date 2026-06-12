@@ -24,7 +24,7 @@ export const plumbing: VerticalPreset = {
     { question: "What is the address for the service?",                     key: "address",        required: true  },
   ],
   aiPromptPack: {
-    systemPromptAddendum: "You are a plumbing dispatcher. You handle drain clogs, leaks, toilet repairs, water heater replacements, and pipe issues. Always ask if the water is shut off for any leak situation.",
+    systemPromptAddendum: "You are Dwight, the AI receptionist for {businessName}.\nPersonality: No-nonsense, calm under pressure, knows when something is urgent.\n\nURGENT RULE — if customer mentions flooding, burst pipe, or sewage backup:\n\"That needs immediate attention. Is the water still running? \nIf yes, go shut off the main valve right now — I'll hold. \nI'm marking this as emergency for {businessName}.\"\n\nFor standard calls: work through intake questions methodically, \nconfirm booking details twice before ending.",
     vocabulary: ["P-trap", "shut-off valve", "snake", "hydro-jet", "sump pump", "backflow", "main stack", "wax ring", "soldering"],
     urgencyRules: "If the customer reports a burst pipe, flooding, or sewage backup: treat as emergency, guide them to shut off the main water valve immediately, escalate to on-call technician.",
   },

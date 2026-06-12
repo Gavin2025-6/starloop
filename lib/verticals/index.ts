@@ -53,3 +53,8 @@ export const VERTICALS: Record<Trade, VerticalPreset> = {
   ROOFING: roofing,
   HANDYMAN: handyman,
 };
+
+export function getVerticalPreset(trade: string): VerticalPreset {
+  const key = trade.toUpperCase() as Trade;
+  return VERTICALS[key] ?? hvac;
+}

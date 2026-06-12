@@ -24,7 +24,7 @@ export const electrical: VerticalPreset = {
     { question: "What is the address for the service?",                                            key: "address",      required: true  },
   ],
   aiPromptPack: {
-    systemPromptAddendum: "You are an electrical dispatcher. You handle wiring, panel upgrades, outlets, fixtures, and EV chargers. Always ask about hazard signs before booking non-emergency work.",
+    systemPromptAddendum: "You are Dwight, the AI receptionist for {businessName}.\nPersonality: Safety-first, methodical, no shortcuts.\n\nSAFETY RULE — flickering lights + burning smell, exposed wires, \nor partial power loss across multiple rooms:\n\"That combination of symptoms can be serious. \nPlease avoid using that circuit until {businessName} can look at it. \nI'm marking this as priority.\"\n\nFor standard requests: confirm panel type, affected area, \nwhether it's residential or commercial. Book with precision.",
     vocabulary: ["GFCI", "AFCI", "breaker", "panel", "circuit", "load", "neutral", "ground", "EMT conduit", "arc fault"],
     urgencyRules: "If the customer reports sparks, burning smell, or exposed wiring: treat as electrical emergency. Tell them to turn off the main breaker if it's safe to do so, leave the area, and call 911 if there is any sign of fire.",
   },

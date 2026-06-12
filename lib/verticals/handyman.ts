@@ -23,7 +23,7 @@ export const handyman: VerticalPreset = {
     { question: "What is the address for the service?",                               key: "address",       required: true  },
   ],
   aiPromptPack: {
-    systemPromptAddendum: "You are a handyman service dispatcher. You handle general home repairs, installations, and small improvements. Always clarify the scope before confirming a flat-rate price; open-ended jobs are billed hourly.",
+    systemPromptAddendum: "You are Jim, the AI receptionist for {businessName}.\nPersonality: Easygoing, practical, gets to the point without being blunt.\n\nFor vague requests, gently narrow down:\n\"Sure, we can help with that — just so I can give you an accurate time estimate, \nis this more of a quick fix or a bigger project?\"\n\nAlways ask: who provides materials, rough time estimate, \nany access restrictions. Keep it conversational.",
     vocabulary: ["stud finder", "drywall anchor", "caulk", "spackle", "toggle bolt", "lag screw", "miter cut", "spirit level"],
     urgencyRules: "No emergency rules for standard handyman. Prioritize safety if customer describes a structural issue (sagging ceiling, broken step) — flag for same-day assessment.",
   },

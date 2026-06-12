@@ -118,7 +118,8 @@ export default function RegisterPage() {
     setCatalog((prev) => prev.filter((_, i) => i !== idx));
   }
 
-  const twilioNumber = process.env.NEXT_PUBLIC_TWILIO_NUMBER ?? "your Twilio number";
+  const twilioNumber = process.env.NEXT_PUBLIC_TWILIO_NUMBER || '+1 (XXX) XXX-XXXX';
+  const formattedNumber = twilioNumber.replace(/\+1/, '+1 ').replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
 
   return (
     <div className={`${dmSans.className} min-h-screen flex flex-col`}>
@@ -269,18 +270,19 @@ export default function RegisterPage() {
                   <Check className="w-8 h-8 text-white" strokeWidth={3} />
                 </div>
                 <h1 className="text-3xl font-extrabold text-[#0f172a] mb-2">Your front office is live.</h1>
-                <p className="text-[#64748b] mb-6">Forward your missed calls to your Twilio number and we&apos;ll handle the rest.</p>
+                <p className="text-[#64748b] mb-6">Forward your missed calls to Erin:</p>
 
                 <div className="border border-[#e2e8f0] rounded-xl p-5 mb-5 space-y-3">
                   <p className="text-xs font-semibold text-[#94a3b8] uppercase tracking-wider">Call Forwarding Setup</p>
                   <div className="bg-[#f8fafc] rounded-lg p-3">
                     <p className="text-xs font-medium text-[#64748b] mb-1">iPhone</p>
-                    <p className="text-sm font-mono text-[#0f172a]">Settings → Phone → Call Forwarding → Enter {twilioNumber}</p>
+                    <p className="text-sm font-mono text-[#0f172a]">Settings → Phone → Call Forwarding → ON → {formattedNumber}</p>
                   </div>
                   <div className="bg-[#f8fafc] rounded-lg p-3">
-                    <p className="text-xs font-medium text-[#64748b] mb-1">Universal (most carriers)</p>
-                    <p className="text-sm font-mono text-[#0f172a]">Dial <strong>*61*{twilioNumber}#</strong> from your business phone</p>
+                    <p className="text-xs font-medium text-[#64748b] mb-1">Any phone (universal code)</p>
+                    <p className="text-sm font-mono text-[#0f172a]">Dial: <strong>*61*{twilioNumber}#</strong> then press Call</p>
                   </div>
+                  <p className="text-sm text-[#64748b]">That&apos;s it. Erin will answer every call you miss.</p>
                 </div>
 
                 <div className="space-y-2 mb-6">

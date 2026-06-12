@@ -35,6 +35,33 @@
 | 12 | **`NEXT_PUBLIC_TWILIO_NUMBER` env var 未设置** | 注册 Launch 页呼叫转移指引显示 "your Twilio number" | Railway 设置 `NEXT_PUBLIC_TWILIO_NUMBER=+1XXXXXXXXXX` |
 | 13 | **Stripe Connect webhook 需要 Connect 事件** | `account.updated` 只有在 Stripe Dashboard 开启 Connect Webhooks 时才能收到 | Stripe Dashboard → Webhooks → 新建 Connect webhook endpoint → `account.updated, payment_intent.succeeded, charge.refunded, charge.dispute.created` |
 
+---
+
+## PATCH-3 改动文件清单（2026-06-11）
+
+- `lib/resend.ts` — 新增 lazy init 封装（修复缺口#10）
+- `lib/verticals/hvac.ts` — systemPromptAddendum 替换为 Dwight 角色
+- `lib/verticals/plumbing.ts` — systemPromptAddendum 替换为 Dwight 角色
+- `lib/verticals/cleaning.ts` — systemPromptAddendum 替换为 Jim 角色
+- `lib/verticals/roofing.ts` — systemPromptAddendum 替换为 Angela 角色
+- `lib/verticals/handyman.ts` — systemPromptAddendum 替换为 Jim 角色
+- `lib/verticals/electrical.ts` — systemPromptAddendum 替换为 Dwight 角色
+- `lib/verticals/index.ts` — 新增 `getVerticalPreset()` 工具函数
+- `lib/vapi/erin-assistant-config.json` — Erin Vapi 助手配置模板（新增）
+- `lib/vapi/build-assistant-config.ts` — 占位符替换构建器（新增）
+- `app/auth/register/page.tsx` — Step 5 呼叫转移说明读取 `NEXT_PUBLIC_TWILIO_NUMBER` 并格式化
+- `package.json` — 新增 `resend` 依赖
+
+### PATCH-3 遗留问题
+
+| # | 遗留项 | 影响 | 动作 |
+|---|--------|------|------|
+| P3-1 | **RESEND_API_KEY 未在 Railway 设置** | 邮件发送运行时失败 | Railway Variables 设置 `RESEND_API_KEY` |
+| P3-2 | **NEXT_PUBLIC_TWILIO_NUMBER 格式需为 E.164**（如 `+14165550100`）| 呼叫转移页面显示占位符 | Railway 设置 `NEXT_PUBLIC_TWILIO_NUMBER=+1XXXXXXXXXX` |
+| P3-3 | **VAPI_WEBHOOK_SECRET 未设置** | `erin-assistant-config.json` 的 `serverUrlSecret` 占位符需在 Vapi onboarding 时替换 | 注册 Vapi 账号后填入；`buildVapiConfig` 当前不替换此字段，如需动态化需更新 `build-assistant-config.ts` |
+
+---
+
 ## v2 改动文件清单（核心）
 - `prisma/schema.prisma` — Trade enum, PriceBookItem, Payment, 地址字段
 - `migrations/v2_front_office.sql` — 已在生产库执行
