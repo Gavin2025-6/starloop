@@ -14,6 +14,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const business = await prisma.business.findUnique({ where: { userId: session.user.id } });
     if (!business) return NextResponse.json({ error: "No business" }, { status: 404 });
 
+    const existing = await prisma.job.findUnique({ where: { id, businessId: business.id }, select: { status: true } });
+    if (!existing) return NextResponse.json({ error: "Job not found" }, { status: 404 });
+
     const job = await prisma.job.update({
       where: { id, businessId: business.id },
       data: {
@@ -26,19 +29,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       include: { customer: true },
     });
 
-    // Trigger follow-up agent
-    await runFollowup(job.id).catch(() => {});
-
-    // Log
-    await prisma.agentLog.create({
-      data: {
-        businessId: business.id,
-        agent: "followup",
-        action: "Job completed — follow-up sequence started",
-        detail: `Job ${job.jobNumber} · $${job.total}`,
-        customerId: job.customerId,
-      },
+    await prisma.jobEvent.create({
+      data: { jobId: id, type: "status_changed", payload: { from: existing.status, to: "completed" } },
     });
+
+    await runFollowup(job.id).catch(() => {});
 
     return NextResponse.json(job);
   } catch (err) {

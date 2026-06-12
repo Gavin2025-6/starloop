@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, List, LayoutGrid, CheckCircle, AlertCircle } from "lucide-react";
 
 interface Job {
@@ -31,6 +32,7 @@ const statusBadge = (s: string) =>
   "bg-blue-100 text-blue-700";
 
 export default function JobsPage() {
+  const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"kanban" | "list">("kanban");
@@ -143,7 +145,7 @@ export default function JobsPage() {
               </div>
               <div className="space-y-2">
                 {kanbanJobs(col.key).map((job) => (
-                  <div key={job.id} className="bg-white rounded-xl p-3 border border-[#e2e8f0] cursor-pointer hover:shadow-sm transition-shadow">
+                  <div key={job.id} onClick={() => router.push(`/dashboard/jobs/${job.id}`)} className="bg-white rounded-xl p-3 border border-[#e2e8f0] cursor-pointer hover:shadow-sm transition-shadow">
                     <div className="flex items-start justify-between mb-1.5">
                       <span className="text-xs font-mono text-gray-400">{job.jobNumber}</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${priorityBadge(job.priority)}`}>{job.priority}</span>

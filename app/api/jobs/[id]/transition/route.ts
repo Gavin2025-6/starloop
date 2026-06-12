@@ -48,6 +48,10 @@ export async function POST(
       data: { status: to },
     });
 
+    await prisma.jobEvent.create({
+      data: { jobId: id, type: "status_changed", payload: { from: job.status, to } },
+    });
+
     return NextResponse.json(updated);
   } catch (err) {
     console.error("[jobs/transition]", err);

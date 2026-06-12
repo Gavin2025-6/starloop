@@ -6,60 +6,46 @@ export async function runFollowup(jobId: string) {
     where: { id: jobId },
     include: {
       customer: true,
-      business: {
-        include: { googleConnection: true },
-      },
+      business: { include: { googleConnection: true } },
     },
   });
 
   const { customer, business } = job;
 
   if (!customer.phone) {
+    await prisma.jobEvent.create({
+      data: { jobId, type: "sms_mocked", payload: { kind: "thank_you", reason: "no_phone" } },
+    });
     return { sent: 0, reason: "no phone" };
   }
 
   const reviewUrl = business.googleConnection?.reviewUrl ?? null;
-  const isPaid = business.plan !== "free" && business.plan !== "trial";
+  const isTrial = process.env.TWILIO_MOCK === "1" || business.plan === "free" || business.plan === "trial";
 
   // T+0: Thank-you SMS
-  const thankYouMsg = `Thanks for choosing ${business.name}! Your service is complete. We'll follow up shortly.`;
+  const thankYouMsg = `Thanks for choosing ${business.name}! Your ${job.serviceType} service is complete.`;
   await sendSms({ to: customer.phone, body: thankYouMsg }).catch(() => {});
+  await prisma.jobEvent.create({
+    data: { jobId, type: isTrial && process.env.TWILIO_MOCK === "1" ? "sms_mocked" : "sms_sent", payload: { kind: "thank_you" } },
+  });
 
-  // T+24h review request (in MVP: fire immediately, no real scheduling)
+  // T+0: Review request SMS (fire immediately for MVP)
   let reviewMsg: string;
-  if (isPaid && reviewUrl) {
-    reviewMsg = `How was your ${job.serviceType} service from ${business.name}? Your feedback means a lot! Leave us a Google review: ${reviewUrl}`;
+  if (!isTrial && reviewUrl) {
+    reviewMsg = `How was your ${job.serviceType} service from ${business.name}? Leave a review: ${reviewUrl}`;
   } else {
     reviewMsg = `How was your ${job.serviceType} service from ${business.name}? Your feedback means a lot!`;
   }
   await sendSms({ to: customer.phone, body: reviewMsg }).catch(() => {});
-
-  // Update Customer.lastFollowupAt
-  await prisma.customer.update({
-    where: { id: customer.id },
-    data: { lastFollowupAt: new Date() },
-  });
-
-  // AgentLog: sequence started
-  await prisma.agentLog.create({
+  await prisma.jobEvent.create({
     data: {
-      businessId: business.id,
-      agent: "followup",
-      action: "follow-up sequence started",
-      customerId: customer.id,
+      jobId,
+      type: isTrial && !reviewUrl ? "sms_mocked" : "sms_sent",
+      payload: { kind: "review_request", reviewUrl: reviewUrl ?? null, sentAt: new Date().toISOString() },
     },
   });
 
-  // AgentLog: review request queued
-  await prisma.agentLog.create({
-    data: {
-      businessId: business.id,
-      agent: "followup",
-      action: "review request queued",
-      detail: `reviewUrl: ${reviewUrl ?? "none (trial)"}`,
-      customerId: customer.id,
-    },
-  });
+  await prisma.customer.update({ where: { id: customer.id }, data: { lastFollowupAt: new Date() } });
 
   return { sent: 2 };
 }
