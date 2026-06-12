@@ -4,7 +4,7 @@
 |---|-------|---------|---------|
 | 1 | **域名 servicestar.app 未绑定 Railway** | 短信链接全为 railway.app 死链，客户侧体验差 | 代码已用 `NEXT_PUBLIC_APP_URL` env var，Gavin 绑域名后改一个变量即可 |
 | 2 | **Twilio 试用账号无法发 URL（Error 30044）** | 发票链接、评价请求链接、winback /b/slug 链接全被封 | 代码已做降级处理：发纯文字版，检测到付费后自动加链接；短信内容留`{LINK}`占位符 |
-| 3 | **Vapi/Retell 账号未注册** | ss-agents 的语音 Intake 无法完成 end-to-end 测试 | Intake webhook 已实现，准备好集成代码，等 Gavin 授权后 10 分钟完成绑定 |
+| 3 | **Vapi 账号未注册 + env vars 未设置** | Front Office 页面显示 "Vapi not connected" 警告；Call Log 只能显示本地记录；Configure Greeting 弹窗无法加载/保存 Erin 的配置 | (1) 在 [vapi.ai](https://vapi.ai) 注册账号并创建 Assistant（用 `lib/vapi/build-assistant-config.ts` 生成配置）；(2) 在 Railway Variables 设置 `VAPI_API_KEY=<your key>` 和 `VAPI_ASSISTANT_ID=<assistant id>`；(3) 设置 Vapi Assistant 的 Server URL 为 `https://{YOUR_DOMAIN}/api/vapi/webhook`；(4) 重新部署后 Front Office 页面自动切换为 Live 状态 |
 | 4 | **Google OAuth redirect URI** | Google Business 连接需要在 GCP Console 加新域名的 redirect URI | 集成代码已写，Gavin 进 GCP Console 加 `https://{NEW_DOMAIN}/api/google/callback` |
 | 5 | **Stripe key 截断（Railway 已知 bug）** | v1 不做收款，不阻塞；收款前必修 | 手动在 Railway Variables 粘贴完整 key |
 
@@ -102,6 +102,36 @@
 | P3-1 | **RESEND_API_KEY 未在 Railway 设置** | 邮件发送运行时失败 | Railway Variables 设置 `RESEND_API_KEY` |
 | P3-2 | **NEXT_PUBLIC_TWILIO_NUMBER 格式需为 E.164**（如 `+14165550100`）| 呼叫转移页面显示占位符 | Railway 设置 `NEXT_PUBLIC_TWILIO_NUMBER=+1XXXXXXXXXX` |
 | P3-3 | **VAPI_WEBHOOK_SECRET 未设置** | `erin-assistant-config.json` 的 `serverUrlSecret` 占位符需在 Vapi onboarding 时替换 | 注册 Vapi 账号后填入；`buildVapiConfig` 当前不替换此字段，如需动态化需更新 `build-assistant-config.ts` |
+
+---
+
+---
+
+## v3 Vapi 接入步骤（Gavin 需操作）
+
+| 步骤 | 操作 | 说明 |
+|------|------|------|
+| 1 | 注册 [vapi.ai](https://vapi.ai) 账号 | 获取 API Key |
+| 2 | 用 `buildVapiConfig()` 生成 Assistant 配置并在 Vapi Dashboard 创建 Assistant | 见 `lib/vapi/build-assistant-config.ts` |
+| 3 | Railway Variables → `VAPI_API_KEY=vapi_...` | Vapi Dashboard → API Keys |
+| 4 | Railway Variables → `VAPI_ASSISTANT_ID=<assistant_id>` | Vapi Dashboard → Assistants |
+| 5 | Vapi Assistant → Server URL = `https://{YOUR_DOMAIN}/api/vapi/webhook` | 接收通话结果 |
+| 6 | 运行数据库迁移：`railway run npx prisma db execute --file migrations/v3_booking_rules.sql` | 添加 bookingRules + vapiAssistantId 字段 |
+
+迁移完成后 Front Office 页面 → Stats bar 显示 **"Live"** 标签，Configure Greeting 按钮可加载/保存 Erin 的真实配置。
+
+---
+
+## v3 改动文件清单
+
+- `prisma/schema.prisma` — 新增 5 个字段：vapiAssistantId, bookingHoursStart/End, bookingBufferMins, bookingWeekendEnabled
+- `migrations/v3_booking_rules.sql` — 对应 SQL migration（需手动执行）
+- `lib/vapi/client.ts` — Vapi REST API 封装（getAssistant / updateAssistant / listCalls）
+- `lib/vapi/build-assistant-config.ts` — 注入 bookingRules 到 Erin systemPrompt
+- `app/api/vapi/assistant/route.ts` — GET/PATCH Erin 的 Vapi 配置
+- `app/api/vapi/calls/route.ts` — GET 通话记录（Vapi 优先，降级本地 DB）
+- `app/api/booking-rules/route.ts` — GET/POST booking rules（保存后同步推送 Vapi）
+- `app/dashboard/front-office/page.tsx` — 全面更新：真实通话数据、Configure Greeting 弹窗、Booking Rules 与 DB 同步
 
 ---
 

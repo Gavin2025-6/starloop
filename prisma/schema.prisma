@@ -85,6 +85,13 @@ model Business {
   stripeChargesEnabled  Boolean  @default(false)
   stripeOnboardedAt     DateTime?
 
+  // Vapi / Booking Rules (v3)
+  vapiAssistantId       String?
+  bookingHoursStart     String   @default("08:00")
+  bookingHoursEnd       String   @default("18:00")
+  bookingBufferMins     Int      @default(30)
+  bookingWeekendEnabled Boolean  @default(false)
+
   customers             Customer[]
   campaigns             Campaign[]
   profile               PublicProfile?
