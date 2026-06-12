@@ -1,7 +1,162 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save, ExternalLink, CheckCircle } from "lucide-react";
+import { Save, ExternalLink, CheckCircle, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+
+// ─── Price Book tab ────────────────────────────────────────────────────────────
+interface PriceBookItem {
+  id: string; name: string; description: string | null;
+  priceMin: string | number; priceMax: string | number;
+  unit: string; isActive: boolean; sortOrder: number;
+}
+
+function PriceBookTab() {
+  const [items, setItems]   = useState<PriceBookItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [addForm, setAddForm] = useState({ name: "", priceMin: "", priceMax: "", unit: "flat", description: "" });
+  const [adding, setAdding]   = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+
+  useEffect(() => { loadItems(); }, []);
+
+  async function loadItems() {
+    setLoading(true);
+    const res = await fetch("/api/pricebook").catch(() => null);
+    if (res?.ok) setItems(await res.json());
+    setLoading(false);
+  }
+
+  async function deleteItem(id: string) {
+    await fetch(`/api/pricebook/${id}`, { method: "DELETE" });
+    loadItems();
+  }
+
+  async function toggleActive(item: PriceBookItem) {
+    await fetch(`/api/pricebook/${item.id}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isActive: !item.isActive }),
+    });
+    loadItems();
+  }
+
+  async function moveItem(idx: number, dir: -1 | 1) {
+    const target = items[idx + dir];
+    const current = items[idx];
+    if (!target) return;
+    await Promise.all([
+      fetch(`/api/pricebook/${current.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sortOrder: target.sortOrder }) }),
+      fetch(`/api/pricebook/${target.id}`,  { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sortOrder: current.sortOrder }) }),
+    ]);
+    loadItems();
+  }
+
+  async function addItem(e: React.FormEvent) {
+    e.preventDefault();
+    setAdding(true);
+    await fetch("/api/pricebook", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...addForm, sortOrder: items.length }),
+    });
+    setAddForm({ name: "", priceMin: "", priceMax: "", unit: "flat", description: "" });
+    setShowAdd(false);
+    setAdding(false);
+    loadItems();
+  }
+
+  if (loading) return <div className="text-gray-400 text-sm py-8">Loading...</div>;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-gray-500">{items.length} services · AI quotes from this list</p>
+        <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 text-sm bg-[#1a2744] text-white px-3 py-1.5 rounded-lg hover:bg-[#243460]">
+          <Plus size={13} /> Add service
+        </button>
+      </div>
+
+      {items.length === 0 && (
+        <div className="text-center py-12 text-gray-400 text-sm border border-dashed border-gray-200 rounded-xl">
+          No services yet. Add your first service or complete onboarding to auto-populate.
+        </div>
+      )}
+
+      <div className="space-y-2">
+        {items.map((item, idx) => (
+          <div key={item.id} className={`flex items-center gap-3 border rounded-xl px-4 py-3 ${item.isActive ? "border-gray-200 bg-white" : "border-gray-100 bg-gray-50 opacity-60"}`}>
+            <div className="flex flex-col gap-0.5">
+              <button onClick={() => moveItem(idx, -1)} disabled={idx === 0} className="text-gray-300 hover:text-gray-500 disabled:invisible"><ChevronUp size={13} /></button>
+              <button onClick={() => moveItem(idx, 1)} disabled={idx === items.length - 1} className="text-gray-300 hover:text-gray-500 disabled:invisible"><ChevronDown size={13} /></button>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-[#0d1117] truncate">{item.name}</p>
+              {item.description && <p className="text-xs text-gray-400 truncate">{item.description}</p>}
+            </div>
+            <span className="text-sm font-semibold text-[#0d1117] shrink-0">
+              ${Number(item.priceMin).toFixed(0)}–${Number(item.priceMax).toFixed(0)}
+              <span className="text-xs text-gray-400 font-normal ml-1">{item.unit}</span>
+            </span>
+            <button onClick={() => toggleActive(item)} className={`text-xs px-2 py-0.5 rounded-full font-medium ${item.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}>
+              {item.isActive ? "Active" : "Off"}
+            </button>
+            <button onClick={() => deleteItem(item.id)} className="text-gray-300 hover:text-red-400 ml-1"><Trash2 size={13} /></button>
+          </div>
+        ))}
+      </div>
+
+      {showAdd && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">Add Service</h2>
+              <button onClick={() => setShowAdd(false)} className="text-gray-400 text-xl">×</button>
+            </div>
+            <form onSubmit={addItem} className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Service Name *</label>
+                <input required value={addForm.name} onChange={(e) => setAddForm((f) => ({ ...f, name: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Description</label>
+                <input value={addForm.description} onChange={(e) => setAddForm((f) => ({ ...f, description: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none" />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-1">
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Min $</label>
+                  <input type="number" required min={0} value={addForm.priceMin} onChange={(e) => setAddForm((f) => ({ ...f, priceMin: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none" />
+                </div>
+                <div className="col-span-1">
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Max $</label>
+                  <input type="number" required min={0} value={addForm.priceMax} onChange={(e) => setAddForm((f) => ({ ...f, priceMax: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none" />
+                </div>
+                <div className="col-span-1">
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Unit</label>
+                  <select value={addForm.unit} onChange={(e) => setAddForm((f) => ({ ...f, unit: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none bg-white">
+                    <option value="flat">flat</option>
+                    <option value="hourly">hourly</option>
+                    <option value="per_sqft">per sqft</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button type="button" onClick={() => setShowAdd(false)}
+                  className="flex-1 border border-gray-200 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
+                <button type="submit" disabled={adding}
+                  className="flex-1 bg-[#1a2744] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#243460] disabled:opacity-60">
+                  {adding ? "Adding..." : "Add Service"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const INDUSTRIES = [
   "HVAC","Plumbing","Electrical","Cleaning","Landscaping","Roofing",
@@ -20,7 +175,11 @@ function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
 }
 
+const SETTINGS_TABS = ["Business", "Price Book"] as const;
+type SettingsTab = (typeof SETTINGS_TABS)[number];
+
 export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState<SettingsTab>("Business");
   const [biz, setBiz] = useState<BizData>({
     name: "", industry: "", phone: "", email: "",
     address: "", city: "", slug: "", googleBusinessUrl: "",
@@ -84,9 +243,27 @@ export default function SettingsPage() {
 
   return (
     <div className="p-8 max-w-2xl">
-      <h1 className="text-2xl font-bold text-[#0d1117] mb-6">Settings</h1>
+      <h1 className="text-2xl font-bold text-[#0d1117] mb-4">Settings</h1>
 
-      <form onSubmit={handleSave} className="space-y-6">
+      {/* Tab switcher */}
+      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit mb-6">
+        {SETTINGS_TABS.map((t) => (
+          <button key={t} type="button" onClick={() => setActiveTab(t)}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === t ? "bg-white text-[#0d1117] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "Price Book" && (
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <h2 className="font-semibold text-[#0d1117] mb-1">Price Book</h2>
+          <p className="text-gray-400 text-xs mb-5">AI quotes customers from this list. Services not here get an estimate visit.</p>
+          <PriceBookTab />
+        </div>
+      )}
+
+      {activeTab === "Business" && <form onSubmit={handleSave} className="space-y-6">
 
         {/* Business Profile */}
         <section className="bg-white border border-gray-200 rounded-xl p-6">
@@ -208,7 +385,7 @@ export default function SettingsPage() {
           <Save size={16} />
           {saving ? "Saving..." : saved ? "✓ Saved!" : "Save Changes"}
         </button>
-      </form>
+      </form>}
     </div>
   );
 }
