@@ -6,6 +6,15 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Trade {
+  HVAC
+  PLUMBING
+  ELECTRICAL
+  CLEANING
+  ROOFING
+  HANDYMAN
+}
+
 model User {
   id                     String    @id @default(cuid())
   email                  String    @unique
@@ -64,6 +73,18 @@ model Business {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
+  // v2 Front Office
+  trade              Trade?
+  aiGreetingScript   String?
+  intakeQuestions    Json?
+  addressLine1       String?
+  province           String?
+  postalCode         String?
+  // Stripe Connect
+  stripeAccountId       String?
+  stripeChargesEnabled  Boolean  @default(false)
+  stripeOnboardedAt     DateTime?
+
   customers             Customer[]
   campaigns             Campaign[]
   profile               PublicProfile?
@@ -75,9 +96,11 @@ model Business {
   timeOff               TimeOff[]
   businessMembers       BusinessMember[]
   googleConnection      GoogleBusinessConnection?
-  jobs        Job[]
-  invoices    Invoice[]
-  teamMembers TeamMember[]
+  jobs                  Job[]
+  invoices              Invoice[]
+  teamMembers           TeamMember[]
+  priceBookItems        PriceBookItem[]
+  payments              Payment[]
 }
 
 model Customer {
@@ -96,6 +119,12 @@ model Customer {
   referralCode    String?   @unique
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
+  // v2 address fields
+  addressLine1 String?
+  city         String?
+  province     String?
+  postalCode   String?
 
   campaignResults CampaignResult[]
   referrals       Referral[]
@@ -150,8 +179,8 @@ model Call {
   businessId       String
   business         Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   callerPhone      String
-  status           String   @default("answered") // answered | missed | voicemail | transferred
-  intent           String?  // appointment | emergency | inquiry | complaint
+  status           String   @default("answered")
+  intent           String?
   transcript       String?
   appointmentBooked Boolean @default(false)
   createdAt        DateTime @default(now())
@@ -161,7 +190,7 @@ model Review {
   id          String   @id @default(cuid())
   businessId  String
   business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  platform    String   @default("google") // google | yelp | facebook
+  platform    String   @default("google")
   rating      Int
   content     String?
   authorName  String?
@@ -175,7 +204,7 @@ model AgentLog {
   id         String   @id @default(cuid())
   businessId String
   business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  agent      String   // intake | followup | reputation | winback | referral
+  agent      String
   action     String
   detail     String?
   customerId String?
@@ -225,8 +254,18 @@ model Job {
   source          String    @default("manual")
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
+  // v2 price book + address
+  priceBookItemId String?
+  priceBookItem   PriceBookItem? @relation(fields: [priceBookItemId], references: [id], onDelete: SetNull)
+  quoteType       String?
+  city            String?
+  province        String?
+  postalCode      String?
+
   invoice         Invoice?
   events          JobEvent[]
+  payment         Payment?
 }
 
 model Invoice {
@@ -246,6 +285,38 @@ model Invoice {
   paidAt        DateTime?
   dueDate       DateTime?
   createdAt     DateTime @default(now())
+}
+
+model PriceBookItem {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  priceMin    Decimal
+  priceMax    Decimal
+  unit        String   @default("flat")
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  jobs Job[]
+}
+
+model Payment {
+  id                    String    @id @default(cuid())
+  jobId                 String    @unique
+  job                   Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  businessId            String
+  business              Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  stripePaymentLinkId   String?
+  stripePaymentIntentId String?
+  amount                Decimal
+  applicationFee        Decimal
+  status                String    @default("pending")
+  paidAt                DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 }
 
 model TeamMember {

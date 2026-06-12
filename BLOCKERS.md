@@ -12,3 +12,13 @@
 - 所有短信降级为纯文字（无 URL），在 Twilio 升级后改 1 行代码开启链接
 - 语音 Intake 的 Vapi webhook 已准备好 `/api/intake/webhook`，等账号绑定
 - Google OAuth 代码已移植自 StarLoop，等 redirect URI 更新
+
+---
+
+## v1.1 部署后新增缺口（2026-06-10）
+
+| # | 缺口 | 影响 | 动作 |
+|---|------|------|------|
+| 6 | **GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET 未设置** | Google OAuth 运行时失败 | GCP Console 创建凭证，Railway 设置两个变量 |
+| 7 | **STRIPE_WEBHOOK_SECRET 是占位符 `whsec_...`** | Stripe webhook 验签失败，订阅事件不处理 | Stripe Dashboard → Webhooks 获取真实 secret |
+| 8 | **CRON_SECRET 未设置** | cron 端点无保护或报错 | Railway 设置 `CRON_SECRET=<随机字符串>` |
