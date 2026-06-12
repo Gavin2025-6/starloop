@@ -37,6 +37,49 @@
 
 ---
 
+## Stripe Connect 测试结果（2026-06-11）
+
+### 按钮不响应根本原因
+
+**UI 静默失败** + **STRIPE_SECRET_KEY 无效**，双重问题叠加：
+
+1. `/api/payments/connect/start` API route 本身逻辑正确（有 try/catch，正确调用 `stripe.accounts.create` 和 `stripe.accountLinks.create`，正确使用 return_url/refresh_url）
+2. 但 `STRIPE_SECRET_KEY` 无效（截断或错误），导致 Stripe 返回 `StripeAuthenticationError`，route 返回 HTTP 500
+3. 前端 `startConnect()` 收到非 ok 响应后，**只是 setConnecting(false)，没有显示任何错误信息**，用户看到按钮闪一下后恢复，以为「没反应」
+
+**已修复**：`PaymentsTab` 现在在失败时展示红色错误横幅，明确提示 Stripe key 问题。
+
+### 端到端测试脚本输出
+
+```
+=== Stripe Connect 端到端测试 ===
+
+1. 创建测试 Express 账户...
+❌ 测试失败: Invalid API Key provided: sk_test_*...YOBh
+错误码: undefined
+错误类型: StripeAuthenticationError
+
+诊断：STRIPE_SECRET_KEY 无效或权限不足
+```
+
+### 结论
+
+| 项目 | 状态 |
+|------|------|
+| API route 逻辑 | ✅ 正确 |
+| UI 错误处理 | ✅ 已修复（PATCH-3-stripe-test）|
+| `STRIPE_SECRET_KEY` | ❌ 无效 — **需要 Gavin 操作** |
+| Stripe Connect 平台设置 | ⚠️ 无法验证（key 无效时无法测试） |
+
+### Gavin 需要做的事
+
+1. **Railway → Variables → `STRIPE_SECRET_KEY`**：从 Stripe Dashboard (dashboard.stripe.com → API Keys) 复制完整 Secret key（`sk_test_51...` 或 `sk_live_51...`），粘贴时注意不要被截断
+2. Railway 重新部署后，再次运行测试脚本确认 key 有效
+3. 确认 Stripe Dashboard → Settings → Connect 已开启（才能创建 Express 账户）
+4. 如需正式收款：Stripe Dashboard → Webhooks → 添加 Connect webhook（见缺口#13）
+
+---
+
 ## PATCH-3 改动文件清单（2026-06-11）
 
 - `lib/resend.ts` — 新增 lazy init 封装（修复缺口#10）

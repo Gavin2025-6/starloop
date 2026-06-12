@@ -163,6 +163,7 @@ function PaymentsTab() {
   const [status, setStatus] = useState<{ connected: boolean; chargesEnabled: boolean; onboardedAt?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
+  const [connectError, setConnectError] = useState("");
 
   useEffect(() => {
     fetch("/api/payments/connect/status").then((r) => r.json()).then(setStatus).catch(() => {}).finally(() => setLoading(false));
@@ -170,11 +171,14 @@ function PaymentsTab() {
 
   async function startConnect() {
     setConnecting(true);
+    setConnectError("");
     const res = await fetch("/api/payments/connect/start", { method: "POST" }).catch(() => null);
     if (res?.ok) {
       const { url } = await res.json();
       window.location.href = url;
     } else {
+      const body = await res?.json().catch(() => ({}));
+      setConnectError(body?.error || "Failed to connect Stripe. Check that STRIPE_SECRET_KEY is set correctly in your environment.");
       setConnecting(false);
     }
   }
@@ -211,6 +215,12 @@ function PaymentsTab() {
             <CreditCard size={16} />
             {connecting ? "Redirecting to Stripe..." : "Connect Stripe to get paid"}
           </button>
+          {connectError && (
+            <div className="flex items-start gap-2 mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+              <AlertCircle size={13} className="mt-0.5 shrink-0" />
+              {connectError}
+            </div>
+          )}
         </div>
       )}
       <div className="bg-gray-50 rounded-xl p-4 text-xs text-gray-500 space-y-1">
