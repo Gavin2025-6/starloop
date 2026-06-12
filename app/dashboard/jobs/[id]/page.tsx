@@ -56,6 +56,8 @@ export default function JobDetailPage() {
   const [notes, setNotes] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
   const [sendingPayment, setSendingPayment] = useState(false);
+  const [sendingReview, setSendingReview] = useState(false);
+  const [reviewSentAt, setReviewSentAt] = useState<string | null>(null);
 
   useEffect(() => { load(); }, [id]);
 
@@ -67,6 +69,10 @@ export default function JobDetailPage() {
       setJob(data);
       setNotes(data.notes ?? "");
       setFinalAmount(String(data.total ?? ""));
+      // Detect if a review request was already sent via events
+      const events: Array<{ type: string; payload: Record<string, unknown> | null; createdAt: string }> = data.events ?? [];
+      const rrEvent = events.find(e => e.type === "sms_sent" && (e.payload as Record<string,unknown>)?.kind === "review_request");
+      setReviewSentAt(rrEvent?.createdAt ?? null);
     }
     setLoading(false);
   }
@@ -100,6 +106,16 @@ export default function JobDetailPage() {
       body: JSON.stringify({ notes }),
     }).catch(() => {});
     setSavingNotes(false);
+  }
+
+  async function sendReviewRequest() {
+    setSendingReview(true);
+    await fetch(`/api/jobs/${id}/review-request`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    }).catch(() => {});
+    setReviewSentAt(new Date().toISOString());
+    setSendingReview(false);
   }
 
   async function sendPaymentLink() {
@@ -210,23 +226,21 @@ export default function JobDetailPage() {
               )}
 
               {/* Address */}
-              {fullAddress && (
-                <div className="flex items-start gap-2 py-3 border-t border-gray-100">
-                  <MapPin size={14} className="text-gray-400 mt-0.5 shrink-0" />
-                  {mapsUrl ? (
-                    <a
-                      href={mapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-[#4A6FFF] hover:underline leading-relaxed"
-                    >
+              <div className="flex items-start gap-2 py-3 border-t border-gray-100">
+                <MapPin size={14} className="text-gray-400 mt-0.5 shrink-0" />
+                {fullAddress ? (
+                  mapsUrl ? (
+                    <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
+                      className="text-sm text-[#4A6FFF] hover:underline leading-relaxed">
                       {fullAddress}
                     </a>
                   ) : (
                     <span className="text-sm text-gray-500 leading-relaxed">{fullAddress}</span>
-                  )}
-                </div>
-              )}
+                  )
+                ) : (
+                  <span className="text-sm text-gray-400 italic">+ Add Address</span>
+                )}
+              </div>
             </div>
 
             {/* Notes card */}
@@ -332,6 +346,29 @@ export default function JobDetailPage() {
                     </button>
                   )}
                 </div>
+              )}
+            </div>
+
+            {/* Review Request card */}
+            <div className="bg-white rounded-xl p-5" style={CARD_SHADOW}>
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Review Request</h2>
+              {!isComplete ? (
+                <p className="text-sm text-gray-400">Complete this job to send a review request</p>
+              ) : reviewSentAt ? (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-[#15803D] text-sm font-medium">
+                    <span>✓</span>
+                    <span>Sent {new Date(reviewSentAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={sendReviewRequest}
+                  disabled={sendingReview}
+                  className="w-full border-2 border-[#0D1117] text-[#0D1117] py-2.5 rounded-lg text-sm font-semibold hover:bg-[#0D1117] hover:text-white disabled:opacity-60 transition-colors"
+                >
+                  {sendingReview ? "Sending…" : "⭐ Send Review Request"}
+                </button>
               )}
             </div>
 
