@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save, ExternalLink, CheckCircle, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { Save, ExternalLink, CheckCircle, Plus, Trash2, ChevronUp, ChevronDown, CreditCard, AlertCircle } from "lucide-react";
 
 // ─── Price Book tab ────────────────────────────────────────────────────────────
 interface PriceBookItem {
@@ -158,6 +158,70 @@ function PriceBookTab() {
   );
 }
 
+// ─── Payments tab ──────────────────────────────────────────────────────────────
+function PaymentsTab() {
+  const [status, setStatus] = useState<{ connected: boolean; chargesEnabled: boolean; onboardedAt?: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [connecting, setConnecting] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/payments/connect/status").then((r) => r.json()).then(setStatus).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  async function startConnect() {
+    setConnecting(true);
+    const res = await fetch("/api/payments/connect/start", { method: "POST" }).catch(() => null);
+    if (res?.ok) {
+      const { url } = await res.json();
+      window.location.href = url;
+    } else {
+      setConnecting(false);
+    }
+  }
+
+  if (loading) return <div className="text-gray-400 text-sm py-8">Loading...</div>;
+
+  return (
+    <div className="space-y-4">
+      {status?.chargesEnabled ? (
+        <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
+          <CheckCircle size={18} className="text-green-600 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-green-800">Stripe Connect active</p>
+            <p className="text-xs text-green-700 mt-0.5">Payment links are automatically created when you mark jobs complete. Platform fee: 1%.</p>
+          </div>
+        </div>
+      ) : status?.connected ? (
+        <div className="flex items-start gap-3 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+          <AlertCircle size={18} className="text-yellow-600 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-yellow-800">Stripe onboarding in progress</p>
+            <p className="text-xs text-yellow-700 mt-0.5">Your Stripe account isn&apos;t fully approved yet. Complete onboarding to enable payments.</p>
+            <button onClick={startConnect} disabled={connecting}
+              className="mt-2 text-xs text-yellow-800 underline hover:no-underline disabled:opacity-60">
+              {connecting ? "Loading..." : "Continue Stripe onboarding →"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <p className="text-sm text-gray-600 mb-4">Connect your Stripe account to collect payments via secure payment links. We charge 1% per transaction on top of Stripe&apos;s fee.</p>
+          <button onClick={startConnect} disabled={connecting}
+            className="flex items-center gap-2 bg-[#635bff] text-white px-5 py-3 rounded-xl text-sm font-semibold hover:bg-[#5851e5] disabled:opacity-60 transition-colors">
+            <CreditCard size={16} />
+            {connecting ? "Redirecting to Stripe..." : "Connect Stripe to get paid"}
+          </button>
+        </div>
+      )}
+      <div className="bg-gray-50 rounded-xl p-4 text-xs text-gray-500 space-y-1">
+        <p>• When you mark a job complete, a payment link is created and sent to your customer.</p>
+        <p>• Customers pay via card — funds deposit to your Stripe account within 2 business days.</p>
+        <p>• Disputes and refunds are handled through your Stripe dashboard.</p>
+      </div>
+    </div>
+  );
+}
+
 const INDUSTRIES = [
   "HVAC","Plumbing","Electrical","Cleaning","Landscaping","Roofing",
   "Auto Detailing","Pest Control","Pool Service","Appliance Repair",
@@ -175,7 +239,7 @@ function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
 }
 
-const SETTINGS_TABS = ["Business", "Price Book"] as const;
+const SETTINGS_TABS = ["Business", "Price Book", "Payments"] as const;
 type SettingsTab = (typeof SETTINGS_TABS)[number];
 
 export default function SettingsPage() {
@@ -245,7 +309,6 @@ export default function SettingsPage() {
     <div className="p-8 max-w-2xl">
       <h1 className="text-2xl font-bold text-[#0d1117] mb-4">Settings</h1>
 
-      {/* Tab switcher */}
       <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit mb-6">
         {SETTINGS_TABS.map((t) => (
           <button key={t} type="button" onClick={() => setActiveTab(t)}
@@ -260,6 +323,14 @@ export default function SettingsPage() {
           <h2 className="font-semibold text-[#0d1117] mb-1">Price Book</h2>
           <p className="text-gray-400 text-xs mb-5">AI quotes customers from this list. Services not here get an estimate visit.</p>
           <PriceBookTab />
+        </div>
+      )}
+
+      {activeTab === "Payments" && (
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <h2 className="font-semibold text-[#0d1117] mb-1">Payments</h2>
+          <p className="text-gray-400 text-xs mb-5">Accept card payments via Stripe. Funds go directly to your account.</p>
+          <PaymentsTab />
         </div>
       )}
 
