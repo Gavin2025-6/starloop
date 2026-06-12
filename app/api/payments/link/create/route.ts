@@ -41,17 +41,19 @@ export async function POST(req: NextRequest) {
 
     const applicationFeeCents = Math.ceil(amountCents * 0.01);
 
+    // Price on platform account — required for destination charges
     const price = await stripe.prices.create({
       currency: "cad",
       unit_amount: amountCents,
       product_data: { name: `${job.serviceType} — ${business.name}` },
-    }, { stripeAccount: business.stripeAccountId });
+    });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const paymentLink = await (stripe.paymentLinks as any).create({
+    const paymentLink = await stripe.paymentLinks.create({
       line_items: [{ price: price.id, quantity: 1 }],
-      application_fee_amount: applicationFeeCents,
-      transfer_data: { destination: business.stripeAccountId },
+      payment_intent_data: {
+        application_fee_amount: applicationFeeCents,
+        transfer_data: { destination: business.stripeAccountId! },
+      },
       metadata: { jobId: job.id },
     });
 
@@ -75,11 +77,11 @@ export async function POST(req: NextRequest) {
     const isTrial = process.env.TWILIO_MOCK === "1";
     if (job.customer.phone) {
       if (isTrial) {
-        await sendSms({ to: job.customer.phone, body: `Invoice for $${(job.total ?? 0).toFixed(2)} from ${business.name}.` }).catch(() => {});
+        await sendSms({ to: job.customer.phone, body: `Your job is complete! Please pay $${(job.total ?? 0).toFixed(2)} — link sent once your account is active.` }).catch(() => {});
         await prisma.jobEvent.create({ data: { jobId: job.id, type: "sms_mocked", payload: { kind: "payment_link", reason: "trial_no_url" } } });
       } else {
-        await sendSms({ to: job.customer.phone, body: `Invoice $${(job.total ?? 0).toFixed(2)} from ${business.name}. Pay: ${paymentLink.url}`.slice(0, 160) }).catch(() => {});
-        await prisma.jobEvent.create({ data: { jobId: job.id, type: "sms_sent", payload: { kind: "payment_link", amount: job.total } } });
+        await sendSms({ to: job.customer.phone, body: `Your job is complete! Please pay $${(job.total ?? 0).toFixed(2)} here: ${paymentLink.url}`.slice(0, 160) }).catch(() => {});
+        await prisma.jobEvent.create({ data: { jobId: job.id, type: "sms_sent", payload: { kind: "payment_link", amount: job.total, customerName: job.customer.name } } });
       }
     }
 

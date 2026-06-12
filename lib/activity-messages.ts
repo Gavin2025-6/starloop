@@ -45,7 +45,7 @@ export function humanize(type: string, payload: Record<string, unknown> | null, 
       if (kind === "invoice")          return { icon: "📄", human: `Invoice text sent to ${name}` };
       if (kind === "reminder")         return { icon: "🔔", human: `Appointment reminder sent to ${name}` };
       if (kind === "winback")          return { icon: "🔄", human: `Win-back text sent to ${name}` };
-      if (kind === "payment_link")     return { icon: "💳", human: `Payment link texted to ${name}` };
+      if (kind === "payment_link")     return { icon: "💳", human: `Payment link sent to ${name}` };
       return { icon: "💬", human: `Text message sent to ${name}` };
     }
 
