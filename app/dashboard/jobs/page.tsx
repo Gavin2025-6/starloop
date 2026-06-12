@@ -38,7 +38,10 @@ export default function JobsPage() {
   const [form, setForm] = useState({ customerId: "", serviceType: "", description: "", priority: "normal", address: "", scheduledAt: "" });
   const [newCust, setNewCust] = useState({ name: "", phone: "", email: "" });
   const [customers, setCustomers] = useState<Array<{ id: string; name: string; phone: string | null }>>([]);
-  const [aiTiers, setAiTiers] = useState<Array<{ name: string; total: number }>>([]);
+  const [quoteResult, setQuoteResult] = useState<{
+    matched: boolean; name?: string; priceMin?: number; priceMax?: number; unit?: string;
+    quoteType: "pricebook" | "estimate_visit"; estimateMessage?: string; itemId?: string;
+  } | null>(null);
   const [quoting, setQuoting] = useState(false);
   const [completeJobId, setCompleteJobId] = useState<string | null>(null);
   const [finalAmount, setFinalAmount] = useState("");
@@ -73,6 +76,7 @@ export default function JobsPage() {
     setShowModal(false);
     setForm({ customerId: "", serviceType: "", description: "", priority: "normal", address: "", scheduledAt: "" });
     setNewCust({ name: "", phone: "", email: "" });
+    setQuoteResult(null);
     load();
   }
 
@@ -95,14 +99,15 @@ export default function JobsPage() {
   }
 
   async function getAiQuote() {
-    if (!form.serviceType) return;
+    const query = form.description || form.serviceType;
+    if (!query) return;
     setQuoting(true);
+    setQuoteResult(null);
     const res = await fetch("/api/jobs/quote", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ serviceType: form.serviceType }),
-    });
-    const d = await res.json();
-    setAiTiers(d.tiers || []);
+      body: JSON.stringify({ description: query, serviceType: form.serviceType }),
+    }).catch(() => null);
+    if (res?.ok) setQuoteResult(await res.json());
     setQuoting(false);
   }
 
@@ -277,25 +282,36 @@ export default function JobsPage() {
                   className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none resize-none" />
               </div>
 
-              {/* AI Quote */}
+              {/* AI Quote — Price Book match */}
               <div className="border border-gray-100 rounded-xl p-4 bg-gray-50">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-gray-600">AI Quote Suggestion</span>
-                  <button type="button" onClick={getAiQuote} disabled={quoting || !form.serviceType}
+                  <span className="text-xs font-medium text-gray-600">Price Book Match</span>
+                  <button type="button" onClick={getAiQuote} disabled={quoting || (!form.serviceType && !form.description)}
                     className="text-xs bg-[#1a2744] text-white px-3 py-1.5 rounded-lg disabled:opacity-50 hover:bg-[#243460]">
-                    {quoting ? "Generating..." : "✨ Get AI Quote"}
+                    {quoting ? "Matching..." : "✨ Match Price"}
                   </button>
                 </div>
-                {aiTiers.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2">
-                    {aiTiers.map((tier) => (
-                      <button type="button" key={tier.name}
-                        onClick={() => setForm((f) => ({ ...f, description: f.description || tier.name }))}
-                        className="text-center border border-gray-200 bg-white rounded-lg p-2 hover:border-[#f97316] transition-colors">
-                        <div className="text-xs font-medium text-gray-600">{tier.name}</div>
-                        <div className="text-sm font-bold text-[#0d1117]">${tier.total}</div>
-                      </button>
-                    ))}
+                {quoteResult && quoteResult.quoteType === "pricebook" && quoteResult.matched && (
+                  <div className="flex items-center justify-between bg-white border border-green-200 rounded-lg px-3 py-2.5">
+                    <div>
+                      <p className="text-sm font-semibold text-[#0d1117]">{quoteResult.name}</p>
+                      <p className="text-xs text-gray-500">${quoteResult.priceMin}–${quoteResult.priceMax} {quoteResult.unit}</p>
+                    </div>
+                    <button type="button"
+                      onClick={() => {
+                        const mid = Math.round(((quoteResult.priceMin ?? 0) + (quoteResult.priceMax ?? 0)) / 2);
+                        setForm((f) => ({ ...f, description: f.description || quoteResult.name || "" }));
+                        // also store itemId for later — passed in form via hidden state via createJob
+                      }}
+                      className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-lg hover:bg-green-600">
+                      Use this price
+                    </button>
+                  </div>
+                )}
+                {quoteResult && quoteResult.quoteType === "estimate_visit" && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2.5">
+                    <p className="text-xs font-medium text-yellow-800">{quoteResult.estimateMessage}</p>
+                    <p className="text-xs text-yellow-600 mt-0.5">Job will be created without a price — fill in the amount when you complete it.</p>
                   </div>
                 )}
               </div>
