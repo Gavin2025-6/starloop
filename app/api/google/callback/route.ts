@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { exchangeCodeForTokens } from "@/lib/google";
+import { discoverAndSaveLocation } from "@/lib/google/client";
 
 export async function GET(request: Request) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL!;
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
 
     if (oauthError || !code) {
       console.error("[Google/Callback] OAuth error or missing code:", oauthError);
-      return NextResponse.redirect(`${appUrl}/dashboard/settings?google=error`);
+      return NextResponse.redirect(`${appUrl}/dashboard/reviews?connected=error`);
     }
 
     const tokens = await exchangeCodeForTokens(code);
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
 
     if (!business) {
       console.error("[Google/Callback] No business found for user:", session.user.id);
-      return NextResponse.redirect(`${appUrl}/dashboard/settings?google=error`);
+      return NextResponse.redirect(`${appUrl}/dashboard/reviews?connected=error`);
     }
 
     // Upsert GoogleBusinessConnection
@@ -50,17 +51,14 @@ export async function GET(request: Request) {
       },
     });
 
-    // Update autoConfirmBooking if not already enabled
-    if (!business.autoConfirmBooking) {
-      await prisma.business.update({
-        where: { id: business.id },
-        data: { autoConfirmBooking: true },
-      });
-    }
+    // Auto-discover account/location in the background
+    discoverAndSaveLocation(business.id).catch((e) =>
+      console.error("[Google/Callback] discoverAndSaveLocation failed:", e)
+    );
 
-    return NextResponse.redirect(`${appUrl}/dashboard/settings?google=connected`);
+    return NextResponse.redirect(`${appUrl}/dashboard/reviews?connected=true`);
   } catch (err) {
     console.error("[Google/Callback]", err);
-    return NextResponse.redirect(`${appUrl}/dashboard/settings?google=error`);
+    return NextResponse.redirect(`${appUrl}/dashboard/reviews?connected=error`);
   }
 }

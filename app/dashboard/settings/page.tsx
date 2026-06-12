@@ -290,7 +290,7 @@ interface BizData {
   name: string; industry: string; phone: string; email: string;
   address: string; city: string; slug: string; googleBusinessUrl: string;
   profile?: { headline: string; description: string; services: string; };
-  googleConnection?: { reviewUrl: string | null; locationId: string | null; } | null;
+  googleConnection?: { reviewUrl: string | null; locationId: string | null; lastSyncedAt: string | null; } | null;
 }
 
 function slugify(s: string) {
@@ -300,17 +300,52 @@ function slugify(s: string) {
 const SETTINGS_TABS = ["Business", "Price Book", "Payments", "Integrations"] as const;
 type SettingsTab = (typeof SETTINGS_TABS)[number];
 
+function fmtSyncTime(iso: string | null | undefined): string {
+  if (!iso) return "Never";
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (diff < 1) return "Just now";
+  if (diff < 60) return `${diff} min ago`;
+  if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
+  return `${Math.floor(diff / 1440)}d ago`;
+}
+
 // ─── Integrations tab ──────────────────────────────────────────────────────────
-function IntegrationsTab({ googleConnected, stripeEnabled, bizPhone }: {
+function IntegrationsTab({ googleConnected, lastSyncedAt, stripeEnabled, bizPhone }: {
   googleConnected: boolean;
+  lastSyncedAt?: string | null;
   stripeEnabled: boolean;
   bizPhone: string;
 }) {
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState("");
+  const [syncTime, setSyncTime] = useState(lastSyncedAt ?? null);
+
+  async function syncNow() {
+    setSyncing(true);
+    setSyncMsg("");
+    try {
+      const res = await fetch("/api/reviews/sync", { method: "POST" });
+      const d = await res.json();
+      if (res.ok) {
+        setSyncMsg(`Synced — ${d.newReviews ?? 0} new review${d.newReviews !== 1 ? "s" : ""}`);
+        setSyncTime(new Date().toISOString());
+      } else {
+        setSyncMsg(d.error ?? "Sync failed");
+      }
+    } catch {
+      setSyncMsg("Sync failed");
+    }
+    setSyncing(false);
+    setTimeout(() => setSyncMsg(""), 4000);
+  }
+
   const INTEGRATIONS = [
     {
       key: "google",
       name: "Google Business Profile",
-      description: "Sync reviews and reply from Service Star",
+      description: googleConnected
+        ? `Last synced ${fmtSyncTime(syncTime)}`
+        : "Sync reviews and reply from Service Star",
       status: googleConnected ? "connected" : "disconnected",
       Icon: () => (
         <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -323,12 +358,25 @@ function IntegrationsTab({ googleConnected, stripeEnabled, bizPhone }: {
       action: googleConnected
         ? { label: "Disconnect", cls: "border border-gray-200 text-gray-600 hover:bg-gray-50", href: undefined }
         : { label: "Connect", cls: "bg-[#0D1117] text-white hover:bg-[#374151]", href: "/api/google/connect" },
+      extraContent: googleConnected ? (
+        <div className="flex items-center gap-2 mt-1">
+          <button
+            onClick={syncNow}
+            disabled={syncing}
+            className="text-xs px-3 py-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-60 transition-colors"
+          >
+            {syncing ? "Syncing…" : "Sync Now"}
+          </button>
+          {syncMsg && <span className="text-xs text-green-600">{syncMsg}</span>}
+        </div>
+      ) : null,
     },
     {
       key: "stripe",
       name: "Stripe Payments",
       description: stripeEnabled ? "Active · Platform fee: 1%" : "Accept card payments from customers",
       status: stripeEnabled ? "connected" : "disconnected",
+      extraContent: null,
       Icon: () => (
         <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <rect width="24" height="24" rx="4" fill="#635BFF"/>
@@ -342,6 +390,7 @@ function IntegrationsTab({ googleConnected, stripeEnabled, bizPhone }: {
       name: "Twilio SMS",
       description: bizPhone ? `Active · ${bizPhone}` : "SMS & voice integration",
       status: bizPhone ? "connected" : "disconnected",
+      extraContent: null,
       Icon: () => (
         <svg width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <circle cx="12" cy="12" r="12" fill="#F22F46"/>
@@ -369,6 +418,7 @@ function IntegrationsTab({ googleConnected, stripeEnabled, bizPhone }: {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-[#0D1117]">{int.name}</p>
               <p className="text-xs text-gray-400 mt-0.5">{int.description}</p>
+              {int.extraContent}
             </div>
             <div className="flex items-center gap-3 shrink-0">
               {int.status === "connected" && (
@@ -502,6 +552,7 @@ export default function SettingsPage() {
           <p className="text-gray-400 text-xs mb-5">Connect the tools that power your business.</p>
           <IntegrationsTab
             googleConnected={!!biz.googleConnection}
+            lastSyncedAt={biz.googleConnection?.lastSyncedAt ?? null}
             stripeEnabled={false}
             bizPhone={biz.phone}
           />

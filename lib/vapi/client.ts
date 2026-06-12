@@ -73,6 +73,44 @@ export async function updateAssistant(
   }
 }
 
+export interface VapiAssistantCreate {
+  name: string;
+  firstMessage: string;
+  model: { provider: string; model: string; systemPrompt: string; temperature?: number };
+  voice?: { provider: string; voiceId: string };
+  endCallMessage?: string;
+  serverUrl?: string;
+}
+
+export async function createAssistant(payload: VapiAssistantCreate): Promise<VapiAssistant | null> {
+  if (!isVapiConfigured()) return null;
+  try {
+    const res = await fetch(`${BASE}/assistant`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) { console.error("[vapi/createAssistant]", res.status, await res.text()); return null; }
+    return res.json();
+  } catch (err) {
+    console.error("[vapi/createAssistant]", err);
+    return null;
+  }
+}
+
+export async function listAssistants(): Promise<VapiAssistant[]> {
+  if (!isVapiConfigured()) return [];
+  try {
+    const res = await fetch(`${BASE}/assistant`, { headers: headers() });
+    if (!res.ok) { console.error("[vapi/listAssistants]", res.status, await res.text()); return []; }
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data.results ?? []);
+  } catch (err) {
+    console.error("[vapi/listAssistants]", err);
+    return [];
+  }
+}
+
 export async function listCalls(params?: {
   assistantId?: string;
   limit?: number;

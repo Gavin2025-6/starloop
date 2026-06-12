@@ -279,6 +279,7 @@ export default function FrontOfficePage() {
 
   // Vapi assistant status
   const [vapiData, setVapiData] = useState<VapiAssistantData | null>(null);
+  const [agentIds, setAgentIds] = useState<Record<string, string>>({});
 
   // Configure greeting modal
   const [configAgent,    setConfigAgent]    = useState<typeof AGENTS[0] | null>(null);
@@ -295,6 +296,8 @@ export default function FrontOfficePage() {
     fetch("/api/booking-rules").then(r => r.json()).then((d: BookingRules) => setRules(d)).catch(() => {});
     // Vapi assistant status
     fetch("/api/vapi/assistant").then(r => r.json()).then((d: VapiAssistantData) => setVapiData(d)).catch(() => {});
+    // All agent IDs
+    fetch("/api/vapi/setup-agents").then(r => r.json()).then((d: Record<string, string>) => setAgentIds(d)).catch(() => {});
     // Calls
     setCallsLoading(true);
     fetch("/api/vapi/calls").then(r => r.json()).then((d: { calls: CallEntry[]; source: string }) => {
@@ -644,7 +647,7 @@ export default function FrontOfficePage() {
                   </>
                 )
               ) : (
-                /* Other agents: personality preview */
+                /* Other agents: personality preview + Vapi ID */
                 <div className="space-y-4">
                   <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">About {configAgent.name}</p>
@@ -656,6 +659,18 @@ export default function FrontOfficePage() {
                       {configAgent.name}&apos;s personality is injected automatically when your business trade matches.
                       Change your trade in <strong>Settings → Business → Industry</strong>.
                     </p>
+                  </div>
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Vapi Assistant ID</p>
+                    {agentIds[configAgent.key] ? (
+                      <code className="text-xs font-mono text-gray-700 bg-white border border-gray-200 rounded px-2 py-1 block break-all">
+                        {agentIds[configAgent.key]}
+                      </code>
+                    ) : (
+                      <p className="text-xs text-gray-400">
+                        Not configured — run <code className="bg-gray-100 px-1 rounded">POST /api/vapi/setup-agents</code> to create all agents.
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

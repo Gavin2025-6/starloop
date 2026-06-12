@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
+import { getGoogleClient } from "@/lib/google/client";
 
 function getAI() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
@@ -44,12 +45,37 @@ Write a professional, warm reply (2-4 sentences). Be specific to the review. Don
       return NextResponse.json({ reply: generated });
     }
 
-    // Save reply (mark as replied)
+    // Save reply (mark as replied) + post to Google if connected
     if (action === "send" && replyText) {
       await prisma.review.update({
         where: { id },
         data: { aiReply: replyText, isReplied: true },
       });
+
+      // Post to Google if this review has a googleReviewId
+      const googleReviewId = (review as { googleReviewId?: string | null }).googleReviewId;
+      if (googleReviewId) {
+        try {
+          const client = await getGoogleClient(business.id);
+          if (client) {
+            const replyUrl = `https://mybusiness.googleapis.com/v4/${googleReviewId}/reply`;
+            const gRes = await fetch(replyUrl, {
+              method: "PUT",
+              headers: {
+                Authorization: `Bearer ${client.accessToken}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ comment: replyText }),
+            });
+            if (!gRes.ok) {
+              console.error("[reviews/reply] Google reply failed:", gRes.status, await gRes.text());
+            }
+          }
+        } catch (gErr) {
+          console.error("[reviews/reply] Google reply error:", gErr);
+        }
+      }
+
       return NextResponse.json({ success: true });
     }
 

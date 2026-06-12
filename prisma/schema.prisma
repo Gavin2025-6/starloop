@@ -194,17 +194,18 @@ model Call {
 }
 
 model Review {
-  id          String   @id @default(cuid())
-  businessId  String
-  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  platform    String   @default("google")
-  rating      Int
-  content     String?
-  authorName  String?
-  aiReply     String?
-  isReplied   Boolean  @default(false)
-  reviewDate  DateTime
-  createdAt   DateTime @default(now())
+  id             String   @id @default(cuid())
+  businessId     String
+  business       Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  platform       String   @default("google")
+  rating         Int
+  content        String?
+  authorName     String?
+  aiReply        String?
+  isReplied      Boolean  @default(false)
+  reviewDate     DateTime
+  googleReviewId String?
+  createdAt      DateTime @default(now())
 }
 
 model AgentLog {
@@ -379,6 +380,7 @@ model GoogleBusinessConnection {
   reviewUrl    String?
   placeId      String?
   expiresAt    DateTime?
+  lastSyncedAt DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }

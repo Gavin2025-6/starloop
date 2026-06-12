@@ -18,7 +18,16 @@ interface Review {
 
 interface BizData {
   name: string;
-  googleConnection?: { reviewUrl: string | null; locationId: string | null } | null;
+  googleConnection?: { reviewUrl: string | null; locationId: string | null; lastSyncedAt?: string | null } | null;
+}
+
+function fmtSyncTime(iso: string | null | undefined): string {
+  if (!iso) return "Never synced";
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (diff < 1) return "Just now";
+  if (diff < 60) return `${diff} min ago`;
+  if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
+  return `${Math.floor(diff / 1440)}d ago`;
 }
 
 type FilterTab = "all" | "unreplied" | "5star" | "4star" | "3andbelow";
@@ -214,6 +223,8 @@ function ReviewsContent() {
   const searchParams = useSearchParams();
   const initFilter = (searchParams.get("filter") as FilterTab) ?? "all";
 
+  const connected = searchParams.get("connected");
+
   const [biz, setBiz]         = useState<BizData | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -221,6 +232,7 @@ function ReviewsContent() {
   const [autoAfterComplete, setAutoAfterComplete] = useState(true);
   const [autoAfterPayment,  setAutoAfterPayment]  = useState(true);
   const [sendTiming, setSendTiming] = useState("immediately");
+  const [lastSynced, setLastSynced] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -228,10 +240,26 @@ function ReviewsContent() {
       fetch("/api/reputation/check").then(r => r.json()).catch(() => []),
     ]).then(([b, r]) => {
       setBiz(b);
+      setLastSynced(b?.googleConnection?.lastSyncedAt ?? null);
       setReviews(Array.isArray(r) ? r : []);
       setLoading(false);
+
+      // Auto-sync on first connection
+      if (connected === "true" && b?.googleConnection) {
+        fetch("/api/reviews/sync", { method: "POST" })
+          .then(res => res.ok ? res.json() : null)
+          .then(d => {
+            if (d) {
+              setLastSynced(new Date().toISOString());
+              // Reload reviews after sync
+              fetch("/api/reputation/check").then(r2 => r2.json()).then(r2 => {
+                setReviews(Array.isArray(r2) ? r2 : []);
+              }).catch(() => {});
+            }
+          }).catch(() => {});
+      }
     });
-  }, []);
+  }, [connected]);
 
   const avgRating = reviews.length
     ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
@@ -299,7 +327,7 @@ function ReviewsContent() {
             <span className="text-green-600 text-lg">✓</span>
             <div>
               <span className="text-sm font-semibold text-[#15803D]">Connected: {bizName}</span>
-              <span className="text-xs text-green-600 ml-3">Last synced 5 min ago</span>
+              <span className="text-xs text-green-600 ml-3">Last synced {fmtSyncTime(lastSynced)}</span>
             </div>
           </div>
         )}

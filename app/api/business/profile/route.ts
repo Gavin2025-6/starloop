@@ -61,7 +61,7 @@ export async function GET() {
       where: { userId: session.user.id },
       include: {
         profile: true,
-        googleConnection: { select: { reviewUrl: true, locationId: true } },
+        googleConnection: { select: { reviewUrl: true, locationId: true, lastSyncedAt: true } },
       },
     });
     if (!business) return NextResponse.json({ error: "No business" }, { status: 404 });
