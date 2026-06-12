@@ -30,6 +30,7 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("All");
   const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeToast, setAnalyzeToast] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "", lastServiceDate: "", totalSpend: "" });
@@ -55,10 +56,11 @@ export default function CustomersPage() {
     const res = await fetch("/api/customers/analyze", { method: "POST" });
     const d = await res.json();
     setAnalyzing(false);
-    // Reload list
     const r2 = await fetch("/api/customers/list").catch(() => null);
     if (r2?.ok) setCustomers(await r2.json());
-    alert(`Analysis complete: ${d.active} active, ${d.atRisk} at-risk, ${d.lost} lost`);
+    const total = (d.active ?? 0) + (d.atRisk ?? 0) + (d.lost ?? 0);
+    setAnalyzeToast(`${total} customers re-analyzed`);
+    setTimeout(() => setAnalyzeToast(""), 3000);
   }
 
   function parseCsv(text: string) {
@@ -106,6 +108,11 @@ export default function CustomersPage() {
 
   return (
     <div className="p-8">
+      {analyzeToast && (
+        <div className="fixed top-4 right-4 z-50 bg-[#0D1117] text-white px-4 py-3 rounded-xl text-sm font-medium shadow-lg">
+          ✓ {analyzeToast}
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-[#0d1117]">Customers</h1>

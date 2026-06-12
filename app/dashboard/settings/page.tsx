@@ -164,6 +164,7 @@ function PaymentsTab() {
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
   const [connectError, setConnectError] = useState("");
+  const [upgradeToast, setUpgradeToast] = useState(false);
 
   useEffect(() => {
     fetch("/api/payments/connect/status").then((r) => r.json()).then(setStatus).catch(() => {}).finally(() => setLoading(false));
@@ -183,50 +184,97 @@ function PaymentsTab() {
     }
   }
 
+  function handleUpgradeClick(e: React.MouseEvent) {
+    e.preventDefault();
+    setUpgradeToast(true);
+    setTimeout(() => setUpgradeToast(false), 3000);
+  }
+
   if (loading) return <div className="text-gray-400 text-sm py-8">Loading...</div>;
 
   return (
-    <div className="space-y-4">
-      {status?.chargesEnabled ? (
-        <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
-          <CheckCircle size={18} className="text-green-600 mt-0.5 shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-green-800">Stripe Connect active</p>
-            <p className="text-xs text-green-700 mt-0.5">Payment links are automatically created when you mark jobs complete. Platform fee: 1%.</p>
-          </div>
-        </div>
-      ) : status?.connected ? (
-        <div className="flex items-start gap-3 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-          <AlertCircle size={18} className="text-yellow-600 mt-0.5 shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-yellow-800">Stripe onboarding in progress</p>
-            <p className="text-xs text-yellow-700 mt-0.5">Your Stripe account isn&apos;t fully approved yet. Complete onboarding to enable payments.</p>
-            <button onClick={startConnect} disabled={connecting}
-              className="mt-2 text-xs text-yellow-800 underline hover:no-underline disabled:opacity-60">
-              {connecting ? "Loading..." : "Continue Stripe onboarding →"}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div>
-          <p className="text-sm text-gray-600 mb-4">Connect your Stripe account to collect payments via secure payment links. We charge 1% per transaction on top of Stripe&apos;s fee.</p>
-          <button onClick={startConnect} disabled={connecting}
-            className="flex items-center gap-2 bg-[#635bff] text-white px-5 py-3 rounded-xl text-sm font-semibold hover:bg-[#5851e5] disabled:opacity-60 transition-colors">
-            <CreditCard size={16} />
-            {connecting ? "Redirecting to Stripe..." : "Connect Stripe to get paid"}
-          </button>
-          {connectError && (
-            <div className="flex items-start gap-2 mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
-              <AlertCircle size={13} className="mt-0.5 shrink-0" />
-              {connectError}
-            </div>
-          )}
+    <div className="space-y-6">
+      {upgradeToast && (
+        <div className="fixed top-4 right-4 z-50 bg-[#0D1117] text-white px-4 py-3 rounded-xl text-sm font-medium shadow-lg">
+          Subscription plans coming soon!
         </div>
       )}
-      <div className="bg-gray-50 rounded-xl p-4 text-xs text-gray-500 space-y-1">
-        <p>• When you mark a job complete, a payment link is created and sent to your customer.</p>
-        <p>• Customers pay via card — funds deposit to your Stripe account within 2 business days.</p>
-        <p>• Disputes and refunds are handled through your Stripe dashboard.</p>
+
+      {/* Section 1 — Customer Payments */}
+      <div>
+        <h3 className="text-base font-bold text-[#0d1117] mb-0.5">Customer Payments</h3>
+        <p className="text-xs text-gray-400 mb-4">Collect payments from your customers via Stripe</p>
+        <div className="space-y-4">
+          {status?.chargesEnabled ? (
+            <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
+              <CheckCircle size={18} className="text-green-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-green-800">Stripe Connect active</p>
+                <p className="text-xs text-green-700 mt-0.5">Payment links are automatically created when you mark jobs complete. Platform fee: 1%.</p>
+              </div>
+            </div>
+          ) : status?.connected ? (
+            <div className="flex items-start gap-3 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+              <AlertCircle size={18} className="text-yellow-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-yellow-800">Stripe onboarding in progress</p>
+                <p className="text-xs text-yellow-700 mt-0.5">Your Stripe account isn&apos;t fully approved yet. Complete onboarding to enable payments.</p>
+                <button onClick={startConnect} disabled={connecting}
+                  className="mt-2 text-xs text-yellow-800 underline hover:no-underline disabled:opacity-60">
+                  {connecting ? "Loading..." : "Continue Stripe onboarding →"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm text-gray-600 mb-4">Connect your Stripe account to collect payments via secure payment links. We charge 1% per transaction on top of Stripe&apos;s fee.</p>
+              <button onClick={startConnect} disabled={connecting}
+                className="flex items-center gap-2 bg-[#635bff] text-white px-5 py-3 rounded-xl text-sm font-semibold hover:bg-[#5851e5] disabled:opacity-60 transition-colors">
+                <CreditCard size={16} />
+                {connecting ? "Redirecting to Stripe..." : "Connect Stripe to get paid"}
+              </button>
+              {connectError && (
+                <div className="flex items-start gap-2 mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+                  <AlertCircle size={13} className="mt-0.5 shrink-0" />
+                  {connectError}
+                </div>
+              )}
+            </div>
+          )}
+          <div className="bg-gray-50 rounded-xl p-4 text-xs text-gray-500 space-y-1">
+            <p>• When you mark a job complete, a payment link is created and sent to your customer.</p>
+            <p>• Customers pay via card — funds deposit to your Stripe account within 2 business days.</p>
+            <p>• Disputes and refunds are handled through your Stripe dashboard.</p>
+          </div>
+        </div>
+      </div>
+
+      <hr className="border-gray-200" />
+
+      {/* Section 2 — Your Subscription */}
+      <div id="upgrade">
+        <h3 className="text-base font-bold text-[#0d1117] mb-0.5">Your Subscription</h3>
+        <p className="text-xs text-gray-400 mb-4">Your ServiceStar plan</p>
+        <div className="border border-gray-200 rounded-xl p-5 space-y-4 bg-white">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-bold text-[#0d1117]">Current Plan</span>
+            <span className="bg-gray-100 text-gray-500 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">FREE</span>
+          </div>
+          <ul className="space-y-2 text-sm text-gray-600">
+            <li className="flex items-center gap-2"><CheckCircle size={14} className="text-green-500 shrink-0" />Up to 10 active jobs</li>
+            <li className="flex items-center gap-2"><CheckCircle size={14} className="text-green-500 shrink-0" />1 business location</li>
+            <li className="flex items-center gap-2"><CheckCircle size={14} className="text-green-500 shrink-0" />SMS notifications (Twilio)</li>
+            <li className="flex items-center gap-2"><CheckCircle size={14} className="text-green-500 shrink-0" />Stripe payment processing</li>
+            <li className="flex items-center gap-2"><CheckCircle size={14} className="text-green-500 shrink-0" />AI review replies</li>
+          </ul>
+          <button
+            onClick={handleUpgradeClick}
+            className="w-full bg-[#0D1117] text-white py-3 rounded-xl text-sm font-bold hover:bg-[#374151] transition-colors"
+          >
+            Upgrade to Pro
+          </button>
+          <p className="text-xs text-gray-400 text-center">Pro plan coming soon — $49/month</p>
+        </div>
       </div>
     </div>
   );

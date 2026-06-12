@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useMemo, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, CheckCircle, AlertCircle, Search, X } from "lucide-react";
 
 interface Job {
@@ -45,7 +45,7 @@ function isThisMonth(d: string | null) {
   return dt.getFullYear() === now.getFullYear() && dt.getMonth() === now.getMonth();
 }
 
-type FilterTab = "all" | "today" | "scheduled" | "in_progress" | "complete";
+type FilterTab = "all" | "today" | "scheduled" | "in_progress" | "complete" | "unpaid";
 
 const TABS: Array<{ key: FilterTab; label: string }> = [
   { key: "all",         label: "All" },
@@ -53,13 +53,20 @@ const TABS: Array<{ key: FilterTab; label: string }> = [
   { key: "scheduled",   label: "Scheduled" },
   { key: "in_progress", label: "In Progress" },
   { key: "complete",    label: "Complete" },
+  { key: "unpaid",      label: "Unpaid" },
 ];
 
-export default function JobsPage() {
+function JobsContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [activeTab, setActiveTab] = useState<FilterTab>(() => {
+    const f = searchParams.get("filter");
+    if (f === "unpaid") return "unpaid";
+    if (f === "today") return "today";
+    return "all";
+  });
 
   // New job modal
   const [showModal, setShowModal] = useState(false);
@@ -179,6 +186,7 @@ export default function JobsPage() {
       case "scheduled":   return jobs.filter(j => j.status === "scheduled");
       case "in_progress": return jobs.filter(j => j.status === "in_progress");
       case "complete":    return jobs.filter(j => ["completed","invoiced","paid"].includes(j.status));
+      case "unpaid":      return jobs.filter(j => ["completed","invoiced"].includes(j.status));
       default:            return jobs;
     }
   }, [jobs, activeTab]);
@@ -600,5 +608,13 @@ export default function JobsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function JobsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-gray-400 text-sm">Loading…</div>}>
+      <JobsContent />
+    </Suspense>
   );
 }

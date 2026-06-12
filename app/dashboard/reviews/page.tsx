@@ -355,9 +355,19 @@ function ReviewsContent() {
               <span className="text-sm text-gray-700">After job marked complete</span>
               <button
                 onClick={() => setAutoAfterComplete(a => !a)}
-                className={`relative w-10 h-5 rounded-full transition-colors ${autoAfterComplete ? "bg-[#0D1117]" : "bg-gray-200"}`}
+                style={{
+                  position: "relative", width: 44, height: 24, borderRadius: 12,
+                  backgroundColor: autoAfterComplete ? "#16A34A" : "#D1D5DB",
+                  border: "none", cursor: "pointer", transition: "background-color 0.2s ease",
+                  flexShrink: 0,
+                }}
               >
-                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${autoAfterComplete ? "translate-x-5" : "translate-x-0.5"}`} />
+                <span style={{
+                  position: "absolute", top: 2, width: 20, height: 20, borderRadius: "50%",
+                  backgroundColor: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                  transition: "left 0.2s ease",
+                  left: autoAfterComplete ? 22 : 2,
+                }} />
               </button>
             </div>
 
@@ -365,9 +375,19 @@ function ReviewsContent() {
               <span className="text-sm text-gray-700">After payment received</span>
               <button
                 onClick={() => setAutoAfterPayment(a => !a)}
-                className={`relative w-10 h-5 rounded-full transition-colors ${autoAfterPayment ? "bg-[#0D1117]" : "bg-gray-200"}`}
+                style={{
+                  position: "relative", width: 44, height: 24, borderRadius: 12,
+                  backgroundColor: autoAfterPayment ? "#16A34A" : "#D1D5DB",
+                  border: "none", cursor: "pointer", transition: "background-color 0.2s ease",
+                  flexShrink: 0,
+                }}
               >
-                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${autoAfterPayment ? "translate-x-5" : "translate-x-0.5"}`} />
+                <span style={{
+                  position: "absolute", top: 2, width: 20, height: 20, borderRadius: "50%",
+                  backgroundColor: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                  transition: "left 0.2s ease",
+                  left: autoAfterPayment ? 22 : 2,
+                }} />
               </button>
             </div>
 

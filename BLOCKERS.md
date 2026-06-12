@@ -8,6 +8,23 @@
 | 4 | **Google OAuth redirect URI** | Google Business 连接需要在 GCP Console 加新域名的 redirect URI | 集成代码已写，Gavin 进 GCP Console 加 `https://{NEW_DOMAIN}/api/google/callback` |
 | 5 | **Stripe key 截断（Railway 已知 bug）** | v1 不做收款，不阻塞；收款前必修 | 手动在 Railway Variables 粘贴完整 key |
 
+---
+
+## v4 监控工具部署缺口（2026-06-12）
+
+| # | 缺口 | 影响 | 动作 |
+|---|------|------|------|
+| 14 | **`SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` 未设置** | 错误不上报 Sentry | Sentry.io → Projects → Create Project → Next.js → 复制 DSN。Railway 设置 `SENTRY_DSN=https://xxx@oXXX.ingest.sentry.io/XXX` 和 `NEXT_PUBLIC_SENTRY_DSN=同值` |
+| 15 | **`NEXT_PUBLIC_POSTHOG_KEY` 未设置** | 用户行为不上报 PostHog | PostHog.com → 注册 → Project Settings → API Keys → 复制 `phc_...` 密钥。Railway 设置 `NEXT_PUBLIC_POSTHOG_KEY=phc_...` |
+| 16 | **`NEXT_PUBLIC_CLARITY_ID` 未设置** | 会话录制无效 | clarity.microsoft.com → New Project → 复制 Project ID。Railway 设置 `NEXT_PUBLIC_CLARITY_ID=<id>` |
+
+### Vapi 变量确认
+- `VAPI_API_KEY` — 见缺口#3，从 [vapi.ai](https://vapi.ai) Dashboard → API Keys 获取
+- `VAPI_ASSISTANT_ID` — 见缺口#3，创建 Assistant 后在 Vapi Dashboard → Assistants 页面获取 ID
+- `NEXT_PUBLIC_TWILIO_NUMBER` — 见缺口#12，格式：`+1XXXXXXXXXX`（E.164）
+
+---
+
 ## 当前绕行状态
 - 所有短信降级为纯文字（无 URL），在 Twilio 升级后改 1 行代码开启链接
 - 语音 Intake 的 Vapi webhook 已准备好 `/api/intake/webhook`，等账号绑定

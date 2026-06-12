@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+function deriveStatus(lastServiceDate: Date | null): string {
+  if (!lastServiceDate) return "new";
+  const days = Math.floor((Date.now() - lastServiceDate.getTime()) / 86400000);
+  if (days <= 60) return "active";
+  if (days <= 120) return "at-risk";
+  return "lost";
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -19,22 +27,26 @@ export async function POST(req: NextRequest) {
       phone: header.indexOf("phone"),
       email: header.indexOf("email"),
       lastServiceDate: header.indexOf("lastservicedate"),
-      totalSpend: header.indexOf("totalspend"),
+      // Accept both "totalspent" and "totalspend"
+      totalSpend: header.indexOf("totalspent") >= 0
+        ? header.indexOf("totalspent")
+        : header.indexOf("totalspend"),
     };
 
-    const rows = lines.slice(1).map((line: string) => {
+    const rows = lines.slice(1).filter((l: string) => l.trim()).map((line: string) => {
       const cols = line.split(",").map((c: string) => c.trim());
+      const lastServiceDate =
+        idx.lastServiceDate >= 0 && cols[idx.lastServiceDate]
+          ? new Date(cols[idx.lastServiceDate])
+          : null;
       return {
         businessId: business.id,
         name: cols[idx.name] || "Unknown",
         phone: idx.phone >= 0 ? cols[idx.phone] || null : null,
         email: idx.email >= 0 ? cols[idx.email] || null : null,
-        lastServiceDate:
-          idx.lastServiceDate >= 0 && cols[idx.lastServiceDate]
-            ? new Date(cols[idx.lastServiceDate])
-            : null,
-        totalSpend:
-          idx.totalSpend >= 0 ? parseFloat(cols[idx.totalSpend]) || 0 : 0,
+        lastServiceDate,
+        totalSpend: idx.totalSpend >= 0 ? parseFloat(cols[idx.totalSpend]) || 0 : 0,
+        status: deriveStatus(lastServiceDate),
       };
     });
 
