@@ -50,10 +50,8 @@ export async function POST(req: NextRequest) {
 
     const paymentLink = await stripe.paymentLinks.create({
       line_items: [{ price: price.id, quantity: 1 }],
-      payment_intent_data: {
-        application_fee_amount: applicationFeeCents,
-        transfer_data: { destination: business.stripeAccountId! },
-      },
+      application_fee_amount: applicationFeeCents,
+      transfer_data: { destination: business.stripeAccountId! },
       metadata: { jobId: job.id },
     });
 
