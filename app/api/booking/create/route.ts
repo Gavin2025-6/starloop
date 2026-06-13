@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateJobNumber } from "@/lib/job-number";
+import { sendSms } from "@/lib/twilio";
 
 // Public endpoint — no auth required (customer-facing)
 export async function POST(req: NextRequest) {
   try {
-    const { businessId, name, phone, notes, service, scheduledAt } = await req.json();
+    const { businessId, name, phone, address, notes, service, scheduledAt } = await req.json();
     if (!businessId || !name || !phone || !scheduledAt) {
       return NextResponse.json({ error: "businessId, name, phone, and scheduledAt required" }, { status: 400 });
     }
@@ -31,6 +32,7 @@ export async function POST(req: NextRequest) {
         serviceType: service ?? "general",
         description: notes ?? null,
         scheduledAt: new Date(scheduledAt),
+        address: address ?? null,
         status: "requested",
         source: "booking_page",
       },
@@ -45,6 +47,46 @@ export async function POST(req: NextRequest) {
         customerId: customer.id,
       },
     });
+
+    // Format booking details for SMS
+    const bookedDate = new Date(scheduledAt);
+    const dateLabel = bookedDate.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+    });
+    const timeLabel = bookedDate.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    const serviceLabel = service ?? "Service";
+
+    // SMS to customer
+    const customerSms = [
+      `Hi ${name}! Your booking with ${business.name} is confirmed.`,
+      `Service: ${serviceLabel}`,
+      `When: ${dateLabel} at ${timeLabel}`,
+      address ? `Address: ${address}` : null,
+      business.phone ? `Questions? Call us: ${business.phone}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    // SMS to business owner
+    const ownerSms = [
+      `New booking from ${name} (${phone})!`,
+      `Service: ${serviceLabel}`,
+      `When: ${dateLabel} at ${timeLabel}`,
+      address ? `Address: ${address}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const smsPromises: Promise<unknown>[] = [];
+    if (phone) smsPromises.push(sendSms({ to: phone, body: customerSms }).catch(() => {}));
+    if (business.phone) smsPromises.push(sendSms({ to: business.phone, body: ownerSms }).catch(() => {}));
+    await Promise.all(smsPromises);
 
     return NextResponse.json({ jobId: job.id, jobNumber: job.jobNumber });
   } catch (err) {

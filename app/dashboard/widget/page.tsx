@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Check, ExternalLink } from "lucide-react";
+import { Copy, Check, ExternalLink, Link2 } from "lucide-react";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://service-star-production.up.railway.app";
 
@@ -14,6 +14,7 @@ interface BusinessInfo {
 export default function WidgetPage() {
   const [business, setBusiness] = useState<BusinessInfo | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedBooking, setCopiedBooking] = useState(false);
 
   useEffect(() => {
     fetch("/api/business/profile")
@@ -37,6 +38,15 @@ export default function WidgetPage() {
   }
 
   const widgetUrl = business ? `${APP_URL}/widget/${business.slug}` : null;
+  const bookingUrl = business ? `${APP_URL}/book/${business.slug}` : null;
+
+  function copyBookingLink() {
+    if (!bookingUrl) return;
+    navigator.clipboard.writeText(bookingUrl).then(() => {
+      setCopiedBooking(true);
+      setTimeout(() => setCopiedBooking(false), 2000);
+    });
+  }
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
@@ -123,6 +133,45 @@ export default function WidgetPage() {
             </div>
           </div>
         )}
+
+        {/* Booking link */}
+        <div className="bg-white rounded-xl border border-[#E5E7EB] p-6">
+          <div className="flex items-center gap-2 mb-1">
+            <Link2 size={16} className="text-[#0D1117]" />
+            <h2 className="text-base font-bold text-[#0D1117]">Share your booking link</h2>
+          </div>
+          <p className="text-sm text-gray-500 mb-4">
+            Send this link to customers so they can self-book directly — no website needed.
+          </p>
+          {bookingUrl ? (
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 font-mono truncate">
+                {bookingUrl}
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <a
+                  href={bookingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  <ExternalLink size={14} /> Preview
+                </a>
+                <button
+                  onClick={copyBookingLink}
+                  className="flex items-center gap-1.5 bg-[#0D1117] text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#374151] transition-colors"
+                >
+                  {copiedBooking ? <Check size={14} /> : <Copy size={14} />}
+                  {copiedBooking ? "Copied!" : "Copy Link"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-gray-100 rounded-lg px-4 py-3 text-sm text-gray-400 animate-pulse">
+              Loading your booking link…
+            </div>
+          )}
+        </div>
 
         {/* Instructions */}
         <div className="bg-white rounded-xl border border-[#E5E7EB] p-6">
