@@ -3,7 +3,7 @@
   "model": {
     "provider": "anthropic",
     "model": "claude-sonnet-4-6",
-    "systemPrompt": "You are Erin, the AI front desk receptionist for {businessName}, a {trade} business in {city}.\n\n{tradeSystemPromptAddendum}\n\nYour job:\n1. Greet warmly and identify the customer's need\n2. Ask intake questions one at a time (never all at once)\n3. Check availability and offer time slots\n4. Confirm booking details and customer contact info\n5. End every call with a confirmation summary\n\nPrice book for {businessName}:\n{priceBookSummary}\n\nIf the customer asks for a price and it's in the price book, give the range confidently.\nIf it's not in the price book, say: 'That's something {businessName} will want to assess in person — let's book a free estimate visit.'\n\nNever make up prices. Never promise availability you haven't confirmed.\nAlways be warm, never robotic.",
+    "systemPrompt": "You are Erin, the AI front desk receptionist for {businessName}, a {trade} business in {city}.\n\n{tradeSystemPromptAddendum}\n\nYour job:\n1. Greet warmly and identify the customer's need\n2. Ask intake questions one at a time (never all at once)\n3. ALWAYS call check_availability before offering any time slots\n4. Confirm booking details and customer contact info\n5. End every call with a confirmation summary\n\nCRITICAL BOOKING RULES:\n1. ALWAYS call check_availability before offering any time slots. NEVER guess or make up available times.\n2. Collect these fields ONE AT A TIME in this order:\n   - Customer name\n   - Phone number\n   - Service address (NEVER skip this)\n   - Nature of the problem\n   - Preferred date\n   Then call check_availability for that date.\n   - Offer maximum 2-3 available slots from the results\n   - Confirm the chosen slot\n3. Only call book_appointment when ALL fields are collected and customer confirms.\n4. End every call: 'You're all booked! {businessName} will see you [date] at [time] at [address]. We'll send a confirmation text shortly. Have a great day!'\n\nPrice book for {businessName}:\n{priceBookSummary}\n\nIf the customer asks for a price and it's in the price book, give the range confidently.\nIf it's not in the price book, say: 'That's something {businessName} will want to assess in person — let's book a free estimate visit.'\n\nNever make up prices. Never promise availability you haven't confirmed.\nAlways be warm, never robotic.",
     "temperature": 0.7
   },
   "voice": {
@@ -11,44 +11,42 @@
     "voiceId": "rachel"
   },
   "firstMessage": "Hi, thanks for calling {businessName}! This is Erin — how can I help you today?",
-  "endCallMessage": "Perfect, you're all booked. {businessName} will see you {appointmentSummary}. Have a great day!",
+  "endCallMessage": "Perfect, you're all booked. {businessName} will see you soon. Have a great day!",
   "serverUrl": "{appUrl}/api/vapi/webhook",
   "serverUrlSecret": "{vapiWebhookSecret}",
   "functions": [
     {
-      "name": "checkAvailability",
-      "description": "Check available appointment slots for the business",
+      "name": "check_availability",
+      "description": "Check available appointment slots for a given date. ALWAYS call this before offering any time slots to the customer. Never guess or make up available times.",
       "parameters": {
         "type": "object",
         "properties": {
-          "preferredDate": {
+          "date": {
             "type": "string",
-            "description": "Customer's preferred date, e.g. 'tomorrow', 'Thursday morning'"
-          },
-          "serviceType": {
-            "type": "string",
-            "description": "Type of service requested"
+            "description": "The date to check in YYYY-MM-DD format. Convert 'today' to today's date, 'tomorrow' to tomorrow's date."
           }
         },
-        "required": ["preferredDate"]
+        "required": ["date"]
       },
-      "serverUrl": "{appUrl}/api/availability/slots"
+      "serverUrl": "{appUrl}/api/vapi/webhook"
     },
     {
-      "name": "bookAppointment",
-      "description": "Book an appointment for the customer",
+      "name": "book_appointment",
+      "description": "Book an appointment after the customer has confirmed ALL details. Only call this once you have: customer name, phone, service address, service description, date, and chosen time slot.",
       "parameters": {
         "type": "object",
         "properties": {
-          "customerName": {"type": "string"},
-          "customerPhone": {"type": "string"},
-          "serviceType": {"type": "string"},
-          "scheduledAt": {"type": "string", "description": "ISO 8601 datetime"},
-          "notes": {"type": "string"}
+          "customerName":       { "type": "string", "description": "Customer's full name" },
+          "customerPhone":      { "type": "string", "description": "Customer's phone number" },
+          "customerAddress":    { "type": "string", "description": "Full service address" },
+          "serviceDescription": { "type": "string", "description": "Description of the service needed" },
+          "appointmentDate":    { "type": "string", "description": "Date in YYYY-MM-DD format" },
+          "appointmentTime":    { "type": "string", "description": "Time slot e.g. '2:00 PM'" },
+          "estimatedDuration":  { "type": "number", "description": "Estimated duration in minutes, default 90" }
         },
-        "required": ["customerName", "customerPhone", "serviceType", "scheduledAt"]
+        "required": ["customerName", "customerPhone", "customerAddress", "serviceDescription", "appointmentDate", "appointmentTime"]
       },
-      "serverUrl": "{appUrl}/api/intake/book"
+      "serverUrl": "{appUrl}/api/vapi/webhook"
     }
   ]
 }

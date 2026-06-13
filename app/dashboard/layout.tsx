@@ -12,6 +12,7 @@ const NAV = [
   { href: "/dashboard/customers",    label: "Customers",    emoji: "👥" },
   { href: "/dashboard/reviews",      label: "Reviews",      emoji: "⭐" },
   { href: "/dashboard/campaigns",    label: "Campaigns",    emoji: "📢" },
+  { href: "/dashboard/widget",       label: "Chat Widget",  emoji: "💬" },
   { href: "/dashboard/settings",     label: "Settings",     emoji: "⚙️" },
 ];
 

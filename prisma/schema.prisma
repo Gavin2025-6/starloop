@@ -91,6 +91,8 @@ model Business {
   bookingHoursEnd       String   @default("18:00")
   bookingBufferMins     Int      @default(30)
   bookingWeekendEnabled Boolean  @default(false)
+  avgJobDurationMins    Int      @default(90)
+  travelBufferMins      Int      @default(30)
 
   customers             Customer[]
   campaigns             Campaign[]

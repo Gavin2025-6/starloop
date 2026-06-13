@@ -1,12 +1,16 @@
 import config from './erin-assistant-config.json';
 import { getVerticalPreset } from '../verticals';
+import { buildCheckAvailabilityTool } from './tools/check-availability';
+import { buildBookAppointmentTool } from './tools/book-appointment';
 
 interface BookingRules {
-  hoursStart: string;      // e.g. "08:00"
-  hoursEnd: string;        // e.g. "18:00"
-  bufferMins: number;      // e.g. 30
+  hoursStart: string;
+  hoursEnd: string;
+  bufferMins: number;
   weekendEnabled: boolean;
   autoConfirm: boolean;
+  avgJobDurationMins?: number;
+  travelBufferMins?: number;
 }
 
 export function buildVapiConfig(business: {
@@ -17,19 +21,16 @@ export function buildVapiConfig(business: {
   bookingRules?: BookingRules;
 }) {
   const preset = getVerticalPreset(business.trade);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const webhookUrl = `${appUrl}/api/vapi/webhook`;
 
   const priceBookSummary = business.priceBookItems
     .filter(i => i.priceMin > 0)
     .map(i => `- ${i.name}: $${i.priceMin}–$${i.priceMax} (${i.unit})`)
     .join('\n');
 
-  // Build booking rules context to inject into systemPrompt
   const rules = business.bookingRules;
-  const bookingRulesSection = rules ? `\n\nBOOKING RULES:
-- Available hours: ${rules.hoursStart} – ${rules.hoursEnd}${rules.weekendEnabled ? ' (Mon–Sun)' : ' (Mon–Fri only)'}
-- Buffer between jobs: ${rules.bufferMins} minutes
-- Auto-confirm bookings: ${rules.autoConfirm ? 'YES — confirm appointments immediately on the call' : 'NO — tell the customer a team member will confirm shortly'}
-- If the customer requests a time outside available hours, politely suggest the nearest available slot.` : '';
+  const bookingRulesSection = rules ? `\n\nBOOKING RULES:\n- Available hours: ${rules.hoursStart} – ${rules.hoursEnd}${rules.weekendEnabled ? ' (Mon–Sun)' : ' (Mon–Fri only)'}\n- Average job duration: ${rules.avgJobDurationMins ?? 90} minutes\n- Travel buffer between jobs: ${rules.travelBufferMins ?? 30} minutes\n- Auto-confirm bookings: ${rules.autoConfirm ? 'YES — confirm appointments immediately on the call' : 'NO — tell the customer a team member will confirm shortly'}\n- If the customer requests a time outside available hours, politely suggest the nearest available slot.` : '';
 
   const systemPrompt = config.model.systemPrompt
     .replace(/{businessName}/g, business.name)
@@ -42,11 +43,18 @@ export function buildVapiConfig(business: {
     )
     + bookingRulesSection;
 
+  // Build functions with live webhook URL
+  const functions = [
+    buildCheckAvailabilityTool(webhookUrl),
+    buildBookAppointmentTool(webhookUrl),
+  ];
+
   return {
     ...config,
     name: `Erin — ${business.name}`,
     model: { ...config.model, systemPrompt },
     firstMessage: `Hi, thanks for calling ${business.name}! This is Erin — how can I help you today?`,
-    serverUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/vapi/webhook`,
+    serverUrl: webhookUrl,
+    functions,
   };
 }

@@ -162,6 +162,8 @@ interface BookingRules {
   bookingHoursEnd: string;
   bookingBufferMins: number;
   bookingWeekendEnabled: boolean;
+  avgJobDurationMins: number;
+  travelBufferMins: number;
   vapiAssistantId: string | null;
   vapiConfigured: boolean;
 }
@@ -272,7 +274,9 @@ export default function FrontOfficePage() {
   // Booking rules (loaded from DB)
   const [rules, setRules]   = useState<BookingRules>({
     autoConfirmBooking: true, bookingHoursStart: "08:00", bookingHoursEnd: "18:00",
-    bookingBufferMins: 30, bookingWeekendEnabled: false, vapiAssistantId: null, vapiConfigured: false,
+    bookingBufferMins: 30, bookingWeekendEnabled: false,
+    avgJobDurationMins: 90, travelBufferMins: 30,
+    vapiAssistantId: null, vapiConfigured: false,
   });
   const [ruleSaving, setRuleSaving] = useState(false);
   const [ruleSaved,  setRuleSaved]  = useState(false);
@@ -514,6 +518,36 @@ export default function FrontOfficePage() {
                 <option value="30">30 min</option>
                 <option value="60">60 min</option>
                 <option value="90">90 min</option>
+              </select>
+            </div>
+
+            {/* Average job duration */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Average job duration</label>
+              <p className="text-xs text-gray-400 mb-2">Used to calculate how many appointments fit in a day.</p>
+              <select value={String(rules.avgJobDurationMins)}
+                onChange={e => setRules(r => ({ ...r, avgJobDurationMins: Number(e.target.value) }))}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none bg-white">
+                <option value="30">30 min</option>
+                <option value="60">60 min (1 hour)</option>
+                <option value="90">90 min (1.5 hours)</option>
+                <option value="120">2 hours</option>
+                <option value="180">3 hours</option>
+                <option value="240">Half day (4 hours)</option>
+              </select>
+            </div>
+
+            {/* Travel time between jobs */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Travel time between jobs</label>
+              <p className="text-xs text-gray-400 mb-2">Time reserved for travel after each job finishes.</p>
+              <select value={String(rules.travelBufferMins)}
+                onChange={e => setRules(r => ({ ...r, travelBufferMins: Number(e.target.value) }))}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none bg-white">
+                <option value="15">15 min</option>
+                <option value="30">30 min</option>
+                <option value="45">45 min</option>
+                <option value="60">60 min</option>
               </select>
             </div>
 

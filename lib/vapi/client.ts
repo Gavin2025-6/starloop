@@ -52,13 +52,20 @@ export async function getAssistant(assistantId: string): Promise<VapiAssistant |
 
 export async function updateAssistant(
   assistantId: string,
-  payload: { firstMessage?: string; systemPrompt?: string }
+  payload: {
+    firstMessage?: string;
+    systemPrompt?: string;
+    functions?: unknown[];
+    serverUrl?: string;
+  }
 ): Promise<VapiAssistant | null> {
   if (!isVapiConfigured()) return null;
   try {
     const body: Record<string, unknown> = {};
     if (payload.firstMessage !== undefined) body.firstMessage = payload.firstMessage;
     if (payload.systemPrompt !== undefined) body.model = { systemPrompt: payload.systemPrompt };
+    if (payload.functions !== undefined) body.functions = payload.functions;
+    if (payload.serverUrl !== undefined) body.serverUrl = payload.serverUrl;
 
     const res = await fetch(`${BASE}/assistant/${assistantId}`, {
       method: "PATCH",
