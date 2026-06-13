@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { createAssistant, listAssistants, isVapiConfigured } from "@/lib/vapi/client";
+import { createAssistant, updateAssistant, listAssistants, isVapiConfigured } from "@/lib/vapi/client";
 import { AGENT_CONFIGS } from "@/lib/vapi/agents-config";
+
+// Other agents (Dwight, Jim, Angela, Oscar, Andy) activated when first real users onboard.
+// To activate all, call POST /api/vapi/setup-agents/all.
 
 export async function POST() {
   try {
@@ -12,39 +15,30 @@ export async function POST() {
       return NextResponse.json({ error: "VAPI_API_KEY not set" }, { status: 503 });
     }
 
+    const erinConfig = AGENT_CONFIGS.erin;
     const existing = await listAssistants();
-    const byName = new Map(existing.map((a) => [a.name, a.id]));
+    const existingId = existing.find((a) => a.name === erinConfig.name)?.id;
 
-    const results: Record<string, string> = {};
+    let assistant;
+    if (existingId) {
+      assistant = await updateAssistant(existingId, {
+        firstMessage: erinConfig.firstMessage,
+        systemPrompt: erinConfig.model.systemPrompt,
+      });
+      if (assistant) assistant.id = existingId;
+    } else {
+      assistant = await createAssistant(erinConfig);
+    }
 
-    for (const [key, config] of Object.entries(AGENT_CONFIGS)) {
-      const existingId = byName.get(config.name);
-      let assistant;
-
-      if (existingId) {
-        const { updateAssistant } = await import("@/lib/vapi/client");
-        assistant = await updateAssistant(existingId, {
-          firstMessage: config.firstMessage,
-          systemPrompt: config.model.systemPrompt,
-        });
-        if (assistant) assistant.id = existingId;
-      } else {
-        assistant = await createAssistant(config);
-      }
-
-      if (assistant) {
-        results[key] = assistant.id;
-      } else {
-        console.error(`[vapi/setup-agents] Failed to create/update ${key}`);
-      }
+    if (!assistant) {
+      return NextResponse.json({ error: "Failed to create Erin on Vapi" }, { status: 502 });
     }
 
     return NextResponse.json({
       success: true,
-      agents: results,
-      envVars: Object.entries(results).map(([k, id]) =>
-        `VAPI_AGENT_${k.toUpperCase()}=${id}`
-      ).concat(results.erin ? [`VAPI_ASSISTANT_ID=${results.erin}`] : []),
+      VAPI_AGENT_ERIN: assistant.id,
+      VAPI_ASSISTANT_ID: assistant.id,
+      message: "Erin agent created successfully",
     });
   } catch (err) {
     console.error("[vapi/setup-agents]", err);
