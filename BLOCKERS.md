@@ -4,7 +4,7 @@
 |---|-------|---------|---------|
 | 1 | **域名 servicestar.app 未绑定 Railway** | 短信链接全为 railway.app 死链，客户侧体验差 | 代码已用 `NEXT_PUBLIC_APP_URL` env var，Gavin 绑域名后改一个变量即可 |
 | 2 | **Twilio 试用账号无法发 URL（Error 30044）** | 发票链接、评价请求链接、winback /b/slug 链接全被封 | 代码已做降级处理：发纯文字版，检测到付费后自动加链接；短信内容留`{LINK}`占位符 |
-| 3 | **Vapi 6 agents: env vars 未设置** ✅ 代码完成 | Front Office 页面各 Agent Configure 弹窗显示占位 ID | (1) Railway Variables 设置 `VAPI_API_KEY=vapi_xxx`；(2) 部署后 **POST** `https://{YOUR_DOMAIN}/api/vapi/setup-agents`（需登录）→ 返回 6 个 Agent ID；(3) 将返回的 env vars 全部复制到 Railway Variables（`VAPI_AGENT_ERIN`、`VAPI_AGENT_DWIGHT`、`VAPI_AGENT_JIM`、`VAPI_AGENT_ANGELA`、`VAPI_AGENT_OSCAR`、`VAPI_AGENT_ANDY`、`VAPI_ASSISTANT_ID`）；(4) 重新部署 |
+| 3 | **Vapi Erin agent** ✅ **已完成** (2026-06-12) | — | `VAPI_AGENT_ERIN` + `VAPI_ASSISTANT_ID` = `9201df6e-b0c1-49e8-811c-46189b48fc8a` 已设入 Railway。Dwight/Jim/Angela/Oscar/Andy 留待首批真实用户上线时一键创建 — 调用 `POST /api/vapi/setup-agents/all` 激活全部。 |
 | 4 | **Google Business Profile OAuth** ✅ 代码完成 | Reviews 同步、自动回复发布到 Google 均不可用 | 见下方"Google Business Profile 接入步骤" |
 | 5 | **Stripe key 截断（Railway 已知 bug）** | v1 不做收款，不阻塞；收款前必修 | 手动在 Railway Variables 粘贴完整 key |
 
