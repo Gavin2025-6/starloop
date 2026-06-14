@@ -8,7 +8,13 @@ export async function POST(req: NextRequest) {
   try {
     const { businessId, name, phone, address, notes, service, scheduledAt } = await req.json();
     if (!businessId || !name || !phone || !scheduledAt) {
-      return NextResponse.json({ error: "businessId, name, phone, and scheduledAt required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "businessId, name, phone, and scheduledAt required" },
+        { status: 400 }
+      );
+    }
+    if (!address) {
+      return NextResponse.json({ error: "address is required" }, { status: 400 });
     }
 
     const business = await prisma.business.findUnique({ where: { id: businessId } });
@@ -18,11 +24,13 @@ export async function POST(req: NextRequest) {
     let customer = await prisma.customer.findFirst({ where: { businessId, phone } });
     if (!customer) {
       customer = await prisma.customer.create({
-        data: { businessId, name, phone },
+        data: { businessId, name, phone, addressLine1: address },
       });
     }
 
     const jobNumber = await generateJobNumber();
+    const scheduledDate = new Date(scheduledAt);
+
     const job = await prisma.job.create({
       data: {
         jobNumber,
@@ -30,11 +38,24 @@ export async function POST(req: NextRequest) {
         customerId: customer.id,
         title: service ?? "Service Request",
         serviceType: service ?? "general",
+        serviceDescription: service ?? null,
         description: notes ?? null,
-        scheduledAt: new Date(scheduledAt),
-        address: address ?? null,
-        status: "requested",
+        scheduledAt: scheduledDate,
+        address: address,
+        customerName: name,
+        customerPhone: phone,
+        status: "scheduled",
         source: "booking_page",
+        balanceAmount: 0,
+      },
+    });
+
+    await prisma.jobEvent.create({
+      data: {
+        jobId: job.id,
+        type: "booking_created",
+        triggeredBy: "customer",
+        payload: { source: "booking_page", customerName: name, customerPhone: phone },
       },
     });
 
@@ -43,42 +64,39 @@ export async function POST(req: NextRequest) {
         businessId,
         agent: "intake",
         action: "Online booking",
-        detail: `${name} (${phone}) booked ${service ?? "service"} on ${new Date(scheduledAt).toLocaleString()}`,
+        detail: `${name} (${phone}) booked ${service ?? "service"} on ${scheduledDate.toLocaleString()}`,
         customerId: customer.id,
       },
     });
 
     // Format booking details for SMS
-    const bookedDate = new Date(scheduledAt);
-    const dateLabel = bookedDate.toLocaleDateString("en-US", {
+    const dateLabel = scheduledDate.toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
       day: "numeric",
     });
-    const timeLabel = bookedDate.toLocaleTimeString("en-US", {
+    const timeLabel = scheduledDate.toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
     });
     const serviceLabel = service ?? "Service";
 
-    // SMS to customer
     const customerSms = [
       `Hi ${name}! Your booking with ${business.name} is confirmed.`,
       `Service: ${serviceLabel}`,
       `When: ${dateLabel} at ${timeLabel}`,
-      address ? `Address: ${address}` : null,
+      `Address: ${address}`,
       business.phone ? `Questions? Call us: ${business.phone}` : null,
     ]
       .filter(Boolean)
       .join("\n");
 
-    // SMS to business owner
     const ownerSms = [
       `New booking from ${name} (${phone})!`,
       `Service: ${serviceLabel}`,
       `When: ${dateLabel} at ${timeLabel}`,
-      address ? `Address: ${address}` : null,
+      `Address: ${address}`,
     ]
       .filter(Boolean)
       .join("\n");

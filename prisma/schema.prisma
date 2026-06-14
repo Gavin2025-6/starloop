@@ -244,15 +244,24 @@ model Job {
   title           String
   description     String?
   serviceType     String
-  status          String    @default("requested")
+  status          String    @default("scheduled")
   priority        String    @default("normal")
   scheduledAt     DateTime?
+  scheduledEnd    DateTime?
+  actualStart     DateTime?
+  actualEnd       DateTime?
   completedAt     DateTime?
   address         String?
   lineItems       Json?
   subtotal        Float     @default(0)
   tax             Float     @default(0)
   total           Float     @default(0)
+  paidAmount      Float     @default(0)
+  balanceAmount   Float     @default(0)
+  cancelReason    String?
+  customerName    String?
+  customerPhone   String?
+  serviceDescription String?
   notes           String?
   internalNotes   String?
   photos          String[]
@@ -388,10 +397,14 @@ model GoogleBusinessConnection {
 }
 
 model JobEvent {
-  id        String   @id @default(cuid())
-  jobId     String
-  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  type      String
-  payload   Json?
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  type        String
+  fromStatus  String?
+  toStatus    String?
+  triggeredBy String?
+  note        String?
+  payload     Json?
+  createdAt   DateTime @default(now())
 }

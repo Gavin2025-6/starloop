@@ -37,11 +37,12 @@ export async function getAvailableSlots(
   const startOfDay = new Date(dateStr + "T00:00:00");
   const endOfDay = new Date(dateStr + "T23:59:59");
 
+  // Only SCHEDULED and IN_PROGRESS jobs block slots; terminal/complete states free them
   const jobs = await prisma.job.findMany({
     where: {
       businessId,
       scheduledAt: { gte: startOfDay, lte: endOfDay },
-      status: { notIn: ["cancelled"] },
+      status: { in: ["scheduled", "in_progress"] },
     },
     select: { scheduledAt: true },
   });

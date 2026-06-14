@@ -27,8 +27,16 @@ export async function GET(
     if (!job) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     // Check-on-read: if last review_request event was >72h ago and no review received, append hint
-    const events = [...job.events];
-    const lastReviewReq = [...events].reverse().find((e) => e.type === "sms_sent" && (e.payload as Record<string, unknown>)?.kind === "review_request");
+    const events: Array<{
+      id: string; jobId: string; type: string;
+      fromStatus: string | null; toStatus: string | null;
+      triggeredBy: string | null; note: string | null;
+      payload: unknown; createdAt: Date;
+    }> = [...job.events];
+
+    const lastReviewReq = [...events].reverse().find(
+      (e) => e.type === "sms_sent" && (e.payload as Record<string, unknown>)?.kind === "review_request"
+    );
     const hasReview = events.some((e) => e.type === "review_received");
     if (lastReviewReq && !hasReview) {
       const age = Date.now() - lastReviewReq.createdAt.getTime();
@@ -37,6 +45,10 @@ export async function GET(
           id: `synthetic-no-review-${job.id}`,
           jobId: job.id,
           type: "review_no_response",
+          fromStatus: null,
+          toStatus: null,
+          triggeredBy: null,
+          note: null,
           payload: null,
           createdAt: new Date(lastReviewReq.createdAt.getTime() + 72 * 3600 * 1000),
         });

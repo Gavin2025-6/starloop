@@ -1,4 +1,37 @@
 # Service Star 交接文档
+Updated: 2026-06-14 (PATCH-4: Job State Machine)
+
+---
+
+## PATCH-4 Summary
+
+The Booking → Job → Payment flow is now professional grade:
+
+**State Machine (8 states, strict transitions):**
+```
+SCHEDULED ──→ IN_PROGRESS ──→ COMPLETED ──→ AWAITING_PAYMENT ──→ PAID
+     │              │               └──────────────────────────→ PARTIALLY_PAID ──→ PAID
+     ├──→ CANCELLED (terminal)                                          │
+     └──→ NO_SHOW  (terminal)
+```
+
+**Zero re-entry:** Every booking source (web form, Erin voice, dashboard) writes
+`customerName`, `customerPhone`, `serviceDescription`, `address` directly to the Job.
+The owner never types a customer name twice.
+
+**Side effects wired automatically:**
+- → `in_progress`: records `actualStart`
+- → `completed`: records `actualEnd`, auto-generates Stripe payment link (stored, not sent yet)
+- → `awaiting_payment`: sends SMS to customer with link + notifies owner
+- → `partially_paid`: records balance, creates new Stripe link for remainder
+- → `paid`: marks payment, fires thank-you + review request (idempotent)
+- → `cancelled`: saves reason, frees slot, SMS to customer
+- → `no_show`: frees slot
+
+**All 30 integration tests pass:** `npx tsx scripts/test-state-machine.ts`
+
+---
+
 生成时间：2026-06-09
 
 ## 生产URL

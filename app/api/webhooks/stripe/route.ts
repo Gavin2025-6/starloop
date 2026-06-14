@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
+import { transitionJobStatus } from "@/lib/job-state-machine";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-04-22.dahlia" });
@@ -19,7 +20,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // Idempotency: skip events already processed (use event.id as dedup key via JobEvent upsert)
   try {
     switch (event.type) {
 
@@ -30,8 +30,10 @@ export async function POST(req: NextRequest) {
           where: { stripeAccountId: acct.id },
           data: {
             stripeChargesEnabled: acct.charges_enabled ?? false,
-            stripeOnboardedAt: (acct.charges_enabled && !acct.requirements?.currently_due?.length)
-              ? new Date() : undefined,
+            stripeOnboardedAt:
+              acct.charges_enabled && !acct.requirements?.currently_due?.length
+                ? new Date()
+                : undefined,
           },
         });
         break;
@@ -43,21 +45,54 @@ export async function POST(req: NextRequest) {
         const jobId = pi.metadata?.jobId;
         if (!jobId) break;
 
-        // Idempotency: check if this event was already handled
+        // Idempotency: skip if this exact event was already handled
         const alreadyDone = await prisma.jobEvent.findFirst({
-          where: { jobId, type: "payment_received", payload: { path: ["stripeEventId"], equals: event.id } },
+          where: {
+            jobId,
+            type: "payment_received",
+            payload: { path: ["stripeEventId"], equals: event.id },
+          },
         });
         if (alreadyDone) break;
 
         const amountPaid = pi.amount_received / 100;
-        await prisma.job.update({ where: { id: jobId }, data: { status: "paid" } });
-        await prisma.payment.updateMany({
-          where: { jobId },
-          data: { status: "paid", paidAt: new Date(), stripePaymentIntentId: pi.id },
-        });
+
+        // Record the raw payment receipt (separate from status change)
         await prisma.jobEvent.create({
-          data: { jobId, type: "payment_received", payload: { amount: amountPaid, stripeEventId: event.id } },
+          data: {
+            jobId,
+            type: "payment_received",
+            triggeredBy: "stripe_webhook",
+            payload: { amount: amountPaid, stripeEventId: event.id, paymentIntentId: pi.id },
+          },
         });
+
+        const job = await prisma.job.findUnique({
+          where: { id: jobId },
+          select: { total: true, paidAmount: true, status: true },
+        });
+        if (!job) break;
+
+        const totalOwed = job.total;
+        const alreadyPaid = job.paidAmount ?? 0;
+        const totalPaidNow = alreadyPaid + amountPaid;
+
+        // Overpayment / tip: if paid >= total (with a 1-cent tolerance), it's PAID
+        if (totalPaidNow >= totalOwed - 0.01) {
+          await transitionJobStatus(jobId, "paid", {
+            triggeredBy: "stripe_webhook",
+            paidAmount: totalPaidNow,
+            paymentIntentId: pi.id,
+            stripeEventId: event.id,
+          });
+        } else {
+          await transitionJobStatus(jobId, "partially_paid", {
+            triggeredBy: "stripe_webhook",
+            paidAmount: totalPaidNow,
+            paymentIntentId: pi.id,
+            stripeEventId: event.id,
+          });
+        }
         break;
       }
 
@@ -68,7 +103,12 @@ export async function POST(req: NextRequest) {
         if (!jobId) break;
         await prisma.payment.updateMany({ where: { jobId }, data: { status: "refunded" } });
         await prisma.jobEvent.create({
-          data: { jobId, type: "status_changed", payload: { from: "paid", to: "refunded", stripeEventId: event.id } },
+          data: {
+            jobId,
+            type: "refunded",
+            triggeredBy: "stripe_webhook",
+            payload: { stripeEventId: event.id },
+          },
         });
         break;
       }
@@ -76,23 +116,35 @@ export async function POST(req: NextRequest) {
       // ── charge.dispute.created ───────────────────────────────────────────────
       case "charge.dispute.created": {
         const dispute = event.data.object as Stripe.Dispute;
-        const charge = typeof dispute.charge === "string" ? await stripe.charges.retrieve(dispute.charge) : dispute.charge as Stripe.Charge;
+        const charge =
+          typeof dispute.charge === "string"
+            ? await stripe.charges.retrieve(dispute.charge)
+            : (dispute.charge as Stripe.Charge);
         const jobId = charge.metadata?.jobId;
         if (!jobId) break;
         await prisma.payment.updateMany({ where: { jobId }, data: { status: "disputed" } });
         await prisma.jobEvent.create({
-          data: { jobId, type: "status_changed", payload: { note: "Payment disputed", stripeEventId: event.id } },
+          data: {
+            jobId,
+            type: "disputed",
+            triggeredBy: "stripe_webhook",
+            payload: { note: "Payment disputed", stripeEventId: event.id },
+          },
         });
         break;
       }
 
-      // ── legacy: payment_intent.payment_failed (card-on-file) ─────────────────
       case "payment_intent.payment_failed": {
         const pi = event.data.object as Stripe.PaymentIntent;
         const jobId = pi.metadata?.jobId;
         if (jobId) {
           await prisma.jobEvent.create({
-            data: { jobId, type: "payment_failed", payload: { stripeEventId: event.id } },
+            data: {
+              jobId,
+              type: "payment_failed",
+              triggeredBy: "stripe_webhook",
+              payload: { stripeEventId: event.id },
+            },
           });
         }
         break;

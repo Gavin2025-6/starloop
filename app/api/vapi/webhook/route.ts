@@ -107,11 +107,24 @@ async function handleBookAppointment(
         customerId: customer.id,
         title: serviceDescription ?? "Service Request",
         serviceType: serviceDescription ?? "general",
+        serviceDescription: serviceDescription ?? null,
+        customerName,
+        customerPhone,
         description: `Address: ${customerAddress}`,
         scheduledAt,
         address: customerAddress,
-        status: "requested",
+        status: "scheduled",
         source: "voice_booking",
+        balanceAmount: 0,
+      },
+    });
+
+    await prisma.jobEvent.create({
+      data: {
+        jobId: job.id,
+        type: "booking_created",
+        triggeredBy: "erin_voice",
+        payload: { source: "voice_booking", customerName, customerPhone },
       },
     });
 

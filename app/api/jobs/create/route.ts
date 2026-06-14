@@ -11,10 +11,17 @@ export async function POST(req: NextRequest) {
     const business = await prisma.business.findUnique({ where: { userId: session.user.id } });
     if (!business) return NextResponse.json({ error: "No business" }, { status: 404 });
 
-    const { customerId, title, serviceType, description, priority, address, scheduledAt, lineItems, subtotal, tax, total, source } = await req.json();
-    if (!customerId || !serviceType) return NextResponse.json({ error: "customerId and serviceType required" }, { status: 400 });
+    const {
+      customerId, title, serviceType, description, priority,
+      address, scheduledAt, lineItems, subtotal, tax, total, source,
+    } = await req.json();
+    if (!customerId || !serviceType)
+      return NextResponse.json({ error: "customerId and serviceType required" }, { status: 400 });
+
+    const customer = await prisma.customer.findUnique({ where: { id: customerId } });
 
     const jobNumber = await generateJobNumber();
+    const scheduledDate = scheduledAt ? new Date(scheduledAt) : null;
 
     const job = await prisma.job.create({
       data: {
@@ -23,17 +30,31 @@ export async function POST(req: NextRequest) {
         customerId,
         title: title || serviceType,
         serviceType,
+        serviceDescription: description || null,
         description: description || null,
         priority: priority || "normal",
         address: address || null,
-        scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
+        scheduledAt: scheduledDate,
         lineItems: lineItems || null,
         subtotal: subtotal || 0,
         tax: tax || 0,
         total: total || 0,
+        balanceAmount: total || 0,
+        customerName: customer?.name ?? null,
+        customerPhone: customer?.phone ?? null,
+        status: "scheduled",
         source: source || "manual",
       },
       include: { customer: true },
+    });
+
+    await prisma.jobEvent.create({
+      data: {
+        jobId: job.id,
+        type: "job_created",
+        triggeredBy: session.user.id,
+        payload: { source: source || "manual" },
+      },
     });
 
     return NextResponse.json(job);

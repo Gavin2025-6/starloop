@@ -20,8 +20,9 @@ export async function POST(
       include: { customer: true },
     });
     if (!job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
-    if (!["completed", "invoiced", "paid"].includes(job.status)) {
-      return NextResponse.json({ error: "Job must be complete" }, { status: 400 });
+    const doneStatuses = ["completed", "awaiting_payment", "partially_paid", "paid"];
+    if (!doneStatuses.includes(job.status)) {
+      return NextResponse.json({ error: "Job must be complete before sending a review request" }, { status: 400 });
     }
 
     const reviewUrl = business.googleBusinessUrl || null;

@@ -1,5 +1,41 @@
 # BLOCKERS — 需要 Gavin 本人处理
 
+---
+
+## ✅ PATCH-4: Job State Machine (2026-06-14) — DEPLOYED
+
+**What changed:**
+- Strict 8-state machine: `scheduled → in_progress → completed → awaiting_payment → paid / partially_paid` (+ `cancelled`, `no_show`)
+- Single `transitionJobStatus()` function — every status change goes through it, no raw writes
+- `JobEvent` audit trail enriched with `fromStatus`, `toStatus`, `triggeredBy`, `note`
+- Zero re-entry: booking → job populates `customerName`, `customerPhone`, `serviceDescription`, `address`
+- Stripe webhook now calls `transitionJobStatus` (idempotent, handles partial payments)
+- `availability.ts` now only blocks `scheduled` + `in_progress` jobs (releases slot on cancel/complete)
+- Dashboard: colored badges for all 8 states, only legal action buttons shown per state
+- Cancel modal (with reason), Reschedule modal (validates no double-booking), partial payment display
+- 30-test integration suite: `npx tsx scripts/test-state-machine.ts` — all pass
+
+**Files changed:**
+- `prisma/schema.prisma` + `prisma/migrations/20260614_job_state_machine/migration.sql`
+- `lib/job-state-machine.ts` (NEW — core)
+- `lib/availability.ts`, `lib/activity-messages.ts`
+- `app/api/jobs/[id]/transition/`, `complete/`, `status/`, `invoice/`, `cancel/` (NEW), `reschedule/` (NEW), `route.ts`
+- `app/api/booking/create/`, `app/api/jobs/create/`, `app/api/vapi/webhook/`, `app/api/webhooks/stripe/`
+- `app/dashboard/jobs/page.tsx`, `app/dashboard/jobs/[id]/page.tsx`
+- `scripts/test-state-machine.ts` (NEW)
+
+**Manual tests needed:**
+1. Create a booking at `/book/[slug]` → confirm job appears in SCHEDULED state with address + phone
+2. From dashboard job detail: Start → Complete → Send Payment Link → verify SMS sent (AWAITING_PAYMENT)
+3. Reschedule a SCHEDULED job → old slot freed, new slot blocked
+4. Cancel a SCHEDULED job → confirm reason saved, slot freed, customer SMS sent
+5. Trigger Stripe webhook `payment_intent.succeeded` with partial amount → job goes PARTIALLY_PAID
+6. Pay full balance → job goes PAID, review request SMS fires
+
+---
+
+# Original Blockers
+
 | # | 阻塞项 | 影响范围 | 绕行方案 |
 |---|-------|---------|---------|
 | 1 | **域名 servicestar.app 未绑定 Railway** | 短信链接全为 railway.app 死链，客户侧体验差 | 代码已用 `NEXT_PUBLIC_APP_URL` env var，Gavin 绑域名后改一个变量即可 |

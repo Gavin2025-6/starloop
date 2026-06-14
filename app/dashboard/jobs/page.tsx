@@ -6,21 +6,23 @@ import { Plus, CheckCircle, AlertCircle, Search, X } from "lucide-react";
 
 interface Job {
   id: string; jobNumber: string; title: string; serviceType: string;
-  status: string; priority: string; total: number; scheduledAt: string | null;
-  completedAt: string | null; createdAt: string;
+  status: string; priority: string; total: number; paidAmount: number;
+  balanceAmount: number; scheduledAt: string | null; completedAt: string | null;
+  createdAt: string; cancelReason: string | null;
   customer: { name: string; phone: string | null };
 }
 
 interface Customer { id: string; name: string; phone: string | null; }
 
 const STATUS_CFG: Record<string, { label: string; bg: string; text: string }> = {
-  scheduled:   { label: "Scheduled",   bg: "bg-[#EFF6FF]",  text: "text-[#1D4ED8]"  },
-  in_progress: { label: "In Progress", bg: "bg-[#FFFBEB]",  text: "text-[#B45309]"  },
-  completed:   { label: "Complete",    bg: "bg-[#F0FDF4]",  text: "text-[#15803D]"  },
-  requested:   { label: "Requested",   bg: "bg-gray-100",   text: "text-gray-600"   },
-  invoiced:    { label: "Invoiced",    bg: "bg-teal-50",    text: "text-teal-700"   },
-  paid:        { label: "Paid",        bg: "bg-emerald-50", text: "text-emerald-700"},
-  cancelled:   { label: "Cancelled",   bg: "bg-red-50",     text: "text-red-700"    },
+  scheduled:        { label: "Scheduled",        bg: "bg-[#EFF6FF]",   text: "text-[#1D4ED8]"   },
+  in_progress:      { label: "In Progress",      bg: "bg-[#FFFBEB]",   text: "text-[#B45309]"   },
+  completed:        { label: "Complete",          bg: "bg-[#F0FDF4]",   text: "text-[#15803D]"   },
+  awaiting_payment: { label: "Awaiting Payment", bg: "bg-[#FFF7ED]",   text: "text-[#C2410C]"   },
+  partially_paid:   { label: "Partially Paid",   bg: "bg-orange-50",   text: "text-orange-700"  },
+  paid:             { label: "Paid",             bg: "bg-emerald-50",  text: "text-emerald-700" },
+  cancelled:        { label: "Cancelled",        bg: "bg-red-50",      text: "text-red-700"     },
+  no_show:          { label: "No Show",          bg: "bg-gray-100",    text: "text-gray-500"    },
 };
 
 function fmtDateTime(d: string | null) {
@@ -56,6 +58,13 @@ const TABS: Array<{ key: FilterTab; label: string }> = [
   { key: "unpaid",      label: "Unpaid" },
 ];
 
+function getActionBtn(status: string): { label: string; cls: string } | null {
+  if (status === "scheduled")   return { label: "Start Job",     cls: "bg-[#F59E0B] text-white hover:bg-[#D97706]"  };
+  if (status === "in_progress") return { label: "Mark Complete", cls: "bg-[#16A34A] text-white hover:bg-[#15803D]"  };
+  if (status === "completed")   return { label: "Send Payment",  cls: "bg-[#4A6FFF] text-white hover:bg-[#3B5EEE]"  };
+  return null;
+}
+
 function JobsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -68,26 +77,21 @@ function JobsContent() {
     return "all";
   });
 
-  // New job modal
   const [showModal, setShowModal] = useState(false);
   const [modalStep, setModalStep] = useState(1);
-
-  // Step 1 — customer
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [custSearch, setCustSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showNewCust, setShowNewCust] = useState(false);
   const [newCust, setNewCust] = useState({ name: "", phone: "" });
-
-  // Step 2 — job details
   const [jobForm, setJobForm] = useState({
     serviceType: "", total: "", date: "", time: "", priority: "normal", address: "",
   });
 
-  // Complete job modal
   const [completeJobId, setCompleteJobId] = useState<string | null>(null);
   const [finalAmount, setFinalAmount] = useState("");
   const [completing, setCompleting] = useState(false);
+  const [transitioning, setTransitioning] = useState<string | null>(null);
 
   useEffect(() => {
     load();
@@ -101,12 +105,30 @@ function JobsContent() {
     setLoading(false);
   }
 
-  async function updateStatus(jobId: string, status: string) {
-    await fetch(`/api/jobs/${jobId}/status`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    load();
+  async function handleCardAction(e: React.MouseEvent, job: Job) {
+    e.stopPropagation();
+    if (job.status === "scheduled") {
+      setTransitioning(job.id);
+      await fetch(`/api/jobs/${job.id}/transition`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: "in_progress" }),
+      });
+      setTransitioning(null);
+      load();
+    } else if (job.status === "in_progress") {
+      setCompleteJobId(job.id);
+      setFinalAmount(String(job.total || ""));
+    } else if (job.status === "completed") {
+      setTransitioning(job.id);
+      await fetch(`/api/jobs/${job.id}/transition`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: "awaiting_payment" }),
+      });
+      setTransitioning(null);
+      load();
+    } else {
+      router.push(`/dashboard/jobs/${job.id}`);
+    }
   }
 
   async function completeJob() {
@@ -152,19 +174,12 @@ function JobsContent() {
   }
 
   function openModal() {
-    setShowModal(true);
-    setModalStep(1);
-    setSelectedCustomer(null);
-    setCustSearch("");
-    setShowNewCust(false);
-    setNewCust({ name: "", phone: "" });
+    setShowModal(true); setModalStep(1); setSelectedCustomer(null);
+    setCustSearch(""); setShowNewCust(false); setNewCust({ name: "", phone: "" });
     setJobForm({ serviceType: "", total: "", date: "", time: "", priority: "normal", address: "" });
   }
 
-  function closeModal() {
-    setShowModal(false);
-    setModalStep(1);
-  }
+  function closeModal() { setShowModal(false); setModalStep(1); }
 
   const filteredCusts = useMemo(() => {
     if (!custSearch.trim()) return customers.slice(0, 8);
@@ -174,10 +189,11 @@ function JobsContent() {
     ).slice(0, 8);
   }, [customers, custSearch]);
 
-  const scheduledCount = jobs.filter(j => j.status === "scheduled").length;
+  const scheduledCount  = jobs.filter(j => j.status === "scheduled").length;
   const inProgressCount = jobs.filter(j => j.status === "in_progress").length;
-  const completeCount = jobs.filter(
-    j => ["completed", "invoiced", "paid"].includes(j.status) && isThisMonth(j.completedAt ?? j.createdAt)
+  const completeCount   = jobs.filter(j =>
+    ["completed","awaiting_payment","partially_paid","paid"].includes(j.status) &&
+    isThisMonth(j.completedAt ?? j.createdAt)
   ).length;
 
   const filteredJobs = useMemo(() => {
@@ -185,31 +201,11 @@ function JobsContent() {
       case "today":       return jobs.filter(j => isToday(j.scheduledAt));
       case "scheduled":   return jobs.filter(j => j.status === "scheduled");
       case "in_progress": return jobs.filter(j => j.status === "in_progress");
-      case "complete":    return jobs.filter(j => ["completed","invoiced","paid"].includes(j.status));
-      case "unpaid":      return jobs.filter(j => ["completed","invoiced"].includes(j.status));
+      case "complete":    return jobs.filter(j => ["completed","awaiting_payment","partially_paid","paid"].includes(j.status));
+      case "unpaid":      return jobs.filter(j => ["completed","awaiting_payment","partially_paid"].includes(j.status));
       default:            return jobs;
     }
   }, [jobs, activeTab]);
-
-  function handleCardAction(e: React.MouseEvent, job: Job) {
-    e.stopPropagation();
-    if (job.status === "scheduled" || job.status === "requested") {
-      updateStatus(job.id, "in_progress");
-    } else if (job.status === "in_progress") {
-      setCompleteJobId(job.id);
-      setFinalAmount(String(job.total));
-    } else {
-      router.push(`/dashboard/jobs/${job.id}`);
-    }
-  }
-
-  function getActionBtn(status: string) {
-    if (status === "scheduled" || status === "requested")
-      return { label: "Start Job",      cls: "bg-[#F59E0B] text-white hover:bg-[#D97706]" };
-    if (status === "in_progress")
-      return { label: "Mark Complete",  cls: "bg-[#16A34A] text-white hover:bg-[#15803D]" };
-    return   { label: "View Details",   cls: "bg-gray-100 text-gray-600 hover:bg-gray-200"  };
-  }
 
   const step1Valid = selectedCustomer !== null || (showNewCust && newCust.name.trim() && newCust.phone.trim());
   const step2Valid = jobForm.serviceType.trim().length > 0;
@@ -220,7 +216,7 @@ function JobsContent() {
 
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
-          <h1 className="text-2xl font-bold text-[#0D1117]" style={{ fontFamily: "'Inter', sans-serif" }}>Jobs</h1>
+          <h1 className="text-2xl font-bold text-[#0D1117]">Jobs</h1>
           <button
             onClick={openModal}
             className="flex items-center gap-2 bg-[#0D1117] text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#374151] transition-colors"
@@ -267,6 +263,11 @@ function JobsContent() {
             {filteredJobs.map(job => {
               const sc = STATUS_CFG[job.status] ?? { label: job.status, bg: "bg-gray-100", text: "text-gray-600" };
               const btn = getActionBtn(job.status);
+              const isSpinning = transitioning === job.id;
+              const amountLabel = job.status === "partially_paid"
+                ? `$${job.paidAmount.toLocaleString()} paid / $${job.balanceAmount.toLocaleString()} due`
+                : `$${job.total.toLocaleString()}`;
+
               return (
                 <div
                   key={job.id}
@@ -274,16 +275,13 @@ function JobsContent() {
                   className="bg-white rounded-xl p-4 cursor-pointer hover:shadow-md transition-shadow"
                   style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)", borderRadius: "12px" }}
                 >
-                  {/* Row 1: Customer + Amount */}
                   <div className="flex items-baseline justify-between mb-1">
                     <span className="text-[18px] font-bold text-[#0D1117] leading-tight">{job.customer.name}</span>
-                    <span className="text-[18px] font-bold text-[#0D1117] ml-3 shrink-0">${job.total.toLocaleString()}</span>
+                    <span className="text-[15px] font-bold text-[#0D1117] ml-3 shrink-0">{amountLabel}</span>
                   </div>
 
-                  {/* Row 2: Service description */}
                   <p className="text-[14px] text-gray-500 mb-3">{job.serviceType}</p>
 
-                  {/* Row 3: Date + Status badge */}
                   <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                     <span className="text-[14px] text-gray-400 flex items-center gap-1.5">
                       <span>📅</span>
@@ -295,16 +293,18 @@ function JobsContent() {
                     </span>
                   </div>
 
-                  {/* Row 4: Action button */}
-                  <div className="sm:flex sm:justify-end">
-                    <button
-                      onClick={e => handleCardAction(e, job)}
-                      className={`w-full sm:w-auto px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${btn.cls}`}
-                      style={{ borderRadius: "8px" }}
-                    >
-                      {btn.label}
-                    </button>
-                  </div>
+                  {btn && (
+                    <div className="sm:flex sm:justify-end">
+                      <button
+                        onClick={e => handleCardAction(e, job)}
+                        disabled={isSpinning}
+                        className={`w-full sm:w-auto px-5 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-60 ${btn.cls}`}
+                        style={{ borderRadius: "8px" }}
+                      >
+                        {isSpinning ? "…" : btn.label}
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -315,19 +315,12 @@ function JobsContent() {
       {/* ── 3-Step New Job Modal ── */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-          <div
-            className="bg-white w-full sm:max-w-lg shadow-xl max-h-[90vh] overflow-y-auto"
-            style={{ borderRadius: "16px 16px 0 0" }}
-          >
-            {/* Modal header */}
+          <div className="bg-white w-full sm:max-w-lg shadow-xl max-h-[90vh] overflow-y-auto" style={{ borderRadius: "16px 16px 0 0" }}>
             <div className="flex items-center justify-between px-6 pt-6 pb-4">
               <h2 className="text-lg font-bold text-[#0D1117]">New Job</h2>
-              <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">
-                <X size={20} />
-              </button>
+              <button onClick={closeModal} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
             </div>
 
-            {/* Step progress */}
             <div className="flex items-center gap-2 px-6 pb-5">
               {[1, 2, 3].map(step => (
                 <div key={step} className="flex items-center gap-2">
@@ -349,8 +342,6 @@ function JobsContent() {
             </div>
 
             <div className="px-6 pb-8 space-y-4">
-
-              {/* ── Step 1: Customer ── */}
               {modalStep === 1 && (
                 <>
                   {!showNewCust ? (
@@ -360,46 +351,34 @@ function JobsContent() {
                         <div className="relative">
                           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                           <input
-                            type="text"
-                            value={custSearch}
+                            type="text" value={custSearch}
                             onChange={e => { setCustSearch(e.target.value); setSelectedCustomer(null); }}
                             placeholder="Name or phone number..."
                             className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-gray-400"
                           />
                         </div>
                       </div>
-
                       {selectedCustomer ? (
                         <div className="p-3 bg-[#F0FDF4] border border-green-200 rounded-lg flex items-center justify-between">
                           <div>
                             <span className="text-sm font-semibold text-[#0D1117]">{selectedCustomer.name}</span>
-                            {selectedCustomer.phone && (
-                              <span className="text-xs text-gray-500 ml-2">{selectedCustomer.phone}</span>
-                            )}
+                            {selectedCustomer.phone && <span className="text-xs text-gray-500 ml-2">{selectedCustomer.phone}</span>}
                           </div>
-                          <button onClick={() => setSelectedCustomer(null)} className="text-gray-400 hover:text-gray-600">
-                            <X size={14} />
-                          </button>
+                          <button onClick={() => setSelectedCustomer(null)} className="text-gray-400 hover:text-gray-600"><X size={14} /></button>
                         </div>
                       ) : custSearch.trim() && filteredCusts.length > 0 ? (
                         <div className="border border-gray-200 rounded-lg overflow-hidden">
                           {filteredCusts.map(c => (
-                            <button
-                              key={c.id}
-                              onClick={() => { setSelectedCustomer(c); setCustSearch(""); }}
-                              className="w-full px-3 py-2.5 flex items-center justify-between hover:bg-gray-50 text-left border-b border-gray-100 last:border-0"
-                            >
+                            <button key={c.id} onClick={() => { setSelectedCustomer(c); setCustSearch(""); }}
+                              className="w-full px-3 py-2.5 flex items-center justify-between hover:bg-gray-50 text-left border-b border-gray-100 last:border-0">
                               <span className="text-sm font-medium text-[#0D1117]">{c.name}</span>
                               {c.phone && <span className="text-xs text-gray-400">{c.phone}</span>}
                             </button>
                           ))}
                         </div>
                       ) : null}
-
-                      <button
-                        onClick={() => { setShowNewCust(true); setSelectedCustomer(null); setCustSearch(""); }}
-                        className="text-sm text-[#4A6FFF] hover:underline font-medium"
-                      >
+                      <button onClick={() => { setShowNewCust(true); setSelectedCustomer(null); setCustSearch(""); }}
+                        className="text-sm text-[#4A6FFF] hover:underline font-medium">
                         + New Customer
                       </button>
                     </div>
@@ -407,124 +386,84 @@ function JobsContent() {
                     <div className="border border-gray-200 rounded-xl p-4 bg-gray-50 space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-semibold text-[#0D1117]">New Customer</span>
-                        <button
-                          onClick={() => setShowNewCust(false)}
-                          className="text-xs text-gray-400 hover:text-gray-600 underline"
-                        >
-                          Cancel
-                        </button>
+                        <button onClick={() => setShowNewCust(false)} className="text-xs text-gray-400 hover:text-gray-600 underline">Cancel</button>
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Name *</label>
-                        <input
-                          type="text"
-                          value={newCust.name}
-                          onChange={e => setNewCust(n => ({ ...n, name: e.target.value }))}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none bg-white"
-                        />
+                        <input type="text" value={newCust.name} onChange={e => setNewCust(n => ({ ...n, name: e.target.value }))}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none bg-white" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Phone *</label>
-                        <input
-                          type="tel"
-                          value={newCust.phone}
-                          onChange={e => setNewCust(n => ({ ...n, phone: e.target.value }))}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none bg-white"
-                        />
+                        <input type="tel" value={newCust.phone} onChange={e => setNewCust(n => ({ ...n, phone: e.target.value }))}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none bg-white" />
                       </div>
                     </div>
                   )}
-
-                  <button
-                    onClick={() => setModalStep(2)}
-                    disabled={!step1Valid}
-                    className="w-full bg-[#0D1117] text-white py-3 rounded-lg text-sm font-semibold hover:bg-[#374151] disabled:opacity-40 transition-colors mt-2"
-                  >
+                  <button onClick={() => setModalStep(2)} disabled={!step1Valid}
+                    className="w-full bg-[#0D1117] text-white py-3 rounded-lg text-sm font-semibold hover:bg-[#374151] disabled:opacity-40 transition-colors mt-2">
                     Next →
                   </button>
                 </>
               )}
 
-              {/* ── Step 2: Job Details ── */}
               {modalStep === 2 && (
                 <>
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
-                      Service Description *
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={jobForm.serviceType}
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Service Description *</label>
+                    <textarea rows={3} value={jobForm.serviceType}
                       onChange={e => setJobForm(f => ({ ...f, serviceType: e.target.value }))}
                       placeholder="e.g. Weekly lawn mowing"
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none resize-none"
-                    />
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none resize-none" />
                   </div>
-
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Amount</label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-sm">$</span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={jobForm.total}
+                      <input type="number" min="0" step="0.01" value={jobForm.total}
                         onChange={e => setJobForm(f => ({ ...f, total: e.target.value }))}
                         placeholder="0.00"
-                        className="w-full pl-7 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none"
-                      />
+                        className="w-full pl-7 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none" />
                     </div>
                   </div>
-
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Address</label>
+                    <input type="text" value={jobForm.address}
+                      onChange={e => setJobForm(f => ({ ...f, address: e.target.value }))}
+                      placeholder="123 Main St, City"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none" />
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Date</label>
-                      <input
-                        type="date"
-                        value={jobForm.date}
-                        onChange={e => setJobForm(f => ({ ...f, date: e.target.value }))}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none"
-                      />
+                      <input type="date" value={jobForm.date} onChange={e => setJobForm(f => ({ ...f, date: e.target.value }))}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Time</label>
-                      <input
-                        type="time"
-                        value={jobForm.time}
-                        onChange={e => setJobForm(f => ({ ...f, time: e.target.value }))}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none"
-                      />
+                      <input type="time" value={jobForm.time} onChange={e => setJobForm(f => ({ ...f, time: e.target.value }))}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none" />
                     </div>
                   </div>
-
                   <div className="flex gap-3 pt-1">
-                    <button
-                      onClick={() => setModalStep(1)}
-                      className="flex-1 border border-gray-200 py-3 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors"
-                    >
+                    <button onClick={() => setModalStep(1)}
+                      className="flex-1 border border-gray-200 py-3 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
                       ← Back
                     </button>
-                    <button
-                      onClick={() => setModalStep(3)}
-                      disabled={!step2Valid}
-                      className="flex-1 bg-[#0D1117] text-white py-3 rounded-lg text-sm font-semibold hover:bg-[#374151] disabled:opacity-40 transition-colors"
-                    >
+                    <button onClick={() => setModalStep(3)} disabled={!step2Valid}
+                      className="flex-1 bg-[#0D1117] text-white py-3 rounded-lg text-sm font-semibold hover:bg-[#374151] disabled:opacity-40 transition-colors">
                       Next →
                     </button>
                   </div>
                 </>
               )}
 
-              {/* ── Step 3: Confirm ── */}
               {modalStep === 3 && (
                 <>
                   <div className="bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-100">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Customer</span>
-                      <span className="font-semibold text-[#0D1117]">
-                        {selectedCustomer?.name ?? newCust.name}
-                      </span>
+                      <span className="font-semibold text-[#0D1117]">{selectedCustomer?.name ?? newCust.name}</span>
                     </div>
                     <div className="flex justify-between text-sm gap-4">
                       <span className="text-gray-500 shrink-0">Service</span>
@@ -534,6 +473,12 @@ function JobsContent() {
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-500">Amount</span>
                         <span className="font-semibold text-[#0D1117]">${parseFloat(jobForm.total).toFixed(2)}</span>
+                      </div>
+                    )}
+                    {jobForm.address && (
+                      <div className="flex justify-between text-sm gap-4">
+                        <span className="text-gray-500 shrink-0">Address</span>
+                        <span className="font-semibold text-[#0D1117] text-right">{jobForm.address}</span>
                       </div>
                     )}
                     {(jobForm.date || jobForm.time) && (
@@ -546,17 +491,11 @@ function JobsContent() {
                       </div>
                     )}
                   </div>
-
-                  <button
-                    onClick={createJob}
-                    className="w-full bg-[#0D1117] text-white py-3 rounded-lg text-sm font-bold hover:bg-[#374151] transition-colors"
-                  >
+                  <button onClick={createJob}
+                    className="w-full bg-[#0D1117] text-white py-3 rounded-lg text-sm font-bold hover:bg-[#374151] transition-colors">
                     Create Job
                   </button>
-                  <button
-                    onClick={() => setModalStep(2)}
-                    className="w-full text-sm text-gray-400 hover:text-gray-600 py-1 text-center"
-                  >
+                  <button onClick={() => setModalStep(2)} className="w-full text-sm text-gray-400 hover:text-gray-600 py-1 text-center">
                     ← Back
                   </button>
                 </>
@@ -575,32 +514,21 @@ function JobsContent() {
               <h2 className="text-lg font-bold text-[#0D1117]">Mark Complete</h2>
             </div>
             <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
-                Final Amount ($)
-              </label>
-              <input
-                type="number"
-                value={finalAmount}
-                onChange={e => setFinalAmount(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-lg font-bold focus:outline-none text-[#0D1117]"
-              />
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Final Amount ($)</label>
+              <input type="number" value={finalAmount} onChange={e => setFinalAmount(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-lg font-bold focus:outline-none text-[#0D1117]" />
             </div>
             <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 mb-4 flex items-start gap-2">
               <AlertCircle size={14} className="text-[#F59E0B] mt-0.5 shrink-0" />
-              <p className="text-xs text-[#B45309]">This will trigger invoice + follow-up SMS to the customer.</p>
+              <p className="text-xs text-[#B45309]">Marks job complete and prepares the payment link. Click "Send Payment" to SMS the customer.</p>
             </div>
             <div className="flex gap-3">
-              <button
-                onClick={() => setCompleteJobId(null)}
-                className="flex-1 border border-gray-200 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50"
-              >
+              <button onClick={() => setCompleteJobId(null)}
+                className="flex-1 border border-gray-200 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50">
                 Cancel
               </button>
-              <button
-                onClick={completeJob}
-                disabled={completing}
-                className="flex-1 bg-[#16A34A] text-white py-2.5 rounded-lg text-sm font-bold hover:bg-[#15803D] disabled:opacity-60 transition-colors"
-              >
+              <button onClick={completeJob} disabled={completing}
+                className="flex-1 bg-[#16A34A] text-white py-2.5 rounded-lg text-sm font-bold hover:bg-[#15803D] disabled:opacity-60 transition-colors">
                 {completing ? "Saving..." : "Confirm"}
               </button>
             </div>
