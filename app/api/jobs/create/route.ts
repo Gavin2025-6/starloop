@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateJobNumber } from "@/lib/job-number";
@@ -13,7 +14,8 @@ export async function POST(req: NextRequest) {
 
     const {
       customerId, title, serviceType, description, priority,
-      address, scheduledAt, lineItems, subtotal, tax, total, source,
+      address, addressLine1, addressLine2, city, province, postalCode, country,
+      scheduledAt, lineItems, subtotal, tax, total, source,
     } = await req.json();
     if (!customerId || !serviceType)
       return NextResponse.json({ error: "customerId and serviceType required" }, { status: 400 });
@@ -26,6 +28,7 @@ export async function POST(req: NextRequest) {
     const job = await prisma.job.create({
       data: {
         jobNumber,
+        clientToken: randomUUID(),
         businessId: business.id,
         customerId,
         title: title || serviceType,
@@ -33,7 +36,13 @@ export async function POST(req: NextRequest) {
         serviceDescription: description || null,
         description: description || null,
         priority: priority || "normal",
-        address: address || null,
+        address: address || addressLine1 || null,
+        addressLine1: addressLine1 || null,
+        addressLine2: addressLine2 || null,
+        city: city || null,
+        province: province || null,
+        postalCode: postalCode || null,
+        country: country || "Canada",
         scheduledAt: scheduledDate,
         lineItems: lineItems || null,
         subtotal: subtotal || 0,

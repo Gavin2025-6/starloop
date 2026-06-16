@@ -33,6 +33,8 @@ export interface TransitionMetadata {
   finalAmount?: number;
   paidAmount?: number;
   cancelReason?: string;
+  cancelledBy?: string;
+  paymentMethod?: string;
   paymentIntentId?: string;
   stripeEventId?: string;
 }
@@ -61,7 +63,7 @@ export async function transitionJobStatus(
 ): Promise<Record<string, unknown>> {
   const job = await prisma.job.findUniqueOrThrow({
     where: { id: jobId },
-    include: { customer: true, business: true, payment: true },
+    include: { customer: true, business: true, payment: true, reviewStatus: true },
   });
 
   const fromStatus = job.status;
@@ -99,6 +101,7 @@ export async function transitionJobStatus(
 
   if (toStatus === "cancelled" || toStatus === "no_show") {
     if (metadata.cancelReason) updateData.cancelReason = metadata.cancelReason;
+    if (metadata.cancelledBy) updateData.cancelledBy = metadata.cancelledBy;
   }
 
   if (toStatus === "paid") {
@@ -106,6 +109,9 @@ export async function transitionJobStatus(
     const paid = metadata.paidAmount ?? totalOwed;
     updateData.paidAmount = paid;
     updateData.balanceAmount = 0;
+    if (metadata.paymentMethod) updateData.paymentMethod = metadata.paymentMethod;
+    // Schedule review request 30 minutes from now
+    updateData.reviewRequestScheduledAt = new Date(Date.now() + 30 * 60 * 1000);
   }
 
   if (toStatus === "partially_paid") {
@@ -119,7 +125,7 @@ export async function transitionJobStatus(
   const updated = await prisma.job.update({
     where: { id: jobId },
     data: updateData,
-    include: { customer: true, business: true, payment: true },
+    include: { customer: true, business: true, payment: true, reviewStatus: true },
   });
 
   // Write immutable audit entry
@@ -160,6 +166,7 @@ async function runSideEffects(
     serviceType: string;
     customerName: string | null;
     customerPhone: string | null;
+    clientToken: string | null;
     customer: { name: string; phone: string | null };
     business: {
       id: string;
@@ -176,6 +183,7 @@ async function runSideEffects(
   const customerPhone = job.customerPhone ?? job.customer.phone;
   const customerName = job.customerName ?? job.customer.name;
   const isTrial = process.env.TWILIO_MOCK === "1";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
   switch (toStatus) {
     case "completed": {
@@ -238,16 +246,13 @@ async function runSideEffects(
     }
 
     case "awaiting_payment": {
-      // Retrieve stored payment link URL then SMS customer
-      const payment = await prisma.payment.findUnique({ where: { jobId } });
-      const linkUrl = payment?.stripePaymentLinkId
-        ? await getPaymentLinkUrl(payment.stripePaymentLinkId)
+      const totalAmount = job.total;
+      const clientHubUrl = job.clientToken && appUrl
+        ? `${appUrl}/pay/${job.clientToken}`
         : null;
 
-      const totalAmount = job.total;
-
       if (customerPhone) {
-        if (isTrial || !linkUrl) {
+        if (isTrial || !clientHubUrl) {
           await sendSms({
             to: customerPhone,
             body: `Hi ${customerName}! Your ${job.serviceType} is complete. Amount due: $${totalAmount.toFixed(2)} — your service provider will share payment details.`,
@@ -262,13 +267,13 @@ async function runSideEffects(
         } else {
           await sendSms({
             to: customerPhone,
-            body: `Hi ${customerName}! Your ${job.serviceType} is complete. Pay $${totalAmount.toFixed(2)} here: ${linkUrl}`.slice(0, 160),
+            body: `Hi ${customerName}! Your ${job.serviceType} is complete. Pay $${totalAmount.toFixed(2)} here: ${clientHubUrl}\nReply STOP to opt out.`.slice(0, 160),
           }).catch(() => {});
           await prisma.jobEvent.create({
             data: {
               jobId,
               type: "sms_sent",
-              payload: { kind: "payment_link", amount: totalAmount },
+              payload: { kind: "payment_link", amount: totalAmount, url: clientHubUrl },
             },
           });
         }

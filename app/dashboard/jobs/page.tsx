@@ -90,6 +90,7 @@ function JobsContent() {
 
   const [completeJobId, setCompleteJobId] = useState<string | null>(null);
   const [finalAmount, setFinalAmount] = useState("");
+  const [paymentChoice, setPaymentChoice] = useState<"online" | "cash" | "cheque">("online");
   const [completing, setCompleting] = useState(false);
   const [transitioning, setTransitioning] = useState<string | null>(null);
 
@@ -118,6 +119,7 @@ function JobsContent() {
     } else if (job.status === "in_progress") {
       setCompleteJobId(job.id);
       setFinalAmount(String(job.total || ""));
+      setPaymentChoice("online");
     } else if (job.status === "completed") {
       setTransitioning(job.id);
       await fetch(`/api/jobs/${job.id}/transition`, {
@@ -136,7 +138,10 @@ function JobsContent() {
     setCompleting(true);
     await fetch(`/api/jobs/${completeJobId}/complete`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ finalAmount: parseFloat(finalAmount) || 0 }),
+      body: JSON.stringify({
+        finalAmount: parseFloat(finalAmount) || 0,
+        paymentChoice,
+      }),
     });
     setCompleteJobId(null);
     setCompleting(false);
@@ -518,10 +523,39 @@ function JobsContent() {
               <input type="number" value={finalAmount} onChange={e => setFinalAmount(e.target.value)}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-lg font-bold focus:outline-none text-[#0D1117]" />
             </div>
-            <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 mb-4 flex items-start gap-2">
-              <AlertCircle size={14} className="text-[#F59E0B] mt-0.5 shrink-0" />
-              <p className="text-xs text-[#B45309]">Marks job complete and prepares the payment link. Click "Send Payment" to SMS the customer.</p>
+            <div className="mb-5">
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">How was payment handled?</label>
+              <div className="space-y-2">
+                {(["online", "cash", "cheque"] as const).map(choice => (
+                  <label key={choice} className="flex items-center gap-3 cursor-pointer p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="paymentChoice"
+                      value={choice}
+                      checked={paymentChoice === choice}
+                      onChange={() => setPaymentChoice(choice)}
+                      className="accent-[#0D1117]"
+                    />
+                    <span className="text-sm font-medium text-[#0D1117]">
+                      {choice === "online" ? "Send online payment link (SMS to customer)" :
+                       choice === "cash" ? "Cash received" : "Cheque received"}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
+            {paymentChoice === "online" && (
+              <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 mb-4 flex items-start gap-2">
+                <AlertCircle size={14} className="text-[#F59E0B] mt-0.5 shrink-0" />
+                <p className="text-xs text-[#B45309]">An SMS with the payment link will be sent to the customer.</p>
+              </div>
+            )}
+            {(paymentChoice === "cash" || paymentChoice === "cheque") && (
+              <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3 mb-4 flex items-start gap-2">
+                <CheckCircle size={14} className="text-emerald-500 mt-0.5 shrink-0" />
+                <p className="text-xs text-emerald-700">Job will be marked PAID immediately. No SMS will be sent.</p>
+              </div>
+            )}
             <div className="flex gap-3">
               <button onClick={() => setCompleteJobId(null)}
                 className="flex-1 border border-gray-200 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50">

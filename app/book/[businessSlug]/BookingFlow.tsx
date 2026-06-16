@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
 
 interface PriceBookItem {
   id: string;
@@ -19,6 +19,9 @@ interface BusinessInfo {
   slug: string;
   phone: string | null;
   bookingWeekendEnabled: boolean;
+  cancellationProtectionEnabled: boolean;
+  cancellationPolicyText: string | null;
+  stripePublishableKey: string | null;
 }
 
 interface Slot {
@@ -495,6 +498,16 @@ export default function BookingFlow({ business, initial, priceBookItems }: Props
                 )}
               </div>
             </div>
+
+            {business.cancellationProtectionEnabled && business.cancellationPolicyText && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                <ShieldCheck size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-semibold text-amber-800 mb-0.5">Cancellation Policy</p>
+                  <p className="text-xs text-amber-700">{business.cancellationPolicyText}</p>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-3">

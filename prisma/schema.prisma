@@ -94,6 +94,15 @@ model Business {
   avgJobDurationMins    Int      @default(90)
   travelBufferMins      Int      @default(30)
 
+  // v5 cancellation policy
+  cancellationProtectionEnabled Boolean  @default(false)
+  cancellationWindowHours       Int      @default(24)
+  cancellationFeeType           String   @default("fixed")
+  cancellationFeeAmount         Decimal  @default(0)
+  cancellationPolicyText        String?
+  noShowFeeEnabled              Boolean  @default(false)
+  noShowFeeAmount               Decimal  @default(0)
+
   customers             Customer[]
   campaigns             Campaign[]
   profile               PublicProfile?
@@ -134,6 +143,11 @@ model Customer {
   city         String?
   province     String?
   postalCode   String?
+
+  // v5 customer risk
+  noShowCount      Int     @default(0)
+  isHighRisk       Boolean @default(false)
+  requiresDeposit  Boolean @default(false)
 
   campaignResults CampaignResult[]
   referrals       Referral[]
@@ -282,9 +296,24 @@ model Job {
   province        String?
   postalCode      String?
 
+  // v5 structured address + client hub + payment + review
+  clientToken              String?   @unique
+  addressLine1             String?
+  addressLine2             String?
+  country                  String?   @default("Canada")
+  paymentMethod            String?
+  cancelledBy              String?
+  setupIntentId            String?
+  reviewRequestScheduledAt DateTime?
+  reviewRequestSentAt      DateTime?
+  reviewClicked            Boolean   @default(false)
+  reviewClickedAt          DateTime?
+  reviewClickedVia         String?
+
   invoice         Invoice?
   events          JobEvent[]
   payment         Payment?
+  reviewStatus    JobReviewStatus?
 }
 
 model Invoice {
@@ -407,4 +436,18 @@ model JobEvent {
   note        String?
   payload     Json?
   createdAt   DateTime @default(now())
+}
+
+model JobReviewStatus {
+  id             String    @id @default(cuid())
+  jobId          String    @unique
+  job            Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  smsSent        Boolean   @default(false)
+  emailSent      Boolean   @default(false)
+  reviewClicked  Boolean   @default(false)
+  completedAt    DateTime?
+  completedVia   String?
+  reminderSentAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }

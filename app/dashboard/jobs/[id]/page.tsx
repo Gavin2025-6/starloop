@@ -58,10 +58,14 @@ export default function JobDetailPage() {
   const [showComplete, setShowComplete] = useState(false);
   const [showEarlyOverride, setShowEarlyOverride] = useState(false);
   const [finalAmount, setFinalAmount] = useState("");
+  const [paymentChoice, setPaymentChoice] = useState<"online" | "cash" | "cheque">("online");
   const [transitioning, setTransitioning] = useState(false);
 
   const [showCancel, setShowCancel] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  const [cancelReasonOther, setCancelReasonOther] = useState("");
+  const [toNoShow, setToNoShow] = useState(false);
+  const [flagHighRisk, setFlagHighRisk] = useState(false);
 
   const [showReschedule, setShowReschedule] = useState(false);
   const [rescheduleDate, setRescheduleDate] = useState("");
@@ -112,7 +116,7 @@ export default function JobDetailPage() {
     setTransitionError(null);
     const res = await fetch(`/api/jobs/${id}/complete`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ finalAmount: parseFloat(finalAmount) || 0 }),
+      body: JSON.stringify({ finalAmount: parseFloat(finalAmount) || 0, paymentChoice }),
     }).catch(() => null);
     if (res && !res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -127,13 +131,22 @@ export default function JobDetailPage() {
   async function cancelJob() {
     setTransitioning(true);
     setTransitionError(null);
+    const reason = cancelReason === "Other"
+      ? (cancelReasonOther || "Other")
+      : (cancelReason || "Cancelled by business owner");
     const res = await fetch(`/api/jobs/${id}/cancel`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cancelReason: cancelReason || "Cancelled by business owner" }),
+      body: JSON.stringify({ cancelReason: reason, cancelledBy: "owner", toNoShow }),
     }).catch(() => null);
     if (res && !res.ok) {
       const err = await res.json().catch(() => ({}));
       setTransitionError(err.error ?? "Could not cancel job");
+    }
+    if (flagHighRisk && job) {
+      await fetch(`/api/customers/${job.customer.id}/flag`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isHighRisk: true }),
+      }).catch(() => {});
     }
     setShowCancel(false);
     await load();
@@ -534,10 +547,33 @@ export default function JobDetailPage() {
               <input type="number" value={finalAmount} onChange={e => setFinalAmount(e.target.value)}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-lg font-bold focus:outline-none text-[#0D1117]" />
             </div>
-            <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 mb-4 flex items-start gap-2">
-              <AlertCircle size={14} className="text-[#F59E0B] mt-0.5 shrink-0" />
-              <p className="text-xs text-[#B45309]">Marks job complete and creates payment link. Then click "Send Payment Link" to SMS the customer.</p>
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">How was payment handled?</label>
+              <div className="space-y-2">
+                {(["online", "cash", "cheque"] as const).map(choice => (
+                  <label key={choice} className="flex items-center gap-3 cursor-pointer p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50">
+                    <input type="radio" name="paymentChoiceDetail" value={choice} checked={paymentChoice === choice}
+                      onChange={() => setPaymentChoice(choice)} className="accent-[#0D1117]" />
+                    <span className="text-sm font-medium text-[#0D1117]">
+                      {choice === "online" ? "Send online payment link (SMS)" :
+                       choice === "cash" ? "Cash received" : "Cheque received"}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
+            {paymentChoice === "online" && (
+              <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 mb-4 flex items-start gap-2">
+                <AlertCircle size={14} className="text-[#F59E0B] mt-0.5 shrink-0" />
+                <p className="text-xs text-[#B45309]">An SMS with the payment link will be sent to the customer.</p>
+              </div>
+            )}
+            {(paymentChoice === "cash" || paymentChoice === "cheque") && (
+              <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3 mb-4 flex items-start gap-2">
+                <CheckCircle size={14} className="text-emerald-500 mt-0.5 shrink-0" />
+                <p className="text-xs text-emerald-700">Job will be marked PAID immediately.</p>
+              </div>
+            )}
             <div className="flex gap-3">
               <button onClick={() => { setShowComplete(false); setShowEarlyOverride(false); }}
                 className="flex-1 border border-gray-200 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50">
@@ -545,7 +581,7 @@ export default function JobDetailPage() {
               </button>
               <button onClick={complete} disabled={transitioning}
                 className="flex-1 bg-[#16A34A] text-white py-2.5 rounded-lg text-sm font-bold hover:bg-[#15803D] disabled:opacity-60 transition-colors">
-                {transitioning ? "Saving..." : "Confirm Complete"}
+                {transitioning ? "Saving..." : "Confirm"}
               </button>
             </div>
           </div>
@@ -556,24 +592,77 @@ export default function JobDetailPage() {
       {showCancel && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
-            <h2 className="text-lg font-bold text-[#0D1117] mb-4">Cancel Job</h2>
+            <h2 className="text-lg font-bold text-[#0D1117] mb-4">{toNoShow ? "Mark as No-Show" : "Cancel Job"}</h2>
+
             <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Reason (optional)</label>
-              <input type="text" value={cancelReason} onChange={e => setCancelReason(e.target.value)}
-                placeholder="e.g. Customer request, scheduling conflict"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none" />
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Mark as</label>
+              <div className="flex gap-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" checked={!toNoShow} onChange={() => setToNoShow(false)} className="accent-[#0D1117]" />
+                  <span className="text-sm text-[#0D1117]">Cancelled</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" checked={toNoShow} onChange={() => setToNoShow(true)} className="accent-red-600" />
+                  <span className="text-sm text-[#0D1117]">No-Show</span>
+                </label>
+              </div>
             </div>
+
+            {!toNoShow && (
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Reason</label>
+                <select
+                  value={cancelReason}
+                  onChange={e => setCancelReason(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none bg-white"
+                >
+                  <option value="">Select reason…</option>
+                  <option value="Customer request">Customer request</option>
+                  <option value="Schedule conflict">Schedule conflict</option>
+                  <option value="Unable to service">Unable to service</option>
+                  <option value="Other">Other</option>
+                </select>
+                {cancelReason === "Other" && (
+                  <input
+                    type="text"
+                    value={cancelReasonOther}
+                    onChange={e => setCancelReasonOther(e.target.value)}
+                    placeholder="Please specify…"
+                    className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none"
+                  />
+                )}
+              </div>
+            )}
+
+            {toNoShow && (
+              <div className="mb-4">
+                <label className="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={flagHighRisk}
+                    onChange={e => setFlagHighRisk(e.target.checked)}
+                    className="accent-red-600"
+                  />
+                  <span className="text-sm text-[#0D1117]">Flag this customer as high-risk</span>
+                </label>
+              </div>
+            )}
+
             <div className="bg-red-50 border border-red-100 rounded-lg p-3 mb-4">
-              <p className="text-xs text-red-700">The customer will be notified by SMS and the calendar slot will be freed.</p>
+              <p className="text-xs text-red-700">
+                {toNoShow
+                  ? "The calendar slot will be freed. No-show count will be incremented on this customer."
+                  : "The customer will be notified by SMS and the calendar slot will be freed."}
+              </p>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setShowCancel(false)}
+              <button onClick={() => { setShowCancel(false); setToNoShow(false); setFlagHighRisk(false); setCancelReason(""); }}
                 className="flex-1 border border-gray-200 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50">
                 Back
               </button>
               <button onClick={cancelJob} disabled={transitioning}
                 className="flex-1 bg-red-600 text-white py-2.5 rounded-lg text-sm font-bold hover:bg-red-700 disabled:opacity-60 transition-colors">
-                {transitioning ? "Cancelling..." : "Confirm Cancel"}
+                {transitioning ? "Saving..." : toNoShow ? "Confirm No-Show" : "Confirm Cancel"}
               </button>
             </div>
           </div>

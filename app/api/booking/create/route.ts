@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { generateJobNumber } from "@/lib/job-number";
 import { sendSms } from "@/lib/twilio";
@@ -34,6 +35,7 @@ export async function POST(req: NextRequest) {
     const job = await prisma.job.create({
       data: {
         jobNumber,
+        clientToken: randomUUID(),
         businessId,
         customerId: customer.id,
         title: service ?? "Service Request",

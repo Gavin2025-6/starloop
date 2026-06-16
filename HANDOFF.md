@@ -1,5 +1,93 @@
 # Service Star 交接文档
-Updated: 2026-06-14 (PATCH-4: Job State Machine)
+Updated: 2026-06-16 (PATCH-5: Client Hub, Reviews, Cancellation)
+
+---
+
+## PATCH-5 Summary
+
+**6-part feature build on top of PATCH-4:**
+
+### Part 1 — Client Hub (`/pay/[token]`)
+- Public page with 3 states: Confirmed → Awaiting Payment → Paid
+- Stripe Payment Element (Apple Pay, Link, credit card) on the payment state
+- Email collection → receipt email via Resend → Google review button (30min delay after paid)
+- `Job.clientToken` (UUID) generated on every job create (manual + booking page)
+
+### Part 2 — Complete Payment Flow
+- "Mark Complete" modal now shows payment method choice: Online / Cash / Cheque
+- Cash/Cheque → transitions directly to PAID (no Stripe), review request still fires
+- Online → transitions to AWAITING_PAYMENT, SMS sent with `/pay/[clientToken]` URL
+
+### Part 3 — Review Request Flow
+- On transition to PAID: `reviewRequestScheduledAt = now + 30min` is set
+- New cron endpoint: `POST /api/cron/review-requests` — run every 5 minutes
+  - Finds PAID jobs where `reviewRequestScheduledAt <= now` and `reviewRequestSentAt = null`
+  - Sends SMS (Twilio) + email (Resend) simultaneously
+  - Creates `JobReviewStatus` record
+- `GET /api/review-click/[token]` — tracks clicks and redirects to Google review URL
+- 48-hour SMS reminder if `reviewClicked = false`
+
+### Part 4 — Cancellation System
+- New "Cancellation Policy" tab in Settings page
+- Toggles: cancellationProtection, noShowFee; fields: window hours, fee type/amount, policy text
+- Cancel modal now has: Cancelled vs No-Show toggle, reason dropdown, flag-high-risk checkbox
+- No-show → `Customer.noShowCount++` incremented
+- Cancellation fee: if `setupIntentId` on job and owner selects charge → Stripe PaymentIntent created
+
+### Part 5 — Jobs Page Improvements
+- Both dashboard/jobs and dashboard/jobs/[id] now have the payment-choice modal on "Mark Complete"
+- Cancel modal improved with dropdown reasons + no-show toggle
+
+### Part 6 — Schema Changes (applied)
+- Job: `clientToken`, `addressLine1`, `addressLine2`, `country`, `paymentMethod`, `cancelledBy`, `setupIntentId`, `reviewRequestScheduledAt`, `reviewRequestSentAt`, `reviewClicked`, `reviewClickedAt`, `reviewClickedVia`
+- Customer: `noShowCount`, `isHighRisk`, `requiresDeposit`
+- Business: 7 cancellation policy fields
+- New model: `JobReviewStatus`
+
+**Migration to run:**
+```
+railway run npx prisma db execute --file migrations/v5_client_hub_reviews_cancellation.sql
+```
+
+**Files created/modified:**
+- `prisma/schema.prisma` — schema updated, Prisma client regenerated
+- `migrations/v5_client_hub_reviews_cancellation.sql` — NEW
+- `app/pay/[token]/page.tsx` — NEW (Client Hub public page)
+- `app/api/pay/[token]/route.ts` — NEW
+- `app/api/pay/[token]/create-payment-intent/route.ts` — NEW
+- `app/api/pay/[token]/save-email/route.ts` — NEW
+- `app/api/cron/review-requests/route.ts` — NEW
+- `app/api/review-click/[token]/route.ts` — NEW
+- `app/api/customers/[id]/flag/route.ts` — NEW
+- `lib/job-state-machine.ts` — reviewRequestScheduledAt on PAID, clientToken URL in SMS, paymentMethod/cancelledBy fields
+- `app/api/jobs/create/route.ts` — clientToken generation, structured address fields
+- `app/api/booking/create/route.ts` — clientToken generation
+- `app/api/jobs/[id]/complete/route.ts` — paymentChoice: online/cash/cheque
+- `app/api/jobs/[id]/cancel/route.ts` — cancelledBy, toNoShow, noShowCount++, fee charge
+- `app/api/business/profile/route.ts` — PATCH method + cancellation policy fields
+- `app/dashboard/jobs/page.tsx` — paymentChoice modal in Mark Complete
+- `app/dashboard/jobs/[id]/page.tsx` — paymentChoice modal, improved cancel modal
+- `app/dashboard/settings/page.tsx` — new Cancellation tab
+- `app/book/[businessSlug]/page.tsx` — pass cancellation fields to BookingFlow
+- `app/book/[businessSlug]/BookingFlow.tsx` — show cancellation policy text on confirm step
+
+**Manual test steps:**
+1. Run migration: `railway run npx prisma db execute --file migrations/v5_client_hub_reviews_cancellation.sql`
+2. Create a job → open `/pay/[clientToken]` — should show State 1 (Confirmed)
+3. Mark Complete → select "Send online payment link" → verify job goes to AWAITING_PAYMENT, SMS sent with `/pay/` URL
+4. Open `/pay/[token]` → should show State 2 (payment form), enter test card
+5. After payment → page shows State 3 (green checkmark). Review button hidden initially (30-min timer)
+6. Mark Complete → select "Cash received" → job goes directly to PAID
+7. Trigger `POST /api/cron/review-requests` (with `x-cron-secret` header) → verify SMS + email sent
+8. Click review link → `GET /api/review-click/[token]` → redirects to Google, `reviewClicked=true`
+9. Settings → Cancellation tab → enable protection, set policy text → verify it appears on /book/[slug]
+10. Cancel a job → new modal with dropdown reason + no-show toggle
+
+**Credentials needed from Gavin:**
+- Stripe key must be valid (truncation bug) for online payment flow to work
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` must be set for Payment Element on `/pay/[token]`
+- `CRON_SECRET` must be set; cron-job.org should POST `/api/cron/review-requests` every 5 minutes
+- `RESEND_API_KEY` for receipt emails and review request emails
 
 ---
 

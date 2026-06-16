@@ -9,7 +9,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { id } = await params;
-    const { finalAmount, notes, internalNotes } = await req.json();
+    const { finalAmount, notes, internalNotes, paymentChoice } = await req.json();
 
     const business = await prisma.business.findUnique({ where: { userId: session.user.id } });
     if (!business) return NextResponse.json({ error: "No business" }, { status: 404 });
@@ -28,12 +28,34 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       });
     }
 
+    const amount = finalAmount !== undefined ? parseFloat(String(finalAmount)) || 0 : undefined;
+
+    if (paymentChoice === "cash" || paymentChoice === "cheque") {
+      // Cash/cheque: complete + immediately paid
+      await transitionJobStatus(id, "completed", {
+        triggeredBy: session.user.id,
+        finalAmount: amount,
+      });
+      const updated = await transitionJobStatus(id, "paid", {
+        triggeredBy: session.user.id,
+        paidAmount: amount,
+        paymentMethod: paymentChoice,
+        note: `Paid by ${paymentChoice}`,
+      });
+      return NextResponse.json(updated);
+    }
+
+    // Default: complete → awaiting_payment (owner sends payment link separately)
     const updated = await transitionJobStatus(id, "completed", {
       triggeredBy: session.user.id,
-      finalAmount: finalAmount !== undefined ? parseFloat(String(finalAmount)) || 0 : undefined,
+      finalAmount: amount,
+    });
+    // Immediately move to awaiting_payment so the SMS gets sent
+    const final = await transitionJobStatus(id, "awaiting_payment", {
+      triggeredBy: session.user.id,
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json(final);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Internal error";
     const isIllegal = msg.startsWith("Illegal transition");

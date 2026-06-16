@@ -2,18 +2,28 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export async function PATCH(req: NextRequest) {
+  return POST(req);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { slug, services, bookingUrl, headline, description, name, industry, phone, address, city, googleBusinessUrl } = await req.json();
+    const {
+      slug, services, bookingUrl, headline, description,
+      name, industry, phone, address, city, googleBusinessUrl,
+      cancellationProtectionEnabled, cancellationWindowHours,
+      cancellationFeeType, cancellationFeeAmount, cancellationPolicyText,
+      noShowFeeEnabled, noShowFeeAmount,
+    } = await req.json();
 
     const business = await prisma.business.findUnique({ where: { userId: session.user.id } });
     if (!business) return NextResponse.json({ error: "No business" }, { status: 404 });
 
     // Update business core fields
-    const updateData: Record<string, string | undefined> = {};
+    const updateData: Record<string, unknown> = {};
     if (name) updateData.name = name;
     if (industry) updateData.industry = industry;
     if (phone !== undefined) updateData.phone = phone;
@@ -21,6 +31,15 @@ export async function POST(req: NextRequest) {
     if (city !== undefined) updateData.city = city;
     if (googleBusinessUrl !== undefined) updateData.googleBusinessUrl = googleBusinessUrl;
     if (slug) updateData.slug = slug.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+
+    // Cancellation policy fields
+    if (cancellationProtectionEnabled !== undefined) updateData.cancellationProtectionEnabled = cancellationProtectionEnabled;
+    if (cancellationWindowHours !== undefined) updateData.cancellationWindowHours = cancellationWindowHours;
+    if (cancellationFeeType !== undefined) updateData.cancellationFeeType = cancellationFeeType;
+    if (cancellationFeeAmount !== undefined) updateData.cancellationFeeAmount = cancellationFeeAmount;
+    if (cancellationPolicyText !== undefined) updateData.cancellationPolicyText = cancellationPolicyText;
+    if (noShowFeeEnabled !== undefined) updateData.noShowFeeEnabled = noShowFeeEnabled;
+    if (noShowFeeAmount !== undefined) updateData.noShowFeeAmount = noShowFeeAmount;
 
     const updated = await prisma.business.update({
       where: { id: business.id },

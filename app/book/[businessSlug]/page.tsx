@@ -41,6 +41,9 @@ export default async function BookPage({ params }: Props) {
         slug: business.slug,
         phone: business.phone ?? null,
         bookingWeekendEnabled: business.bookingWeekendEnabled,
+        cancellationProtectionEnabled: business.cancellationProtectionEnabled ?? false,
+        cancellationPolicyText: business.cancellationPolicyText ?? null,
+        stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? null,
       }}
       initial={initial}
       priceBookItems={business.priceBookItems.map((item) => ({

@@ -297,7 +297,200 @@ function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
 }
 
-const SETTINGS_TABS = ["Business", "Price Book", "Payments", "Integrations"] as const;
+// ─── Cancellation Policy tab ───────────────────────────────────────────────────
+function CancellationTab() {
+  const [data, setData] = useState({
+    cancellationProtectionEnabled: false,
+    cancellationWindowHours: 24,
+    cancellationFeeType: "fixed",
+    cancellationFeeAmount: 0,
+    cancellationPolicyText: "",
+    noShowFeeEnabled: false,
+    noShowFeeAmount: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/business/profile").then(r => r.json()).then(biz => {
+      setData({
+        cancellationProtectionEnabled: biz.cancellationProtectionEnabled ?? false,
+        cancellationWindowHours: biz.cancellationWindowHours ?? 24,
+        cancellationFeeType: biz.cancellationFeeType ?? "fixed",
+        cancellationFeeAmount: parseFloat(biz.cancellationFeeAmount ?? 0),
+        cancellationPolicyText: biz.cancellationPolicyText ?? "",
+        noShowFeeEnabled: biz.noShowFeeEnabled ?? false,
+        noShowFeeAmount: parseFloat(biz.noShowFeeAmount ?? 0),
+      });
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  async function save() {
+    setSaving(true);
+    await fetch("/api/business/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }).catch(() => {});
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  if (loading) return <div className="text-gray-400 text-sm py-8">Loading...</div>;
+
+  const feeLabel = data.cancellationFeeType === "percentage" ? "%" : "$";
+
+  return (
+    <div className="space-y-6">
+      {/* Cancellation protection toggle */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <h3 className="font-semibold text-[#0d1117] text-sm">Cancellation Protection</h3>
+            <p className="text-gray-400 text-xs mt-0.5">Require a card at booking to cover late cancellations</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setData(d => ({ ...d, cancellationProtectionEnabled: !d.cancellationProtectionEnabled }))}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              data.cancellationProtectionEnabled ? "bg-[#10B981]" : "bg-gray-200"
+            }`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+              data.cancellationProtectionEnabled ? "translate-x-6" : "translate-x-1"
+            }`} />
+          </button>
+        </div>
+
+        {data.cancellationProtectionEnabled && (
+          <div className="mt-5 space-y-4 border-t border-gray-100 pt-5">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+                Cancellation window (hours before appointment)
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={data.cancellationWindowHours}
+                onChange={e => setData(d => ({ ...d, cancellationWindowHours: parseInt(e.target.value) || 24 }))}
+                className="w-32 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+                Fee type
+              </label>
+              <div className="flex gap-3">
+                {["fixed", "percentage"].map(t => (
+                  <label key={t} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="feeType"
+                      checked={data.cancellationFeeType === t}
+                      onChange={() => setData(d => ({ ...d, cancellationFeeType: t }))}
+                      className="accent-[#0D1117]"
+                    />
+                    <span className="text-sm text-[#0d1117] capitalize">{t}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+                Fee amount ({feeLabel})
+              </label>
+              <div className="relative w-32">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{feeLabel}</span>
+                <input
+                  type="number"
+                  min={0}
+                  step={data.cancellationFeeType === "percentage" ? 1 : 0.01}
+                  value={data.cancellationFeeAmount}
+                  onChange={e => setData(d => ({ ...d, cancellationFeeAmount: parseFloat(e.target.value) || 0 }))}
+                  className="w-full pl-7 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+                Policy text (shown to customer at booking)
+              </label>
+              <textarea
+                rows={3}
+                value={data.cancellationPolicyText}
+                onChange={e => setData(d => ({ ...d, cancellationPolicyText: e.target.value }))}
+                placeholder="e.g. Cancellations within 24 hours will be charged $25."
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none resize-none"
+              />
+              {data.cancellationPolicyText && (
+                <div className="mt-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+                  <p className="text-xs text-blue-600 font-medium mb-0.5">Preview (shown on booking page)</p>
+                  <p className="text-xs text-blue-900">{data.cancellationPolicyText}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* No-show fee */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <h3 className="font-semibold text-[#0d1117] text-sm">No-Show Fee</h3>
+            <p className="text-gray-400 text-xs mt-0.5">Charge a fee when a customer doesn't show up</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setData(d => ({ ...d, noShowFeeEnabled: !d.noShowFeeEnabled }))}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              data.noShowFeeEnabled ? "bg-[#10B981]" : "bg-gray-200"
+            }`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+              data.noShowFeeEnabled ? "translate-x-6" : "translate-x-1"
+            }`} />
+          </button>
+        </div>
+
+        {data.noShowFeeEnabled && (
+          <div className="mt-5 border-t border-gray-100 pt-5">
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+              No-show fee ($)
+            </label>
+            <div className="relative w-32">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                value={data.noShowFeeAmount}
+                onChange={e => setData(d => ({ ...d, noShowFeeAmount: parseFloat(e.target.value) || 0 }))}
+                className="w-full pl-7 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={save}
+        disabled={saving}
+        className="bg-[#0D1117] text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#374151] disabled:opacity-50 transition-colors"
+      >
+        {saved ? "Saved!" : saving ? "Saving…" : "Save Cancellation Policy"}
+      </button>
+    </div>
+  );
+}
+
+const SETTINGS_TABS = ["Business", "Price Book", "Payments", "Integrations", "Cancellation"] as const;
 type SettingsTab = (typeof SETTINGS_TABS)[number];
 
 function fmtSyncTime(iso: string | null | undefined): string {
@@ -556,6 +749,14 @@ export default function SettingsPage() {
             stripeEnabled={false}
             bizPhone={biz.phone}
           />
+        </div>
+      )}
+
+      {activeTab === "Cancellation" && (
+        <div>
+          <h2 className="font-semibold text-[#0d1117] mb-1">Cancellation Policy</h2>
+          <p className="text-gray-400 text-xs mb-5">Protect your business from late cancellations and no-shows.</p>
+          <CancellationTab />
         </div>
       )}
 
