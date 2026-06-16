@@ -7,7 +7,7 @@ import { sendSms } from "@/lib/twilio";
 // Public endpoint — no auth required (customer-facing)
 export async function POST(req: NextRequest) {
   try {
-    const { businessId, name, phone, address, notes, service, scheduledAt } = await req.json();
+    const { businessId, name, phone, address, addressLine1, city, province, postalCode, country, notes, service, scheduledAt } = await req.json();
     if (!businessId || !name || !phone || !scheduledAt) {
       return NextResponse.json(
         { error: "businessId, name, phone, and scheduledAt required" },
@@ -43,7 +43,12 @@ export async function POST(req: NextRequest) {
         serviceDescription: service ?? null,
         description: notes ?? null,
         scheduledAt: scheduledDate,
-        address: address,
+        address: address || addressLine1 || null,
+        addressLine1: addressLine1 || address || null,
+        city: city || null,
+        province: province || null,
+        postalCode: postalCode || null,
+        country: country || "Canada",
         customerName: name,
         customerPhone: phone,
         status: "scheduled",

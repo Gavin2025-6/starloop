@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { seedDefaultPriceBook } from "@/lib/seed-pricebook";
 
 function slugify(name: string): string {
   return name
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
       },
     });
 
-    await prisma.business.create({
+    const business = await prisma.business.create({
       data: {
         userId: user.id,
         name: businessName,
@@ -55,6 +56,11 @@ export async function POST(request: Request) {
         slug,
       },
     });
+
+    // Seed default price book for this industry (non-blocking)
+    seedDefaultPriceBook(business.id, industry || "General").catch(err =>
+      console.error("[register] seedDefaultPriceBook failed", err)
+    );
 
     return NextResponse.json({ id: user.id, email: user.email });
   } catch (err) {

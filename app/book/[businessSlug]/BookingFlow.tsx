@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
+import AddressAutocomplete, { type ParsedAddress } from "@/components/AddressAutocomplete";
 
 interface PriceBookItem {
   id: string;
@@ -94,6 +95,7 @@ export default function BookingFlow({ business, initial, priceBookItems }: Props
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [parsedAddress, setParsedAddress] = useState<ParsedAddress | null>(null);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -136,6 +138,11 @@ export default function BookingFlow({ business, initial, priceBookItems }: Props
         name,
         phone,
         address,
+        addressLine1: parsedAddress?.addressLine1 || address,
+        city: parsedAddress?.city || "",
+        province: parsedAddress?.province || "",
+        postalCode: parsedAddress?.postalCode || "",
+        country: parsedAddress?.country || "Canada",
         notes,
         service: selectedService.name,
         scheduledAt: scheduledAt.toISOString(),
@@ -422,12 +429,14 @@ export default function BookingFlow({ business, initial, priceBookItems }: Props
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">Service Address *</label>
-                <input
-                  required
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
+                <AddressAutocomplete
+                  defaultValue={address}
                   placeholder="123 Main St, Toronto, ON"
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]/30 focus:border-[#f97316]"
+                  onAddressSelect={(parsed: ParsedAddress) => {
+                    setAddress(parsed.addressLine1);
+                    setParsedAddress(parsed);
+                  }}
                 />
               </div>
               <div>

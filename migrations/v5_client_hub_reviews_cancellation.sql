@@ -46,5 +46,12 @@ CREATE TABLE IF NOT EXISTS "JobReviewStatus" (
   CONSTRAINT "JobReviewStatus_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job"("id") ON DELETE CASCADE
 );
 
+-- Job: additional v5-final fields
+ALTER TABLE "Job" ADD COLUMN IF NOT EXISTS "reviewReminderSentAt" TIMESTAMPTZ;
+
+-- Business: google review fields
+ALTER TABLE "Business" ADD COLUMN IF NOT EXISTS "googleReviewUrl" TEXT;
+ALTER TABLE "Business" ADD COLUMN IF NOT EXISTS "googlePlaceId"   TEXT;
+
 -- Backfill clientToken for all existing jobs that don't have one
 UPDATE "Job" SET "clientToken" = gen_random_uuid()::TEXT WHERE "clientToken" IS NULL;

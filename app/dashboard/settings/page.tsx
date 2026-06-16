@@ -16,13 +16,21 @@ function PriceBookTab() {
   const [addForm, setAddForm] = useState({ name: "", priceMin: "", priceMax: "", unit: "flat", description: "" });
   const [adding, setAdding]   = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const [showSeededBanner, setShowSeededBanner] = useState(false);
 
   useEffect(() => { loadItems(); }, []);
 
   async function loadItems() {
     setLoading(true);
     const res = await fetch("/api/pricebook").catch(() => null);
-    if (res?.ok) setItems(await res.json());
+    if (res?.ok) {
+      const data = await res.json();
+      setItems(data);
+      // Show seeded banner if items were auto-generated (all have sortOrder 0..n consecutively)
+      if (data.length > 0 && !sessionStorage.getItem("pb-banner-dismissed")) {
+        setShowSeededBanner(true);
+      }
+    }
     setLoading(false);
   }
 
@@ -67,6 +75,20 @@ function PriceBookTab() {
 
   return (
     <div>
+      {showSeededBanner && (
+        <div className="mb-4 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-blue-800 mb-0.5">We've pre-filled your price book based on your trade.</p>
+            <p className="text-sm text-blue-700">Review and adjust your prices before going live.</p>
+          </div>
+          <button
+            onClick={() => { setShowSeededBanner(false); sessionStorage.setItem("pb-banner-dismissed", "1"); }}
+            className="text-blue-400 hover:text-blue-600 shrink-0"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-gray-500">{items.length} services · AI quotes from this list</p>
         <button onClick={() => setShowAdd(true)} className="flex items-center gap-1.5 text-sm bg-[#1a2744] text-white px-3 py-1.5 rounded-lg hover:bg-[#243460]">

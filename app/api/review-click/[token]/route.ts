@@ -10,12 +10,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     const job = await prisma.job.findUnique({
       where: { clientToken: token },
       include: {
-        business: { select: { googleBusinessUrl: true } },
+        business: { select: { name: true, googleReviewUrl: true } },
         reviewStatus: true,
       },
     });
 
-    if (!job || !job.business.googleBusinessUrl) {
+    const reviewUrl = job?.business.googleReviewUrl
+      ?? (job?.business.name
+          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.business.name)}`
+          : null);
+
+    if (!job || !reviewUrl) {
       return NextResponse.redirect("https://www.google.com/search?q=review");
     }
 
@@ -50,7 +55,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
       },
     });
 
-    return NextResponse.redirect(job.business.googleBusinessUrl);
+    return NextResponse.redirect(reviewUrl);
   } catch (err) {
     console.error("[review-click]", err);
     return NextResponse.redirect("https://www.google.com");

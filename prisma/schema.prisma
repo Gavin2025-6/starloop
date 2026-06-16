@@ -103,6 +103,10 @@ model Business {
   noShowFeeEnabled              Boolean  @default(false)
   noShowFeeAmount               Decimal  @default(0)
 
+  // v5 google review
+  googleReviewUrl String?
+  googlePlaceId   String?
+
   customers             Customer[]
   campaigns             Campaign[]
   profile               PublicProfile?
@@ -306,6 +310,7 @@ model Job {
   setupIntentId            String?
   reviewRequestScheduledAt DateTime?
   reviewRequestSentAt      DateTime?
+  reviewReminderSentAt     DateTime?
   reviewClicked            Boolean   @default(false)
   reviewClickedAt          DateTime?
   reviewClickedVia         String?

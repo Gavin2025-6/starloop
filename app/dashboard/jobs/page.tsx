@@ -3,13 +3,21 @@
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, CheckCircle, AlertCircle, Search, X } from "lucide-react";
+import AddressAutocomplete, { type ParsedAddress } from "@/components/AddressAutocomplete";
 
 interface Job {
   id: string; jobNumber: string; title: string; serviceType: string;
   status: string; priority: string; total: number; paidAmount: number;
   balanceAmount: number; scheduledAt: string | null; completedAt: string | null;
   createdAt: string; cancelReason: string | null;
+  address: string | null; addressLine1: string | null; city: string | null; province: string | null;
   customer: { name: string; phone: string | null };
+}
+
+function fmtAddress(job: Job): string | null {
+  if (job.city && job.province) return `${job.city}, ${job.province}`;
+  if (job.addressLine1 && job.city) return `${job.addressLine1}, ${job.city}`;
+  return job.address || null;
 }
 
 interface Customer { id: string; name: string; phone: string | null; }
@@ -86,6 +94,7 @@ function JobsContent() {
   const [newCust, setNewCust] = useState({ name: "", phone: "" });
   const [jobForm, setJobForm] = useState({
     serviceType: "", total: "", date: "", time: "", priority: "normal", address: "",
+    addressLine1: "", city: "", province: "", postalCode: "", country: "Canada",
   });
 
   const [completeJobId, setCompleteJobId] = useState<string | null>(null);
@@ -169,7 +178,12 @@ function JobsContent() {
         serviceType: jobForm.serviceType,
         title: jobForm.serviceType,
         priority: jobForm.priority,
-        address: jobForm.address || null,
+        address: jobForm.address || jobForm.addressLine1 || null,
+        addressLine1: jobForm.addressLine1 || null,
+        city: jobForm.city || null,
+        province: jobForm.province || null,
+        postalCode: jobForm.postalCode || null,
+        country: jobForm.country || "Canada",
         scheduledAt,
         total: parseFloat(jobForm.total) || 0,
       }),
@@ -181,7 +195,7 @@ function JobsContent() {
   function openModal() {
     setShowModal(true); setModalStep(1); setSelectedCustomer(null);
     setCustSearch(""); setShowNewCust(false); setNewCust({ name: "", phone: "" });
-    setJobForm({ serviceType: "", total: "", date: "", time: "", priority: "normal", address: "" });
+    setJobForm({ serviceType: "", total: "", date: "", time: "", priority: "normal", address: "", addressLine1: "", city: "", province: "", postalCode: "", country: "Canada" });
   }
 
   function closeModal() { setShowModal(false); setModalStep(1); }
@@ -285,7 +299,10 @@ function JobsContent() {
                     <span className="text-[15px] font-bold text-[#0D1117] ml-3 shrink-0">{amountLabel}</span>
                   </div>
 
-                  <p className="text-[14px] text-gray-500 mb-3">{job.serviceType}</p>
+                  <p className="text-[14px] text-gray-500 mb-2">{job.serviceType}</p>
+                  {fmtAddress(job) && (
+                    <p className="text-[13px] text-gray-400 mb-2">📍 {fmtAddress(job)}</p>
+                  )}
 
                   <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                     <span className="text-[14px] text-gray-400 flex items-center gap-1.5">
@@ -433,10 +450,19 @@ function JobsContent() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Address</label>
-                    <input type="text" value={jobForm.address}
-                      onChange={e => setJobForm(f => ({ ...f, address: e.target.value }))}
-                      placeholder="123 Main St, City"
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none" />
+                    <AddressAutocomplete
+                      defaultValue={jobForm.address}
+                      placeholder="123 Main St, Oakville"
+                      onAddressSelect={(parsed: ParsedAddress) => setJobForm(f => ({
+                        ...f,
+                        address: parsed.addressLine1,
+                        addressLine1: parsed.addressLine1,
+                        city: parsed.city,
+                        province: parsed.province,
+                        postalCode: parsed.postalCode,
+                        country: parsed.country || "Canada",
+                      }))}
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
