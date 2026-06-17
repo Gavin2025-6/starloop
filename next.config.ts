@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
-  distDir: process.env.NEXT_DIST_DIR || ".next",
+  output: "standalone",
   serverExternalPackages: ["@prisma/client"],
 };
 
