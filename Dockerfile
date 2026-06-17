@@ -4,9 +4,11 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends openssl ca-
 
 WORKDIR /app
 
+# Install dependencies first (layer cache)
 COPY package*.json ./
 RUN npm ci --prefer-offline=false
 
+# Copy source and build
 COPY . .
 RUN npm run build
 

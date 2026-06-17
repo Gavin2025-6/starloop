@@ -13,7 +13,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { id } = await params;
-    const { to, note, cancelReason, paymentMethod, paidAmount } = await req.json();
+    const { to, note, cancelReason } = await req.json();
     if (!to) return NextResponse.json({ error: "to is required" }, { status: 400 });
 
     const business = await prisma.business.findUnique({
@@ -29,8 +29,6 @@ export async function POST(
       triggeredBy: session.user.id,
       note,
       cancelReason,
-      paymentMethod,
-      paidAmount: paidAmount !== undefined ? parseFloat(String(paidAmount)) : undefined,
     });
 
     return NextResponse.json(updated);

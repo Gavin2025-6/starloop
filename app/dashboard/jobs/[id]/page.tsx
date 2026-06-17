@@ -395,45 +395,12 @@ export default function JobDetailPage() {
                   </div>
                 )}
 
-                {/* COMPLETED — choose payment method */}
+                {/* Send Payment Link */}
                 {canSendPayment && (
-                  <div className="space-y-3">
-                    <p className="text-sm text-gray-600 font-medium">How did the client pay?</p>
-
-                    <button
-                      onClick={async () => {
-                        setTransitioning(true);
-                        setTransitionError(null);
-                        const res = await fetch(`/api/jobs/${id}/transition`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ to: "paid", paymentMethod: "cash", paidAmount: job.total }),
-                        }).catch(() => null);
-                        if (res && !res.ok) {
-                          const err = await res.json().catch(() => ({}));
-                          setTransitionError(err.error ?? "Could not mark as paid");
-                        }
-                        await load();
-                        setTransitioning(false);
-                      }}
-                      disabled={transitioning}
-                      className="w-full py-4 border-2 border-gray-200 rounded-xl text-left px-4 hover:border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-60"
-                    >
-                      <div className="font-semibold text-[#0D1117]">💵 Cash or cheque</div>
-                      <div className="text-sm text-gray-500 mt-0.5">Mark as paid immediately</div>
-                    </button>
-
-                    <button
-                      onClick={sendPaymentLink}
-                      disabled={sendingPayment || transitioning}
-                      className="w-full py-4 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl text-left px-4 transition-colors disabled:opacity-60"
-                    >
-                      <div className="font-semibold">📱 Send payment link</div>
-                      <div className="text-sm text-green-100 mt-0.5">
-                        {sendingPayment ? "Sending…" : "Client pays online via SMS"}
-                      </div>
-                    </button>
-                  </div>
+                  <button onClick={sendPaymentLink} disabled={sendingPayment}
+                    className="w-full h-12 rounded-lg bg-[#4A6FFF] hover:bg-[#3B5EEE] text-white font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-60">
+                    💳 {sendingPayment ? "Sending..." : "Send Payment Link"}
+                  </button>
                 )}
 
                 {/* Awaiting Payment — manual paid override */}

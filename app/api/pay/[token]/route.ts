@@ -13,7 +13,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
             id: true,
             name: true,
             slug: true,
-            phone: true,
             stripeAccountId: true,
             stripeChargesEnabled: true,
             googleBusinessUrl: true,
@@ -44,8 +43,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
       paymentMethod: job.paymentMethod,
       business: {
         name: job.business.name,
-        phone: job.business.phone,
-        slug: job.business.slug,
         googleBusinessUrl: job.business.googleBusinessUrl,
         stripeChargesEnabled: job.business.stripeChargesEnabled,
       },

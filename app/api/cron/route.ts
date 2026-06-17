@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendSms } from "@/lib/twilio";
 import { getResend } from "@/lib/resend";
-import { formatName } from "@/lib/utils";
 
 function buildReviewEmailHtml(job: {
   serviceType: string;
@@ -41,10 +40,8 @@ function buildReviewEmailHtml(job: {
 }
 
 export async function GET(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  const headerOk = req.headers.get("authorization") === `Bearer ${secret}`;
-  const tokenOk = req.nextUrl.searchParams.get("token") === secret;
-  if (!headerOk && !tokenOk) {
+  const authHeader = req.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -69,7 +66,7 @@ export async function GET(req: NextRequest) {
 
     for (const job of needsReview) {
       try {
-        const name = formatName(job.customerName ?? job.customer.name);
+        const name = job.customerName ?? job.customer.name;
         const phone = job.customerPhone ?? job.customer.phone;
         const email = job.customer.email;
         const trackingUrl = job.clientToken && appUrl
@@ -84,8 +81,8 @@ export async function GET(req: NextRequest) {
         // SMS
         if (phone) {
           const smsBody = isTrial
-            ? `Hi ${name}, thanks for having us today. We'd love to hear what you thought — ${job.business.name}`
-            : `Hi ${name}, thanks for having us today. If you have a moment, we'd love to hear what you thought: ${trackingUrl} — ${job.business.name}`.slice(0, 320);
+            ? `Hi ${name}! Thanks for choosing ${job.business.name}. A quick Google review would mean a lot. Thank you!`
+            : `Hi ${name}! Thanks for choosing ${job.business.name}. If you're happy with your service, a quick Google review would mean a lot: ${trackingUrl}\nReply STOP to opt out.`.slice(0, 160);
           await sendSms({ to: phone, body: smsBody }).catch(e =>
             results.errors.push(`SMS ${job.id}: ${e.message}`)
           );
@@ -142,7 +139,7 @@ export async function GET(req: NextRequest) {
 
     for (const job of needsReminder) {
       try {
-        const name = formatName(job.customerName ?? job.customer.name);
+        const name = job.customerName ?? job.customer.name;
         const phone = job.customerPhone ?? job.customer.phone;
         const trackingUrl = job.clientToken && appUrl
           ? `${appUrl}/api/review-click/${job.clientToken}?via=reminder`
@@ -150,8 +147,8 @@ export async function GET(req: NextRequest) {
 
         if (phone && trackingUrl) {
           const body = isTrial
-            ? `Hi ${name}, just a gentle reminder — we'd love to hear your thoughts on ${job.business.name}.`
-            : `Hi ${name}, just a gentle reminder — if you have a moment: ${trackingUrl} — ${job.business.name}`.slice(0, 320);
+            ? `Hi ${name}, just a reminder — a Google review for ${job.business.name} would really help! Thank you.`
+            : `Hi ${name}, just a reminder — your Google review for ${job.business.name} would really help: ${trackingUrl}\nReply STOP to opt out.`.slice(0, 160);
           await sendSms({ to: phone, body }).catch(e =>
             results.errors.push(`Reminder SMS ${job.id}: ${e.message}`)
           );

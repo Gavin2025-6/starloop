@@ -8,3 +8,8 @@ healthcheckPath = "/auth/login"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
+
+[[cron]]
+name = "review-cron"
+schedule = "*/5 * * * *"
+command = "curl -sf -H 'Authorization: Bearer $CRON_SECRET' https://service-star-production.up.railway.app/api/cron || true"

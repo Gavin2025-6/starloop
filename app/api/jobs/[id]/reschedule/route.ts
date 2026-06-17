@@ -3,7 +3,6 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendSms } from "@/lib/twilio";
 import { getAvailableSlots } from "@/lib/availability";
-import { formatName } from "@/lib/utils";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -90,7 +89,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       });
       await sendSms({
         to: customerPhone,
-        body: `Hi ${formatName(job.customerName ?? job.customer.name)}, your ${job.serviceType} appointment has been rescheduled to ${dateLabel} at ${timeLabel}.`.slice(0, 160),
+        body: `Hi ${job.customerName ?? job.customer.name}! Your ${job.serviceType} appointment has been rescheduled to ${dateLabel} at ${timeLabel}.`.slice(0, 160),
       }).catch(() => {});
       await prisma.jobEvent.create({
         data: { jobId: id, type: "sms_sent", payload: { kind: "reschedule", newScheduledAt: newDate.toISOString() } },
