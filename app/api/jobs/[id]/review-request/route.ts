@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendSms } from "@/lib/twilio";
+import { formatName } from "@/lib/utils";
 
 export async function POST(
   _req: NextRequest,
@@ -29,12 +30,13 @@ export async function POST(
     const isMock = process.env.TWILIO_MOCK === "1";
 
     if (job.customer.phone) {
+      const customerName = formatName(job.customer.name);
       const body = reviewUrl
-        ? `Hi ${job.customer.name}! Thanks for choosing ${business.name}. We'd love your feedback — it only takes 30 seconds: ${reviewUrl}`
-        : `Hi ${job.customer.name}! Thanks for choosing ${business.name}. We'd love your feedback — please leave us a Google review!`;
+        ? `Hi ${customerName}, thanks for having us today. If you have a moment, we'd love to hear what you thought: ${reviewUrl} — ${business.name}`
+        : `Hi ${customerName}, thanks for having us today. We'd love to hear what you thought — ${business.name}`;
 
       if (!isMock) {
-        await sendSms({ to: job.customer.phone, body: body.slice(0, 160) }).catch(() => {});
+        await sendSms({ to: job.customer.phone, body: body.slice(0, 320) }).catch(() => {});
       }
     }
 

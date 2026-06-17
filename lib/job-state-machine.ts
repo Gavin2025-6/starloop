@@ -6,6 +6,7 @@
 import { prisma } from "@/lib/prisma";
 import { sendSms } from "@/lib/twilio";
 import { runFollowup } from "@/lib/agents/followup-agent";
+import { formatName } from "@/lib/utils";
 import Stripe from "stripe";
 
 export type JobStatus =
@@ -164,6 +165,7 @@ async function runSideEffects(
     paidAmount: number;
     balanceAmount: number;
     serviceType: string;
+    scheduledAt: Date | null;
     customerName: string | null;
     customerPhone: string | null;
     clientToken: string | null;
@@ -171,6 +173,7 @@ async function runSideEffects(
     business: {
       id: string;
       name: string;
+      slug: string;
       phone: string | null;
       stripeAccountId: string | null;
       stripeChargesEnabled: boolean;
@@ -181,7 +184,7 @@ async function runSideEffects(
   metadata: TransitionMetadata
 ) {
   const customerPhone = job.customerPhone ?? job.customer.phone;
-  const customerName = job.customerName ?? job.customer.name;
+  const customerName = formatName(job.customerName ?? job.customer.name);
   const isTrial = process.env.TWILIO_MOCK === "1";
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
@@ -255,7 +258,7 @@ async function runSideEffects(
         if (isTrial || !clientHubUrl) {
           await sendSms({
             to: customerPhone,
-            body: `Hi ${customerName}! Your ${job.serviceType} is complete. Amount due: $${totalAmount.toFixed(2)} — your service provider will share payment details.`,
+            body: `Hi ${customerName}, job's done! Your total is $${totalAmount.toFixed(2)} — ${job.business.name} will share payment details.`,
           }).catch(() => {});
           await prisma.jobEvent.create({
             data: {
@@ -267,7 +270,7 @@ async function runSideEffects(
         } else {
           await sendSms({
             to: customerPhone,
-            body: `Hi ${customerName}! Your ${job.serviceType} is complete. Pay $${totalAmount.toFixed(2)} here: ${clientHubUrl}\nReply STOP to opt out.`.slice(0, 160),
+            body: `Hi ${customerName}, job's done! Your total is $${totalAmount.toFixed(2)}. Pay here when you're ready: ${clientHubUrl} — ${job.business.name}`.slice(0, 320),
           }).catch(() => {});
           await prisma.jobEvent.create({
             data: {
@@ -385,19 +388,23 @@ async function runSideEffects(
 
     case "cancelled": {
       if (customerPhone) {
-        const reason = metadata.cancelReason;
-        await sendSms({
-          to: customerPhone,
-          body: (reason
-            ? `Hi ${customerName}! Your ${job.serviceType} appointment has been cancelled. Reason: ${reason}. Please call us to rebook.`
-            : `Hi ${customerName}! Your ${job.serviceType} appointment has been cancelled. Please call us to rebook.`
-          ).slice(0, 160),
-        }).catch(() => {});
+        const dateStr = job.scheduledAt
+          ? job.scheduledAt.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
+          : null;
+        const rebookUrl = appUrl ? `${appUrl}/book/${job.business.slug}` : null;
+        const body = [
+          `Hi ${customerName}, your ${job.serviceType}${dateStr ? ` appointment on ${dateStr}` : " appointment"} has been cancelled.`,
+          rebookUrl ? `Need to rebook? ${rebookUrl}` : null,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .slice(0, 320);
+        await sendSms({ to: customerPhone, body }).catch(() => {});
         await prisma.jobEvent.create({
           data: {
             jobId,
             type: "sms_sent",
-            payload: { kind: "cancellation", reason: reason ?? null },
+            payload: { kind: "cancellation", reason: metadata.cancelReason ?? null },
           },
         });
       }

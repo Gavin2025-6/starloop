@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { CheckCircle, MapPin, Calendar, DollarSign } from "lucide-react";
+import { CheckCircle, MapPin, Calendar, DollarSign, Phone } from "lucide-react";
 
 interface JobData {
   id: string;
@@ -21,6 +21,8 @@ interface JobData {
   paymentMethod: string | null;
   business: {
     name: string;
+    phone: string | null;
+    slug: string;
     googleBusinessUrl: string | null;
     stripeChargesEnabled: boolean;
   };
@@ -42,6 +44,13 @@ function fmtDate(d: string | null) {
   });
 }
 
+function fmtShort(d: string | null) {
+  if (!d) return null;
+  return new Date(d).toLocaleDateString("en-CA", {
+    month: "short", day: "numeric", year: "numeric",
+  });
+}
+
 function InitialsAvatar({ name }: { name: string }) {
   const initials = name.split(" ").map(p => p[0]).join("").slice(0, 2).toUpperCase();
   return (
@@ -51,7 +60,7 @@ function InitialsAvatar({ name }: { name: string }) {
   );
 }
 
-// ── Payment Form (State 2) ────────────────────────────────────────────────────
+// ── Payment Form (Stripe active) ──────────────────────────────────────────────
 function PaymentForm({
   token, job, onSuccess,
 }: { token: string; job: JobData; onSuccess: () => void }) {
@@ -67,7 +76,6 @@ function PaymentForm({
     setError(null);
     setSaving(true);
 
-    // Save email first
     if (email) {
       await fetch(`/api/pay/${token}/save-email`, {
         method: "POST",
@@ -150,7 +158,6 @@ export default function ClientHubPage() {
       const data: JobData = await res.json();
       setJob(data);
 
-      // For awaiting_payment/partially_paid: fetch a PaymentIntent
       if (["awaiting_payment", "partially_paid"].includes(data.status) && data.business.stripeChargesEnabled) {
         const piRes = await fetch(`/api/pay/${token}/create-payment-intent`, { method: "POST" }).catch(() => null);
         if (piRes?.ok) {
@@ -159,14 +166,12 @@ export default function ClientHubPage() {
         }
       }
 
-      // For paid: show review button after 30 min
       if (data.status === "paid") {
         const urlParams = new URLSearchParams(window.location.search);
         const justPaid = urlParams.get("paid") === "1";
         if (!justPaid) {
           setShowReviewButton(true);
         } else {
-          // show review button after 30 minutes
           setTimeout(() => setShowReviewButton(true), 30 * 60 * 1000);
         }
       }
@@ -197,6 +202,10 @@ export default function ClientHubPage() {
   const isPaid = job.status === "paid";
   const isAwaitingPayment = ["awaiting_payment", "partially_paid"].includes(job.status);
   const isScheduled = ["scheduled", "in_progress"].includes(job.status);
+  const isCancelled = ["cancelled", "no_show"].includes(job.status);
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const rebookUrl = `${appUrl}/book/${job.business.slug}`;
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -284,9 +293,30 @@ export default function ClientHubPage() {
                 <PaymentForm token={token} job={job} onSuccess={() => load()} />
               </Elements>
             ) : (
-              <p className="text-sm text-gray-500">
-                Online payment is not available. Please contact {job.business.name} directly.
-              </p>
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Ready to pay? Contact {job.business.name} directly:
+                </p>
+                {job.business.phone && (
+                  <div className="flex flex-col gap-3">
+                    <a
+                      href={`tel:${job.business.phone}`}
+                      className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl border-2 border-[#0D1117] text-[#0D1117] font-semibold text-base hover:bg-gray-50 transition-colors"
+                    >
+                      <Phone size={18} /> Call us
+                    </a>
+                    <a
+                      href={`sms:${job.business.phone}`}
+                      className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-[#0D1117] text-white font-semibold text-base hover:bg-[#374151] transition-colors"
+                    >
+                      💬 Send a text
+                    </a>
+                  </div>
+                )}
+                {!job.business.phone && (
+                  <p className="text-sm text-gray-400">Online payment is currently unavailable.</p>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -296,9 +326,21 @@ export default function ClientHubPage() {
           <div className="space-y-4">
             <div className="bg-[#F0FDF4] rounded-2xl p-6 text-center">
               <CheckCircle size={44} className="text-[#10B981] mx-auto mb-3" />
-              <p className="text-[#15803D] font-bold text-lg">Payment received — thank you!</p>
-              <p className="text-sm text-[#166534] mt-1">
-                Paid on {fmtDate(new Date().toISOString())}
+              <p className="text-[#15803D] font-bold text-2xl mb-2">
+                Thank you, {job.customer.name}!
+              </p>
+              <p className="text-sm text-[#166534]">
+                {job.serviceType}
+                {job.scheduledAt ? ` · ${fmtShort(job.scheduledAt)}` : ""}
+                {" · "}${job.paidAmount > 0 ? job.paidAmount.toFixed(2) : job.total.toFixed(2)}
+              </p>
+              {job.customer.email && (
+                <p className="text-sm text-[#166534] mt-2">
+                  A receipt has been sent to your email.
+                </p>
+              )}
+              <p className="text-xs text-[#4ADE80] mt-3">
+                We&apos;ll follow up shortly — we&apos;d love to hear how it went.
               </p>
             </div>
 
@@ -312,6 +354,19 @@ export default function ClientHubPage() {
                 ⭐ Leave a Google Review
               </a>
             )}
+          </div>
+        )}
+
+        {/* ── STATE 4: Cancelled / No-Show ── */}
+        {isCancelled && (
+          <div className="bg-gray-50 rounded-2xl p-6 text-center space-y-4">
+            <p className="text-gray-700 font-semibold text-base">This appointment has been cancelled.</p>
+            <a
+              href={rebookUrl}
+              className="block w-full py-3.5 rounded-xl bg-[#0D1117] text-white font-semibold text-base hover:bg-[#374151] transition-colors"
+            >
+              Book a new appointment
+            </a>
           </div>
         )}
 
