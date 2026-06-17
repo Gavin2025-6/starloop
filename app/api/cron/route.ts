@@ -41,8 +41,10 @@ function buildReviewEmailHtml(job: {
 }
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const secret = process.env.CRON_SECRET;
+  const headerOk = req.headers.get("authorization") === `Bearer ${secret}`;
+  const tokenOk = req.nextUrl.searchParams.get("token") === secret;
+  if (!headerOk && !tokenOk) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
