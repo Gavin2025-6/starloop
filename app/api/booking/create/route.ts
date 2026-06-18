@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { generateJobNumber } from "@/lib/job-number";
 import { sendSms } from "@/lib/twilio";
+import { formatName } from "@/lib/utils";
 
 // Public endpoint — no auth required (customer-facing)
 export async function POST(req: NextRequest) {
@@ -89,15 +90,7 @@ export async function POST(req: NextRequest) {
     });
     const serviceLabel = service ?? "Service";
 
-    const customerSms = [
-      `Hi ${name}! Your booking with ${business.name} is confirmed.`,
-      `Service: ${serviceLabel}`,
-      `When: ${dateLabel} at ${timeLabel}`,
-      `Address: ${address}`,
-      business.phone ? `Questions? Call us: ${business.phone}` : null,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    const customerSms = `Hi ${formatName(name)}, you're all set! ${serviceLabel} on ${dateLabel} at ${timeLabel}. Questions? Reply here. — ${business.name}`.slice(0, 160);
 
     const ownerSms = [
       `New booking from ${name} (${phone})!`,

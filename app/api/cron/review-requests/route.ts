@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendSms } from "@/lib/twilio";
 import { getResend } from "@/lib/resend";
+import { formatName } from "@/lib/utils";
 
 // Called every 5 minutes — finds PAID jobs ready for review request
 export async function POST(req: NextRequest) {
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
     });
 
     for (const job of readyForReview) {
-      const name = job.customerName ?? job.customer.name;
+      const name = formatName(job.customerName ?? job.customer.name);
       const phone = job.customerPhone ?? job.customer.phone;
       const email = job.customer.email;
       const googleUrl = job.business.googleBusinessUrl;
@@ -45,8 +46,8 @@ export async function POST(req: NextRequest) {
         // Send SMS
         if (phone) {
           const smsBody = reviewClickUrl && !isTrial
-            ? `Hi ${name}, thanks for choosing ${job.business.name}! If you're happy with your ${job.serviceType}, a quick Google review would mean a lot: ${reviewClickUrl}\nReply STOP to opt out.`.slice(0, 160)
-            : `Hi ${name}, thanks for choosing ${job.business.name}! If you're happy with your ${job.serviceType}, please leave us a Google review. We really appreciate it!`.slice(0, 160);
+            ? `Hi ${name}, thanks for having us today. If you have a moment, we'd love to hear what you thought: ${reviewClickUrl} — ${job.business.name}`.slice(0, 160)
+            : `Hi ${name}, thanks for having us today. If you have a moment, we'd love to hear what you thought — ${job.business.name}`.slice(0, 160);
 
           await sendSms({ to: phone, body: smsBody }).catch(err =>
             console.error("[review-requests] SMS failed", job.id, err)
@@ -128,7 +129,7 @@ export async function POST(req: NextRequest) {
 
     for (const job of needsReminder) {
       if (!job.business.googleBusinessUrl) continue;
-      const name = job.customerName ?? job.customer.name;
+      const name = formatName(job.customerName ?? job.customer.name);
       const phone = job.customerPhone ?? job.customer.phone;
       const reviewToken = job.clientToken;
 
@@ -138,8 +139,8 @@ export async function POST(req: NextRequest) {
           : null;
 
         const body = reviewClickUrl
-          ? `Hi ${name}! Just a reminder — a quick Google review for ${job.business.name} would mean a lot: ${reviewClickUrl}\nReply STOP to opt out.`.slice(0, 160)
-          : `Hi ${name}! Just a reminder — if you enjoyed your ${job.serviceType} with ${job.business.name}, a Google review would mean the world to us. Thank you!`.slice(0, 160);
+          ? `Hi ${name}, just a reminder — we'd love to hear what you thought: ${reviewClickUrl} — ${job.business.name}`.slice(0, 160)
+          : `Hi ${name}, just a reminder — if you have a moment, we'd love to hear how your service went. — ${job.business.name}`.slice(0, 160);
 
         await sendSms({ to: phone, body }).catch(err =>
           console.error("[review-requests] reminder SMS failed", job.id, err)

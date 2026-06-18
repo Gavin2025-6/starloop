@@ -6,6 +6,7 @@
 import { prisma } from "@/lib/prisma";
 import { sendSms } from "@/lib/twilio";
 import { runFollowup } from "@/lib/agents/followup-agent";
+import { formatName } from "@/lib/utils";
 import Stripe from "stripe";
 
 export type JobStatus =
@@ -171,6 +172,7 @@ async function runSideEffects(
     business: {
       id: string;
       name: string;
+      slug: string;
       phone: string | null;
       stripeAccountId: string | null;
       stripeChargesEnabled: boolean;
@@ -252,10 +254,11 @@ async function runSideEffects(
         : null;
 
       if (customerPhone) {
+        const fmtName = formatName(customerName);
         if (isTrial || !clientHubUrl) {
           await sendSms({
             to: customerPhone,
-            body: `Hi ${customerName}! Your ${job.serviceType} is complete. Amount due: $${totalAmount.toFixed(2)} — your service provider will share payment details.`,
+            body: `Hi ${fmtName}, job's done! Your total is $${totalAmount.toFixed(2)}. Pay here when you're ready — link coming soon. — ${job.business.name}`.slice(0, 160),
           }).catch(() => {});
           await prisma.jobEvent.create({
             data: {
@@ -267,7 +270,7 @@ async function runSideEffects(
         } else {
           await sendSms({
             to: customerPhone,
-            body: `Hi ${customerName}! Your ${job.serviceType} is complete. Pay $${totalAmount.toFixed(2)} here: ${clientHubUrl}\nReply STOP to opt out.`.slice(0, 160),
+            body: `Hi ${fmtName}, job's done! Your total is $${totalAmount.toFixed(2)}. Pay here when you're ready: ${clientHubUrl} — ${job.business.name}`.slice(0, 160),
           }).catch(() => {});
           await prisma.jobEvent.create({
             data: {
@@ -386,12 +389,15 @@ async function runSideEffects(
     case "cancelled": {
       if (customerPhone) {
         const reason = metadata.cancelReason;
+        const fmtName = formatName(customerName);
+        const appUrl2 = process.env.NEXT_PUBLIC_APP_URL ?? "";
+        const bookingLink = appUrl2 ? `${appUrl2}/book/${job.business.slug}` : null;
+        const rejectBody = bookingLink
+          ? `Hi ${fmtName}, your ${job.serviceType} appointment has been cancelled${reason ? ` (${reason})` : ""}. Need to rebook? ${bookingLink}`.slice(0, 160)
+          : `Hi ${fmtName}, your ${job.serviceType} appointment has been cancelled${reason ? ` (${reason})` : ""}. Feel free to reach out to rebook.`.slice(0, 160);
         await sendSms({
           to: customerPhone,
-          body: (reason
-            ? `Hi ${customerName}! Your ${job.serviceType} appointment has been cancelled. Reason: ${reason}. Please call us to rebook.`
-            : `Hi ${customerName}! Your ${job.serviceType} appointment has been cancelled. Please call us to rebook.`
-          ).slice(0, 160),
+          body: rejectBody,
         }).catch(() => {});
         await prisma.jobEvent.create({
           data: {

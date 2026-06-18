@@ -55,10 +55,6 @@ export default function JobDetailPage() {
   const [job, setJob] = useState<JobDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [showComplete, setShowComplete] = useState(false);
-  const [showEarlyOverride, setShowEarlyOverride] = useState(false);
-  const [finalAmount, setFinalAmount] = useState("");
-  const [paymentChoice, setPaymentChoice] = useState<"online" | "cash" | "cheque">("online");
   const [transitioning, setTransitioning] = useState(false);
 
   const [showCancel, setShowCancel] = useState(false);
@@ -88,7 +84,6 @@ export default function JobDetailPage() {
       const data = await res.json();
       setJob(data);
       setNotes(data.notes ?? "");
-      setFinalAmount(String(data.total ?? ""));
       const events: Array<{ type: string; payload: Record<string, unknown> | null; createdAt: string }> = data.events ?? [];
       const rrEvent = events.find(e => e.type === "sms_sent" && e.payload?.kind === "review_request");
       setReviewSentAt(rrEvent?.createdAt ?? null);
@@ -107,23 +102,6 @@ export default function JobDetailPage() {
       const err = await res.json().catch(() => ({}));
       setTransitionError(err.error ?? "Transition failed");
     }
-    await load();
-    setTransitioning(false);
-  }
-
-  async function complete() {
-    setTransitioning(true);
-    setTransitionError(null);
-    const res = await fetch(`/api/jobs/${id}/complete`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ finalAmount: parseFloat(finalAmount) || 0, paymentChoice }),
-    }).catch(() => null);
-    if (res && !res.ok) {
-      const err = await res.json().catch(() => ({}));
-      setTransitionError(err.error ?? "Could not complete job");
-    }
-    setShowComplete(false);
-    setShowEarlyOverride(false);
     await load();
     setTransitioning(false);
   }
@@ -215,10 +193,10 @@ export default function JobDetailPage() {
   }
 
   const scheduledInFuture = job.scheduledAt ? new Date(job.scheduledAt) > new Date() : false;
-  const canStart    = job.status === "scheduled";
-  const canComplete = job.status === "in_progress";
-  const completeBlocked = canComplete && scheduledInFuture && !showEarlyOverride;
-  const canSendPayment  = job.status === "completed";
+  const canStart       = job.status === "scheduled";
+  const canComplete    = job.status === "in_progress";
+  const completeBlocked = canComplete && scheduledInFuture;
+  const canSendPayment = job.status === "completed";
   const canMarkPaid     = job.status === "awaiting_payment" || job.status === "partially_paid";
   const isPaid          = job.status === "paid";
   const isClosed        = ["cancelled", "no_show"].includes(job.status);
@@ -366,28 +344,28 @@ export default function JobDetailPage() {
             <div className="bg-white rounded-xl p-5" style={CARD_SHADOW}>
               <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Job Actions</h2>
 
-              <div className="space-y-2">
-                {/* Start */}
+              <div className="space-y-3">
+                {/* SCHEDULED → green Start job */}
                 {canStart && (
                   <button onClick={() => transition("in_progress")} disabled={transitioning}
-                    className="w-full h-12 rounded-lg bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-60">
-                    ▶ Start Job
+                    className="w-full h-14 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-semibold text-base flex items-center justify-center gap-2 transition-colors disabled:opacity-60">
+                    ▶ Start job
                   </button>
                 )}
 
-                {/* Mark Complete */}
+                {/* IN_PROGRESS → blue Mark complete */}
                 {canComplete && (
                   <div className="space-y-1">
                     <button
-                      onClick={() => completeBlocked ? null : setShowComplete(true)}
+                      onClick={() => completeBlocked ? null : transition("completed")}
                       disabled={transitioning || completeBlocked}
-                      className={`w-full h-12 rounded-lg font-semibold text-white flex items-center justify-center gap-2 transition-colors ${
-                        completeBlocked ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-[#16A34A] hover:bg-[#15803D]"
+                      className={`w-full h-14 rounded-2xl font-semibold text-base flex items-center justify-center gap-2 transition-colors ${
+                        completeBlocked ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 text-white"
                       }`}>
-                      <CheckCircle size={18} /> Mark Complete
+                      <CheckCircle size={18} /> Mark complete
                     </button>
                     {completeBlocked && (
-                      <button onClick={() => setShowEarlyOverride(true)}
+                      <button onClick={() => transition("completed")} disabled={transitioning}
                         className="text-xs text-gray-400 hover:text-gray-600 underline w-full text-center">
                         Finished early? Complete anyway
                       </button>
@@ -395,20 +373,32 @@ export default function JobDetailPage() {
                   </div>
                 )}
 
-                {/* Send Payment Link */}
+                {/* COMPLETED → two inline payment options */}
                 {canSendPayment && (
-                  <button onClick={sendPaymentLink} disabled={sendingPayment}
-                    className="w-full h-12 rounded-lg bg-[#4A6FFF] hover:bg-[#3B5EEE] text-white font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-60">
-                    💳 {sendingPayment ? "Sending..." : "Send Payment Link"}
-                  </button>
+                  <div className="flex flex-col gap-3">
+                    <p className="text-sm text-gray-600 font-medium">How did the client pay?</p>
+                    <button
+                      onClick={() => transition("paid")} disabled={transitioning}
+                      className="w-full py-4 border-2 border-gray-200 rounded-2xl text-left px-4 hover:bg-gray-50 transition-colors disabled:opacity-60">
+                      <div className="font-semibold text-[#0D1117]">💵 Cash or cheque</div>
+                      <div className="text-sm text-gray-500">Mark as paid immediately</div>
+                    </button>
+                    <button
+                      onClick={sendPaymentLink} disabled={sendingPayment}
+                      className="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-2xl text-left px-4 transition-colors disabled:opacity-60">
+                      <div className="font-semibold">📱 {sendingPayment ? "Sending..." : "Send payment link"}</div>
+                      <div className="text-sm text-green-100">Client pays online via SMS</div>
+                    </button>
+                  </div>
                 )}
 
-                {/* Awaiting Payment — manual paid override */}
+                {/* AWAITING_PAYMENT */}
                 {paymentPending && (
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-[#C2410C] font-medium py-1">
-                      <Clock size={14} /> Payment link sent — awaiting customer
-                    </div>
+                    <button disabled
+                      className="w-full h-14 rounded-2xl bg-gray-100 text-gray-500 font-semibold text-base flex items-center justify-center cursor-not-allowed">
+                      Payment link sent ✓
+                    </button>
                     <button onClick={() => transition("paid")} disabled={transitioning}
                       className="w-full h-10 rounded-lg border-2 border-[#15803D] text-[#15803D] text-sm font-semibold hover:bg-[#F0FDF4] transition-colors disabled:opacity-60">
                       Mark Paid Manually
@@ -416,7 +406,7 @@ export default function JobDetailPage() {
                   </div>
                 )}
 
-                {/* Partially paid */}
+                {/* PARTIALLY_PAID */}
                 {paymentPartial && (
                   <div className="space-y-2">
                     <div className="text-sm text-orange-600 font-medium py-1">
@@ -429,19 +419,20 @@ export default function JobDetailPage() {
                   </div>
                 )}
 
-                {/* Paid */}
+                {/* PAID */}
                 {isPaid && (
                   <button disabled
-                    className="w-full h-12 rounded-lg border-2 border-[#16A34A] text-[#16A34A] font-semibold flex items-center justify-center gap-2 opacity-80 cursor-not-allowed">
+                    className="w-full h-14 rounded-2xl bg-green-50 text-green-700 font-semibold text-base flex items-center justify-center gap-2 cursor-not-allowed border border-green-200">
                     <CheckCircle size={18} /> Paid ✓
                   </button>
                 )}
 
-                {/* Closed states */}
+                {/* CANCELLED / NO_SHOW */}
                 {isClosed && (
-                  <div className={`text-sm font-medium py-2 ${job.status === "cancelled" ? "text-red-600" : "text-gray-500"}`}>
-                    {job.status === "cancelled" ? "Job cancelled" : "No show — job closed"}
-                  </div>
+                  <button disabled
+                    className="w-full h-14 rounded-2xl bg-gray-100 text-gray-500 font-semibold text-base flex items-center justify-center cursor-not-allowed">
+                    {job.status === "cancelled" ? "Job cancelled" : "No-show recorded"}
+                  </button>
                 )}
 
                 {/* Cancel / Reschedule */}
@@ -518,73 +509,34 @@ export default function JobDetailPage() {
       </div>
 
       {/* Sticky mobile action */}
-      {(canStart || canComplete) && (
+      {(canStart || canComplete || canSendPayment) && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 px-4 py-3 bg-white border-t border-gray-200 shadow-lg">
           {canComplete ? (
-            <button onClick={() => setShowComplete(true)} disabled={transitioning}
-              className="w-full h-14 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-60">
-              <CheckCircle size={18} /> Mark Complete
+            <button
+              onClick={() => completeBlocked ? null : transition("completed")}
+              disabled={transitioning || completeBlocked}
+              className={`w-full h-14 rounded-2xl font-semibold text-base flex items-center justify-center gap-2 transition-colors disabled:opacity-60 ${
+                completeBlocked ? "bg-gray-200 text-gray-400" : "bg-blue-600 hover:bg-blue-700 text-white"
+              }`}>
+              <CheckCircle size={18} /> Mark complete
             </button>
-          ) : (
+          ) : canStart ? (
             <button onClick={() => transition("in_progress")} disabled={transitioning}
-              className="w-full h-14 rounded-lg bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-60">
-              ▶ Start Job
+              className="w-full h-14 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-semibold text-base flex items-center justify-center gap-2 transition-colors disabled:opacity-60">
+              ▶ Start job
             </button>
-          )}
-        </div>
-      )}
-
-      {/* Complete modal */}
-      {(showComplete || showEarlyOverride) && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
-            <div className="flex items-center gap-3 mb-5">
-              <CheckCircle size={22} className="text-green-500" />
-              <h2 className="text-lg font-bold text-[#0D1117]">Mark Complete</h2>
-            </div>
-            <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Final Amount ($)</label>
-              <input type="number" value={finalAmount} onChange={e => setFinalAmount(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-lg font-bold focus:outline-none text-[#0D1117]" />
-            </div>
-            <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">How was payment handled?</label>
-              <div className="space-y-2">
-                {(["online", "cash", "cheque"] as const).map(choice => (
-                  <label key={choice} className="flex items-center gap-3 cursor-pointer p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50">
-                    <input type="radio" name="paymentChoiceDetail" value={choice} checked={paymentChoice === choice}
-                      onChange={() => setPaymentChoice(choice)} className="accent-[#0D1117]" />
-                    <span className="text-sm font-medium text-[#0D1117]">
-                      {choice === "online" ? "Send online payment link (SMS)" :
-                       choice === "cash" ? "Cash received" : "Cheque received"}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            {paymentChoice === "online" && (
-              <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 mb-4 flex items-start gap-2">
-                <AlertCircle size={14} className="text-[#F59E0B] mt-0.5 shrink-0" />
-                <p className="text-xs text-[#B45309]">An SMS with the payment link will be sent to the customer.</p>
-              </div>
-            )}
-            {(paymentChoice === "cash" || paymentChoice === "cheque") && (
-              <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3 mb-4 flex items-start gap-2">
-                <CheckCircle size={14} className="text-emerald-500 mt-0.5 shrink-0" />
-                <p className="text-xs text-emerald-700">Job will be marked PAID immediately.</p>
-              </div>
-            )}
+          ) : canSendPayment ? (
             <div className="flex gap-3">
-              <button onClick={() => { setShowComplete(false); setShowEarlyOverride(false); }}
-                className="flex-1 border border-gray-200 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50">
-                Cancel
+              <button onClick={() => transition("paid")} disabled={transitioning}
+                className="flex-1 h-14 rounded-2xl border-2 border-gray-200 text-[#0D1117] font-semibold text-sm flex items-center justify-center gap-1 hover:bg-gray-50 transition-colors disabled:opacity-60">
+                💵 Cash
               </button>
-              <button onClick={complete} disabled={transitioning}
-                className="flex-1 bg-[#16A34A] text-white py-2.5 rounded-lg text-sm font-bold hover:bg-[#15803D] disabled:opacity-60 transition-colors">
-                {transitioning ? "Saving..." : "Confirm"}
+              <button onClick={sendPaymentLink} disabled={sendingPayment}
+                className="flex-1 h-14 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm flex items-center justify-center gap-1 transition-colors disabled:opacity-60">
+                📱 {sendingPayment ? "Sending..." : "Send link"}
               </button>
             </div>
-          </div>
+          ) : null}
         </div>
       )}
 
